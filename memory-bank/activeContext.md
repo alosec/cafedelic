@@ -140,40 +140,33 @@ This reveals the opportunity for active environment coordination:
 
 See `emacs-integration-plan.md` for detailed design.
 
-### Emacs API Progress (2025-05-26)
+## Emacs Integration Complete (2025-05-26)
 
-✅ **Hello World Success**: Created and tested `open-file-test.sh`
-- Basic emacsclient integration working
-- Can open files programmatically
-- Good error handling for daemon status
+### Working Solution Achieved
+- Left sidebar file tree (30 chars wide)
+- Stable two-pane layout
+- Integration with generate-file-tree.sh
+- Hard-coded project root for simplicity
+- Files display immediately when accessed
 
-✅ **Window Management Exploration**: Two-buffer system tested
-- Left/right split approach implemented
-- Files flashing through too quickly - poor UX
-- *server* buffer not meaningful for user
+### Key Implementation Details
+- `cafedelic-frame.el`: Core elisp with proper window management
+- Shell script integration better than complex elisp
+- Debug logging helps troubleshoot issues
+- State cleanup prevents buffer accumulation
 
-📋 **New Direction**: Full frame approach with recent files list
-- Take over entire emacs frame (simpler, cleaner)
-- Top window: List of recently accessed files with timestamps
-- Bottom window: Current file content
-- Better visualization of "context window" concept
+### Ready for Next Phase
+Need to connect to DC logs and add persistence:
+1. SQLite database for state
+2. Wire DC watcher to auto-open files
+3. Enhanced state management
+4. Activity analytics
 
-✅ **Minimalist Tree View**: Implemented file tree structure
-- Removed decorative elements (title, bars)
-- Files organized by directory structure
-- Rapid file switching creates "flipping through codebase" effect
-- Clean, space-efficient display
-
-📋 **Fixed Layout Issues**: Stable left-sidebar approach
-- Left sidebar: File tree using generate-file-tree.sh
-- Right area: Current file content
-- Proper cleanup of old buffers
-- Consistent window management
-- Integrated existing tree generation script
-
-🔧 **Debugging Tree Issues**: In progress
-- Hard-coded project root to /home/alex/code/cafedelic
-- Added debug logging to track updates
-- Enhanced diagnostics to show tree content
-- Created test-tree-updates.sh for testing
-- Investigating why tree isn't updating dynamically
+### Scripts Cleaned Up
+Removed 10 experimental scripts, kept 6 working ones:
+- init-claude-frame.sh
+- open-claude-file.sh
+- clear-cafedelic-state.sh
+- diagnose-emacs.sh
+- test-stable-tree.sh
+- cafedelic-frame.el

@@ -70,18 +70,19 @@ Split-window approach revealed UX issues:
 - Left/right split not ideal for multiple files
 - Learned we need better context visualization
 
-### ✅ Full Frame UI (Completed)
-New approach with better UX:
-- [x] cafedelic-frame.el - Core elisp functions
-- [x] init-claude-frame.sh - Set up full frame UI
-- [x] open-claude-file.sh - Add files to recent list
-- [x] Recent files list at top of frame
-- [x] Current file content in main area
-- [x] Fixed to left sidebar with tree view
-- [x] Integrated generate-file-tree.sh
-- [x] Stable window management
-- [ ] Connect to DC log watcher
-- [ ] Add relative timestamps
+### ✅ Emacs Integration Complete (2025-05-26)
+Working left-sidebar file tree implementation:
+- [x] cafedelic-frame.el with stable window management
+- [x] Left sidebar tree using generate-file-tree.sh
+- [x] Files display immediately when accessed
+- [x] Diagnostic and cleanup tools
+- [x] Hard-coded project root for simplicity
+- [x] Cleaned up 10 experimental scripts
+
+Known limitations:
+- Tree state needs manual refresh sometimes
+- Not connected to DC logs yet
+- No persistence between sessions
 
 ## Technical Decisions
 
@@ -112,6 +113,26 @@ From teemax and deli:
 3. Create simple translator
 4. Test end-to-end flow
 5. Document learnings
+
+## Next Phase: State Management & DC Integration
+
+### Database Layer
+- [ ] Design SQLite schema for file access history
+- [ ] Create persistence service
+- [ ] Track access patterns and timestamps
+- [ ] Implement state recovery on startup
+
+### DC Log Integration  
+- [ ] Connect watcher to trigger open-claude-file.sh
+- [ ] Extract file paths from all DC commands
+- [ ] Real-time context window updates
+- [ ] Activity analytics and patterns
+
+### Enhanced Features
+- [ ] Automatic tree refresh
+- [ ] Relative timestamps in tree
+- [ ] Context window size metrics
+- [ ] File access heatmap
 
 ## Definition of Done
 
