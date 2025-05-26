@@ -3,9 +3,31 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { launchIde } from './src/tools/launch-ide.js';
-import { getContext } from './src/tools/get-context.js';
+import { getActiveContext, setActivityStore } from './src/tools/get-active-context.js';
 import { logger } from './src/utils/logger.js';
+import { WatcherService } from './src/services/watcher.service.js';
+import { TranslatorService } from './src/services/translator.service.js';
+import { ActivityStore } from './src/services/activity.store.js';
+
+// Initialize services
+const watcher = new WatcherService();
+const translator = new TranslatorService();
+const activityStore = new ActivityStore();
+
+// Inject activity store into tools
+setActivityStore(activityStore);
+
+// Wire up services
+watcher.on('log-entry', (entry) => {
+  const activity = {
+    raw: entry,
+    translated: translator.translate(entry),
+    timestamp: Date.now()
+  };
+  
+  activityStore.add(activity);
+  logger.info('Activity detected', { activity: activity.translated });
+});
 
 // Initialize MCP server
 const server = new Server({
@@ -24,35 +46,18 @@ logger.info('Initializing Cafedelic MCP server', { version: '0.1.0' });
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
-      name: 'launch_ide',
-      description: 'Launch the IDE - combines terminal launch and tmux layout creation',
+      name: 'get_active_context',
+      description: 'Get active development context including recent activity and files under review',
       inputSchema: {
         type: 'object',
         properties: {
-          session_name: {
-            type: 'string',
-            description: 'Name for the tmux session (default: cafedelic-main)'
-          },
-          window_name: {
-            type: 'string',
-            description: 'Name for the tmux window (default: cafedelic)'
-          },
-          start_processes: {
+          include_activity: {
             type: 'boolean',
-            description: 'Whether to start processes in panes (default: true)'
-          }
-        }
-      }
-    },
-    {
-      name: 'get_context',
-      description: 'Refresh knowledge and sync context with project intelligence',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          project_path: {
-            type: 'string',
-            description: 'Path to project directory'
+            description: 'Include recent activity log (default: true)'
+          },
+          lookback_minutes: {
+            type: 'number',
+            description: 'How many minutes of activity to include (default: 5)'
           }
         }
       }
@@ -80,12 +85,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let result;
     
     switch (name) {
-      case 'launch_ide':
-        result = await launchIde(args || {});
-        break;
-      
-      case 'get_context':
-        result = await getContext(args || {});
+      case 'get_active_context':
+        result = await getActiveContext(args || {});
         break;
       
       default:
@@ -116,6 +117,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   try {
     await logger.info('Starting Cafedelic MCP server...');
+    
+    // Start the DC log watcher
+    await watcher.start();
+    await logger.info('DC log watcher started');
     
     const transport = new StdioServerTransport();
     await server.connect(transport);

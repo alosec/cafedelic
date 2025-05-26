@@ -1,0 +1,108 @@
+# Cafedelic Project Intelligence
+
+## Project Philosophy
+- **Austere minimalism**: Prefer inconvenience from refusing complexity over complexity itself
+- **Intelligence over control**: We provide understanding, not manipulation
+- **High-level abstractions only**: No low-level tmux/pane management
+
+## Key Discoveries
+
+### What Cafedelic IS
+- A development intelligence framework
+- A context analysis engine  
+- A translator of opaque logs into human understanding
+- An accumulator of project knowledge over time
+
+### What Cafedelic IS NOT
+- A tmux manager
+- A layout tool
+- A terminal launcher
+- A low-level pane controller
+
+## Architecture Patterns
+
+### Separation of Concerns
+- Cafedelic = Intelligence layer
+- User's tmux = Display/layout layer
+- Desktop Commander = Action layer
+- MCP tools = Query interface
+
+### Implementation Approach
+- Start with proven simple solutions (bash scripts, Node.js)
+- Avoid complex frameworks (learned from teemax)
+- Event-driven architecture with loose coupling
+- Template-based translations for maintainability
+
+## Technical Decisions
+
+### Core Stack
+- Express.js server (minimal overhead)
+- Chokidar for file watching (proven reliability)
+- TypeScript for type safety
+- No tmux dependencies
+
+### Service Pattern
+```typescript
+// Each service has single responsibility
+WatcherService    // Only watches files
+TranslatorService // Only translates logs  
+ActivityStore     // Only stores activities
+```
+
+## Development Workflow
+
+### Memory Bank Maintenance
+When significant changes occur:
+1. Update activeContext.md with current state
+2. Update progress.md with completed tasks
+3. Revise other docs only if fundamentally changed
+
+### Feature Development
+1. Start with simplest working version
+2. Test manually before adding complexity
+3. Keep services isolated and testable
+4. Document learnings in this file
+
+## DC Log Intelligence
+
+### Log Location
+`~/.claude-server-commander/claude_tool_call.log`
+
+### Log Format (Discovered)
+Pipe-delimited format: `TIMESTAMP | COMMAND | Arguments: JSON`
+Example: `2025-05-26T00:06:01.904Z | execute_command | Arguments: {"command":"ls -la"}`
+
+### Common Commands to Translate
+- read_file → "Claude is reading [filename]"
+- write_file → "Claude is updating [filename]"
+- execute_command → "Claude executed: [command]"
+- search_code → "Claude searched for [pattern]"
+
+### Translation Philosophy
+Make the activity human-readable and meaningful, not just technically accurate.
+
+## Future Vision
+
+### Phase 1 (Current)
+DC log watching and translation - make Claude's actions visible
+
+### Phase 2
+Pattern analysis - understand workflows and development patterns
+
+### Phase 3  
+Intelligence accumulation - build project knowledge over time
+
+## Lessons from Related Projects
+
+### From Teemax
+- Simple Node.js scripts beat complex TypeScript servers
+- Real-time log following with position tracking works well
+- Human-readable translations are highly valuable
+
+### From Deli
+- Named pane abstractions are useful but too low-level for cafedelic
+- MCP tool integration patterns work well
+- Focus on specific value proposition
+
+## Remember
+When in doubt, choose simplicity and clarity over feature completeness. Cafedelic's value is in making development transparent and understandable, not in controlling tools.
