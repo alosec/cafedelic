@@ -1,0 +1,43 @@
+# Tmex Layout Pattern Examples
+
+## Basic Patterns
+
+113     - Three columns: 1 | 1 | 3 panes
+122     - Three columns: 1 | 2 | 2 panes  
+131     - Three columns: 1 | 3 | 1 panes
+1111    - Four equal columns
+22      - Two columns with 2 panes each
+33      - Two columns with 3 panes each
+
+## Nested Patterns
+
+1[123]1   - Three columns: 1 | [1,2,3 rows] | 1
+[12][34]  - Two columns with different row counts
+1[22]3    - Three columns with nested middle section
+
+## Size-Adjusted Patterns (using {})
+
+2{1,3}2   - Three columns where middle column has 1:3 ratio
+3{1,1,2}  - Three panes with size ratio 1:1:2
+4{1,1,1,2} - Four panes where last is twice as big
+
+## Transpose Flag
+
+Add -t or --transpose to any pattern for horizontal layout:
+113 -t    - Three rows instead of columns
+122 -t    - Horizontal stack of 1, 2, 2 panes
+
+## Cafedelic-Specific Layouts
+
+1[123]1     - Activity | [Tree, Editor, Terminal] | Context
+131 -t      - Horizontal: Monitor, 3 work panes, logs
+2{1,3}[12]  - Left sidebar, main area with sub-panes
+[12]3{1,2}  - Complex layout with sized regions
+
+## Tips
+
+- Numbers represent pane counts in each section
+- [] create nested layouts within sections  
+- {} adjust relative sizes of panes
+- Combine patterns for complex layouts
+- Use transpose for horizontal arrangements
