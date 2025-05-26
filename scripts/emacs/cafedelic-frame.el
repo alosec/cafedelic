@@ -13,8 +13,8 @@
 (defvar cafedelic-tree-width 30
   "Width of the tree sidebar")
 
-(defvar cafedelic-project-root nil
-  "Project root for tree display")
+(defvar cafedelic-project-root "/home/alex/code/cafedelic"
+  "Hard-coded project root for Cafedelic")
 
 (defun cafedelic-init-frame ()
   "Initialize Cafedelic frame with left tree sidebar and right content area"
@@ -44,11 +44,6 @@
     ;; Move to right window for content
     (other-window 1)
     
-    ;; Try to detect project root
-    (when buffer-file-name
-      (setq cafedelic-project-root 
-            (cafedelic-find-project-root buffer-file-name)))
-    
     "Cafedelic frame initialized"))
 
 (defun cafedelic-cleanup-state ()
@@ -64,9 +59,8 @@
 (defun cafedelic-add-file (filepath)
   "Add a file to recent list and display it"
   (let ((timestamp (current-time-string)))
-    ;; Update project root if needed
-    (unless cafedelic-project-root
-      (setq cafedelic-project-root (cafedelic-find-project-root filepath)))
+    ;; Debug logging
+    (message "[Cafedelic] Adding file: %s" filepath)
     
     ;; Add to recent files
     (setq cafedelic-recent-files
@@ -76,6 +70,9 @@
     ;; Trim list
     (when (> (length cafedelic-recent-files) cafedelic-max-recent-files)
       (setcdr (nthcdr (1- cafedelic-max-recent-files) cafedelic-recent-files) nil))
+    
+    ;; Debug: log file count
+    (message "[Cafedelic] Total files: %d" (length cafedelic-recent-files))
     
     ;; Update tree display
     (cafedelic-update-tree-display)
@@ -97,31 +94,41 @@
 
 (defun cafedelic-update-tree-display ()
   "Update the tree display using generate-file-tree.sh"
+  (message "[Cafedelic] Updating tree display...")
   (when-let ((tree-buffer (get-buffer cafedelic-tree-buffer-name)))
     (with-current-buffer tree-buffer
       (read-only-mode 0)
       (erase-buffer)
       
       (if (null cafedelic-recent-files)
-          (insert "No files accessed yet")
+          (progn
+            (insert "No files accessed yet")
+            (message "[Cafedelic] No files to display"))
         ;; Generate file list JSON
         (let* ((files (mapcar #'car cafedelic-recent-files))
                (json-files (json-encode files))
                (script-path (expand-file-name 
                              "scripts/generate-file-tree.sh"
-                             (or cafedelic-project-root default-directory)))
+                             cafedelic-project-root))
                (tree-output))
           
+          ;; Debug: log what we're sending
+          (message "[Cafedelic] Files to tree: %s" json-files)
+          (message "[Cafedelic] Script path: %s" script-path)
+          (message "[Cafedelic] Project root: %s" cafedelic-project-root)
+          
           ;; Call the tree script
-          (if (and cafedelic-project-root (file-exists-p script-path))
+          (if (file-exists-p script-path)
               (let ((default-directory cafedelic-project-root))
                 (setq tree-output
                       (shell-command-to-string
                        (format "echo '%s' | %s --root %s"
                                json-files
                                script-path
-                               cafedelic-project-root))))
-            ;; Fallback to simple list
+                               cafedelic-project-root)))
+                (message "[Cafedelic] Tree output length: %d" (length tree-output)))
+            ;; Script not found
+            (message "[Cafedelic] Tree script not found at: %s" script-path)
             (setq tree-output
                   (mapconcat 
                    (lambda (f) (format "• %s" (file-name-nondirectory f)))

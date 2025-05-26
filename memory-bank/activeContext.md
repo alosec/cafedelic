@@ -170,3 +170,10 @@ See `emacs-integration-plan.md` for detailed design.
 - Proper cleanup of old buffers
 - Consistent window management
 - Integrated existing tree generation script
+
+🔧 **Debugging Tree Issues**: In progress
+- Hard-coded project root to /home/alex/code/cafedelic
+- Added debug logging to track updates
+- Enhanced diagnostics to show tree content
+- Created test-tree-updates.sh for testing
+- Investigating why tree isn't updating dynamically

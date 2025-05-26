@@ -41,3 +41,28 @@ emacsclient --eval "
   (if claude-buffers
       (mapconcat #'buffer-name claude-buffers \"\\n\")
     \"  None found\"))" 2>/dev/null | tr -d '"' | sed 's/\\n/\n/g'
+
+echo -e "\n${YELLOW}Tree Buffer Content:${NC}"
+emacsclient --eval "
+(if-let ((tree-buffer (get-buffer \"*Claude-Tree*\")))
+    (with-current-buffer tree-buffer
+      (buffer-string))
+  \"Tree buffer not found\")" 2>/dev/null | tr -d '"' | sed 's/\\n/\n/g'
+
+echo -e "\n${YELLOW}Recent Files List:${NC}"
+emacsclient --eval "
+(if (boundp 'cafedelic-recent-files)
+    (if cafedelic-recent-files
+        (mapconcat 
+         (lambda (entry)
+           (format \"  %s\" (car entry)))
+         cafedelic-recent-files
+         \"\\n\")
+      \"  No recent files\")
+  \"  Variable not defined\")" 2>/dev/null | tr -d '"' | sed 's/\\n/\n/g'
+
+echo -e "\n${YELLOW}Project Root:${NC}"
+emacsclient --eval "
+(if (boundp 'cafedelic-project-root)
+    cafedelic-project-root
+  \"Not set\")" 2>/dev/null | tr -d '"'
