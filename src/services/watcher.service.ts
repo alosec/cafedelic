@@ -81,15 +81,33 @@ export class WatcherService extends EventEmitter {
     
     for (const line of lines) {
       try {
-        // Parse format: TIMESTAMP | COMMAND [tabs] | Arguments: JSON
-        // Handle both pipes and tabs as separators
-        const parts = line.split(/\s*\|\s*/).map(p => p.trim());
+        // Parse format: TIMESTAMP | COMMAND [spaces] TAB | Arguments: JSON
+        // First split by TAB to separate the arguments part
+        const tabParts = line.split('\t');
         
-        if (parts.length >= 3) {
-          const timestamp = parts[0];
-          // Command may have extra whitespace/tabs, clean it up
-          const command = parts[1].replace(/\s+/g, ' ').trim();
-          const argsString = parts[2].replace(/^Arguments:\s*/, '');
+        if (tabParts.length >= 2) {
+          // First part: "TIMESTAMP | COMMAND     "
+          // Second part: "| Arguments: JSON"
+          const firstPart = tabParts[0].trim();
+          const secondPart = tabParts[1].trim();
+          
+          // Extract timestamp and command from first part
+          const firstPipe = firstPart.indexOf(' | ');
+          if (firstPipe === -1) {
+            logger.info('No pipe separator found in first part', { line, warning: true });
+            continue;
+          }
+          
+          const timestamp = firstPart.substring(0, firstPipe);
+          const command = firstPart.substring(firstPipe + 3).trim();
+          
+          // Extract arguments from second part
+          if (!secondPart.startsWith('|')) {
+            logger.info('Second part does not start with pipe', { line, warning: true });
+            continue;
+          }
+          
+          const argsString = secondPart.substring(1).replace(/^Arguments:\s*/, '').trim();
           
           if (!argsString) {
             logger.info('No arguments found in log line', { line, warning: true });
@@ -104,7 +122,7 @@ export class WatcherService extends EventEmitter {
           
           this.emit('log-entry', entry);
         } else {
-          logger.info('Unexpected log line format', { line, parts: parts.length, warning: true });
+          logger.info('Unexpected log line format - no tab separator', { line, parts: tabParts.length, warning: true });
         }
       } catch (error) {
         const err = error as Error;
