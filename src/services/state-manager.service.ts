@@ -1,10 +1,11 @@
 // Central state management engine
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
-import { PersistenceService, persistence } from './persistence.service';
-import { FileAccessEvent } from '../models/file-access.model';
-import { ActivityEvent } from '../models/activity.model';
-import { PaneState, Session } from '../models/pane-state.model';
+import { PersistenceService, persistence } from './persistence.service.js';
+import { emacsService } from './emacs.service.js';
+import { FileAccessEvent } from '../models/file-access.model.js';
+import { ActivityEvent } from '../models/activity.model.js';
+import { PaneState, Session } from '../models/pane-state.model.js';
 
 export interface StateChangeEvent {
     type: 'file-accessed' | 'activity-logged' | 'pane-updated' | 'session-started';
@@ -45,7 +46,7 @@ export class StateManager extends EventEmitter {
             this.setupEventHandlers();
             
             this.initialized = true;
-            console.log('✅ State manager initialized with session:', this.currentSessionId);
+            console.error('✅ State manager initialized with session:', this.currentSessionId);
         } catch (error) {
             console.error('❌ Failed to initialize state manager:', error);
             throw error;
@@ -79,16 +80,35 @@ export class StateManager extends EventEmitter {
                 timestamp: new Date()
             } as StateChangeEvent);
 
-            console.log(`📁 File accessed: ${event.filePath} (${event.accessType})`);
+            console.error(`📁 File accessed: ${event.filePath} (${event.accessType}`);
+
+            // Trigger automatic file opening in emacs for read operations
+            if (event.accessType === 'read' && event.shouldDisplay) {
+                this.openFileInEmacs(event.filePath);
+            }
         } catch (error) {
             console.error('Failed to log file access:', error);
+        }
+    }
+
+    // Open file in emacs (async, non-blocking)
+    private async openFileInEmacs(filePath: string): Promise<void> {
+        try {
+            const result = await emacsService.openFile(filePath);
+            if (result.success) {
+                console.error(`📂 Auto-opened in emacs: ${filePath} (${result.bufferCount} total buffers`);
+            } else {
+                console.error(`⚠️  Auto-open skipped: ${result.message} - ${filePath}`);
+            }
+        } catch (error) {
+            console.error(`❌ Failed to auto-open file: ${filePath}`, error);
         }
     }
 
     // Handle command execution events
     async handleCommand(event: any): Promise<void> {
         // Future implementation
-        console.log(`⚡ Command executed:`, event);
+        console.error(`⚡ Command executed:`, event);
     }
 
     // Handle activity logging

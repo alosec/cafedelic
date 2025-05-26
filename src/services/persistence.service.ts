@@ -1,11 +1,16 @@
 // Persistence service for SQLite3 database operations
-import * as sqlite3 from 'sqlite3';
+import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { FileAccess, FileRelationship } from '../models/file-access.model';
-import { Activity } from '../models/activity.model';
-import { PaneState, Session } from '../models/pane-state.model';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { FileAccess, FileRelationship } from '../models/file-access.model.js';
+import { Activity } from '../models/activity.model.js';
+import { PaneState, Session } from '../models/pane-state.model.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export class PersistenceService {
     private db: Database | null = null;
@@ -13,8 +18,11 @@ export class PersistenceService {
     private schemaPath: string;
 
     constructor() {
-        this.dbPath = path.join(process.cwd(), 'cafedelic.db');
-        this.schemaPath = path.join(__dirname, '../database/schema.sql');
+        // Use the project root based on this module's location
+        const projectRoot = path.join(__dirname, '../../..');
+        this.dbPath = path.join(projectRoot, 'cafedelic.db');
+        // Point to the source schema file
+        this.schemaPath = path.join(projectRoot, 'src/database/schema.sql');
     }
 
     async initialize(): Promise<void> {
@@ -31,7 +39,7 @@ export class PersistenceService {
             // Initialize schema
             await this.initializeSchema();
 
-            console.log('✅ Database initialized at:', this.dbPath);
+            console.error('✅ Database initialized at:', this.dbPath);
         } catch (error) {
             console.error('❌ Failed to initialize database:', error);
             throw error;
