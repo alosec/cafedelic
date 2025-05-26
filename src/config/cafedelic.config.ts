@@ -22,6 +22,14 @@ export interface CafedelicConfig {
     defaultPane: string;
     assignments: Record<string, string>;
   };
+  desktopMCP: {
+    enabled: boolean;
+    logBaseDir: string;
+    watchInterval: number;
+    discoveryInterval: number;
+    maxLogAge: number; // days
+    fallbackToDC: boolean;
+  };
 }
 
 export const defaultConfig: CafedelicConfig = {
@@ -62,6 +70,14 @@ export const defaultConfig: CafedelicConfig = {
     assignments: {
       'editor-output': '9:0.2'  // Named assignment for cafedelic outputs
     }
+  },
+  desktopMCP: {
+    enabled: true,
+    logBaseDir: '~/.config/Code/logs',
+    watchInterval: 500,
+    discoveryInterval: 30000,
+    maxLogAge: 2, // days
+    fallbackToDC: true
   }
 };
 

@@ -12,13 +12,16 @@ import { assignPaneRole, handleAssignPaneRole } from './src/tools/assign_pane_ro
 import { getOutputRouting, handleGetOutputRouting } from './src/tools/get_output_routing.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
+import { DesktopMCPWatcherService } from './src/services/desktop-mcp-watcher.service.js';
 import { TranslatorService } from './src/services/translator.service.js';
 import { ActivityStore } from './src/services/activity.store.js';
 import { stateManager } from './src/services/state-manager.service.js';
 import { emacsDaemonManager } from './src/services/emacs-daemon-manager.service.js';
+import { configManager } from './src/config/cafedelic.config.js';
 
 // Initialize services
-const watcher = new WatcherService();
+const config = configManager.getConfig();
+const watcher = config.desktopMCP.enabled ? new DesktopMCPWatcherService() : new WatcherService();
 const translator = new TranslatorService();
 const activityStore = new ActivityStore();
 
@@ -278,9 +281,22 @@ async function main() {
     await stateManager.initialize(projectPath);
     await logger.info('State manager initialized');
     
-    // Start the DC log watcher
+    // Start the appropriate log watcher
+    const watcherType = config.desktopMCP.enabled ? 'Desktop MCP' : 'DC';
     await watcher.start();
-    await logger.info('DC log watcher started');
+    await logger.info(`${watcherType} log watcher started`);
+    
+    // If Desktop MCP fails and fallback is enabled, try DC logs
+    if (config.desktopMCP.enabled && config.desktopMCP.fallbackToDC) {
+      watcher.on('error', async (error) => {
+        logger.warn('Desktop MCP watcher failed, falling back to DC logs', { error });
+        const dcWatcher = new WatcherService();
+        await dcWatcher.start();
+        // Transfer event listeners
+        watcher.removeAllListeners('log-entry');
+        dcWatcher.on('log-entry', (entry) => watcher.emit('log-entry', entry));
+      });
+    }
     
     // Note: Emacs daemon manager uses lazy initialization
     // It will start automatically on first file operation

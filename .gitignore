@@ -16,3 +16,6 @@ server.log
 cafedelic.db
 *.db
 *.db-journal
+
+# Chat logs
+desktop-full-chats/
