@@ -196,72 +196,43 @@ tmex> clear      # Reset
 
 Perfect for rapid tmex pattern discovery and cafedelic layout development.
 
-## Tmux Title Setting Issues Diagnosed and Fixed (2025-05-26)
+## Tmux Pane Management Resolution (2025-05-26)
 
-### 🚨 Problem Identified
-The comprehensive title setting infrastructure was ineffective due to:
-- **Complex escape sequences** interfering with pane state
-- **Timing issues** with commands running in panes
-- **Command conflicts** between escape sequences and running programs
+### 🚨 Title Setting Complexity Removed
+After extensive experimentation with pane titles (20+ test scripts), discovered that complex title management was causing more problems than it solved. Decision made to:
+- Remove all title-setting infrastructure
+- Use tmux pane names (@pane_name) instead
+- Focus on core cafedelic functionality
 
-### 🔧 Root Cause Analysis
-Through debugging discovered:
-- Basic `tmux select-pane -T` DOES work correctly
-- Issue was NOT with tmux configuration (pane-border-format was correct)
-- Complex hybrid method was causing command interference
-- Escape sequences were corrupting titles with extra characters
-
-### ✅ Simple Solution Implemented
-Created `simple-title-fix.sh` with:
-- Direct `select-pane -T` calls only
-- No escape sequences or complexity
-- Proper error handling for missing panes
-- Integration into `create-ide-layout.sh`
-
-### 🧪 Verified Working
-- ✅ Manual title setting: `tmux select-pane -t 'session:window.pane' -T 'Title'`
-- ✅ Script works: `./simple-title-fix.sh 'session:window'`
-- ✅ All 5 IDE panes get correct titles: Activity, Files, Editor, Terminal, Logs
-- ✅ `create-ide-layout.sh` updated to use simple method
+### ✅ Clean Working State Achieved
+- Removed 18 title-related test scripts
+- Simplified create-ide-layout.sh
+- Preserved tmex and tmex-tools for layout management
+- Committed all valuable changes
 
 ### 💡 Key Lesson
-**Simple and reliable beats complex and innovative** for core infrastructure. The escape sequence method was interesting but caused more problems than it solved.
+**Avoid infrastructure rabbit holes** - Complex title setting was distracting from cafedelic's core mission of development intelligence.
 
-## Previous Infrastructure (Still Available)
+## Current IDE Layout Solution
 
-### Major Infrastructure Addition
-Created comprehensive tmux pane title setting system with multiple approaches:
+### Working Implementation
+- Uses `tmex 131 --transpose` for consistent 5-pane layout
+- Sets pane names using tmux user options (@pane_name)
+- No dependencies on complex title infrastructure
+- Clean, maintainable script
 
-#### New Scripts Created
-- **`set-pane-titles.sh`**: Full-featured standalone utility
-  - Supports escape sequences, select-pane, and hybrid methods
-  - Batch processing for multiple panes
-  - Template support and verification
-  - Comprehensive error handling and retry logic
-  
-- **`title-functions.sh`**: Shell functions for integration
-  - Simple functions for direct inclusion in other scripts
-  - Hybrid method combining escape sequences + select-pane
-  - IDE-specific convenience functions
-  
-- **`test-title-infrastructure.sh`**: Testing and validation
-- **`verify-title-setup.sh`**: Quick verification of setup
+### Pane Structure
+```
+┌─────────────────────────────┐
+│      Activity Monitor       │ Pane 0: @pane_name=cafedelic-activity
+├──────┬──────────┬──────────┤
+│ Tree │  Editor  │ Terminal │ Panes 1-3: files, editor, terminal
+├──────┴──────────┴──────────┤
+│        DC Logs              │ Pane 4: @pane_name=cafedelic-logs
+└─────────────────────────────┘
+```
 
-#### Integration Complete
-- **`create-ide-layout.sh`** updated to use new title functions
-- Replaced 20+ line title setting section with 2 line function call
-- Now uses hybrid method (escape sequences + select-pane)
-
-#### Methods Available
-1. **Escape Sequences**: `printf '\033]2;Title\007'` - Dynamic, works from within panes
-2. **Select Pane**: `tmux select-pane -T` - Traditional, reliable
-3. **Hybrid**: Best of both worlds - tries escape then select-pane
-
-#### Why This Matters
-- **Reusable Infrastructure**: Title setting now standardized across all scripts
-- **Innovation**: Escape sequence method enables dynamic titles from running programs
-- **Reliability**: Hybrid approach provides both flexibility and dependability
-- **IDE Foundation**: Core infrastructure for tmux-based development environment
+Reference panes with: `tmux display -p -t '@pane_name=cafedelic-editor' '#{pane_id}'`
 
 ### Previous Context
 
