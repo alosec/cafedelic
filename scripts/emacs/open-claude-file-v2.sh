@@ -22,22 +22,28 @@ fi
 echo -e "${YELLOW}Opening file in Cafedelic...${NC}"
 echo -e "File: ${BLUE}$FILE_PATH${NC}"
 
+# Use socket name from environment if available
+SOCKET_ARG=""
+if [ -n "$CAFEDELIC_SOCKET_NAME" ]; then
+    SOCKET_ARG="--socket-name=$CAFEDELIC_SOCKET_NAME"
+fi
+
 # Check emacs daemon
-if ! emacsclient --eval "(emacs-version)" >/dev/null 2>&1; then
+if ! emacsclient $SOCKET_ARG --eval "(emacs-version)" >/dev/null 2>&1; then
     echo -e "${RED}Error: Emacs daemon is not running${NC}"
     exit 1
 fi
 
 # Ensure elisp is loaded
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-emacsclient --eval "(load \"$SCRIPT_DIR/cafedelic-editor.el\")" >/dev/null 2>&1
+emacsclient $SOCKET_ARG --eval "(load \"$SCRIPT_DIR/cafedelic-editor.el\")" >/dev/null 2>&1
 
 # Open the file
-RESULT=$(emacsclient --eval "(cafedelic-open-file \"$FILE_PATH\")" 2>&1)
+RESULT=$(emacsclient $SOCKET_ARG --eval "(cafedelic-open-file \"$FILE_PATH\")" 2>&1)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}File opened successfully!${NC}"
     # Show current file count
-    COUNT=$(emacsclient --eval "(length cafedelic-recent-files)" 2>/dev/null)
+    COUNT=$(emacsclient $SOCKET_ARG --eval "(length cafedelic-recent-files)" 2>/dev/null)
     echo "Total files in context: $COUNT"
 else
     echo -e "${RED}Failed to open file${NC}"

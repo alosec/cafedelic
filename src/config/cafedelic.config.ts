@@ -1,4 +1,6 @@
 // Cafedelic Configuration Management
+import { EmacsDaemonConfig } from '../types/emacs-daemon.types.js';
+
 export interface CafedelicConfig {
   emacs: {
     autoOpen: boolean;
@@ -6,6 +8,7 @@ export interface CafedelicConfig {
     daemonTimeout: number;
     supportedExtensions: string[];
     scriptsPath: string;
+    daemon?: Partial<EmacsDaemonConfig>;
   };
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error';
@@ -35,7 +38,16 @@ export const defaultConfig: CafedelicConfig = {
       '.el', '.lisp', '.clj',
       '.rs', '.go', '.rb', '.php'
     ],
-    scriptsPath: '/home/alex/code/cafedelic/scripts/emacs'
+    scriptsPath: '/home/alex/code/cafedelic/scripts/emacs',
+    daemon: {
+      manageDaemon: true,
+      lazyInit: true,
+      reuseExisting: true,
+      minimalConfig: true,
+      uniqueSuffix: true,
+      healthCheckInterval: 60000,
+      maxRestartAttempts: 5
+    }
   },
   logging: {
     level: 'info',

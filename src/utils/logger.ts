@@ -54,6 +54,10 @@ class Logger {
   async debug(message: string, data?: any) {
     await this.log('DEBUG', message, data);
   }
+  
+  async warn(message: string, data?: any) {
+    await this.log('WARN', message, data);
+  }
 }
 
 export const logger = new Logger();

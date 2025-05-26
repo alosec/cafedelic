@@ -1,5 +1,6 @@
 // Get Emacs Status MCP Tool
 import { emacsService } from '../services/emacs.service.js';
+import { emacsDaemonManager } from '../services/emacs-daemon-manager.service.js';
 import { configManager } from '../config/cafedelic.config.js';
 import { logger } from '../utils/logger.js';
 
@@ -11,12 +12,22 @@ export async function getEmacsStatus(args: GetEmacsStatusArgs = {}): Promise<any
   try {
     const config = configManager.getConfig();
     const healthCheck = await emacsService.checkEmacsHealth();
+    const daemonStatus = await emacsDaemonManager.getStatus();
     const pendingOpens = emacsService.getPendingOpens();
     
     let statusText = `🔍 Emacs Integration Status
 
 **Daemon Status**: ${healthCheck.isRunning ? '✅ Running' : '❌ Not Running'}
 ${healthCheck.message}
+
+**Daemon Details**:
+  - Available: ${daemonStatus.isAvailable ? 'Yes' : 'No'}
+  - PID: ${daemonStatus.daemonPid || 'N/A'}
+  - Socket: ${daemonStatus.socketName || 'N/A'}
+  - Socket Path: ${daemonStatus.socketPath || 'N/A'}
+  - Uptime: ${daemonStatus.uptime ? `${Math.floor(daemonStatus.uptime / 60)}m ${daemonStatus.uptime % 60}s` : 'N/A'}
+  - Restart Count: ${daemonStatus.restartCount}
+  - Last Health Check: ${daemonStatus.lastHealthCheck ? new Date(daemonStatus.lastHealthCheck).toLocaleTimeString() : 'Never'}
 
 **Auto-Open**: ${config.emacs.autoOpen ? '✅ Enabled' : '❌ Disabled'}
 
@@ -30,6 +41,13 @@ ${pendingOpens.length > 0 ? pendingOpens.map(file => `  - ${file}`).join('\n') :
 
     if (args.detailed) {
       statusText += `
+
+**Daemon Configuration**:
+  - Manage Daemon: ${config.emacs.daemon?.manageDaemon ?? true}
+  - Lazy Init: ${config.emacs.daemon?.lazyInit ?? true}
+  - Reuse Existing: ${config.emacs.daemon?.reuseExisting ?? true}
+  - Health Check Interval: ${config.emacs.daemon?.healthCheckInterval ?? 60000}ms
+  - Max Restart Attempts: ${config.emacs.daemon?.maxRestartAttempts ?? 5}
 
 **Supported File Extensions**:
 ${config.emacs.supportedExtensions.map(ext => `  ${ext}`).join(', ')}

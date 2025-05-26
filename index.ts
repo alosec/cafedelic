@@ -15,6 +15,7 @@ import { WatcherService } from './src/services/watcher.service.js';
 import { TranslatorService } from './src/services/translator.service.js';
 import { ActivityStore } from './src/services/activity.store.js';
 import { stateManager } from './src/services/state-manager.service.js';
+import { emacsDaemonManager } from './src/services/emacs-daemon-manager.service.js';
 
 // Initialize services
 const watcher = new WatcherService();
@@ -281,6 +282,10 @@ async function main() {
     await watcher.start();
     await logger.info('DC log watcher started');
     
+    // Note: Emacs daemon manager uses lazy initialization
+    // It will start automatically on first file operation
+    await logger.info('Emacs daemon manager ready (lazy init)');
+    
     const transport = new StdioServerTransport();
     await server.connect(transport);
     
@@ -300,4 +305,17 @@ main().catch(async (error) => {
   // Use stderr for error output to avoid breaking MCP protocol
   process.stderr.write(`Fatal error: ${err.message}\n${err.stack}\n`);
   process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  logger.info('Shutting down Cafedelic...');
+  await emacsDaemonManager.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  logger.info('Shutting down Cafedelic...');
+  await emacsDaemonManager.shutdown();
+  process.exit(0);
 });

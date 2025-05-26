@@ -6,6 +6,8 @@ import * as path from 'path';
 import { configManager } from '../config/cafedelic.config.js';
 import { logger } from '../utils/logger.js';
 import { outputRouter } from './output-router.service.js';
+import { emacsDaemonManager } from './emacs-daemon-manager.service.js';
+import { EmacsDaemonError } from '../types/emacs-daemon.types.js';
 
 const execAsync = promisify(exec);
 
@@ -56,6 +58,21 @@ export class EmacsService extends EventEmitter {
       };
     }
 
+    // Ensure daemon is running (lazy initialization)
+    try {
+      await emacsDaemonManager.ensureRunning();
+    } catch (error) {
+      if (error instanceof EmacsDaemonError) {
+        logger.warn('Emacs daemon not available', { error: error.message });
+        return {
+          success: false,
+          filePath,
+          message: `Emacs unavailable: ${error.message}`
+        };
+      }
+      throw error;
+    }
+
     // Check if file type is supported
     if (!configManager.isFileSupported(filePath)) {
       return {
@@ -96,11 +113,25 @@ export class EmacsService extends EventEmitter {
   private async executeFileOpen(filePath: string): Promise<EmacsOpenResult> {
     // Use v2 script that doesn't have hard-coded tmux routing
     const scriptPath = path.join(this.scriptsPath, 'open-claude-file-v2.sh');
+    
+    // Get socket name from daemon manager (should be available after ensureRunning)
+    const socketName = emacsDaemonManager.getSocketName();
+    
+    // Pass socket info to script via environment
+    const env = { ...process.env };
+    if (socketName) {
+      env.CAFEDELIC_SOCKET_NAME = socketName;
+      logger.debug('Using socket for file open', { socketName, filePath });
+    } else {
+      logger.warn('No socket name available for file open', { filePath });
+    }
+    
     const command = `bash "${scriptPath}" "${filePath}"`;
     
     try {
       const { stdout, stderr } = await execAsync(command, {
-        timeout: configManager.getConfig().emacs.daemonTimeout
+        timeout: configManager.getConfig().emacs.daemonTimeout,
+        env
       });
       
       // Parse buffer count from output if available
@@ -158,6 +189,21 @@ export class EmacsService extends EventEmitter {
       };
     }
 
+    // Ensure daemon is running (lazy initialization)
+    try {
+      await emacsDaemonManager.ensureRunning();
+    } catch (error) {
+      if (error instanceof EmacsDaemonError) {
+        logger.warn('Emacs daemon not available', { error: error.message });
+        return {
+          success: false,
+          directoryPath,
+          message: `Emacs unavailable: ${error.message}`
+        };
+      }
+      throw error;
+    }
+
     // Avoid duplicate opens
     if (this.pendingOpens.has(directoryPath)) {
       return {
@@ -189,11 +235,25 @@ export class EmacsService extends EventEmitter {
   private async executeDirectoryOpen(directoryPath: string): Promise<EmacsDirectoryResult> {
     // Use v2 script that doesn't have hard-coded tmux routing
     const scriptPath = path.join(this.scriptsPath, 'open-dired-v2.sh');
+    
+    // Get socket name from daemon manager (should be available after ensureRunning)
+    const socketName = emacsDaemonManager.getSocketName();
+    
+    // Pass socket info to script via environment
+    const env = { ...process.env };
+    if (socketName) {
+      env.CAFEDELIC_SOCKET_NAME = socketName;
+      logger.debug('Using socket for directory open', { socketName, directoryPath });
+    } else {
+      logger.warn('No socket name available for directory open', { directoryPath });
+    }
+    
     const command = `bash "${scriptPath}" "${directoryPath}"`;
     
     try {
       const { stdout, stderr } = await execAsync(command, {
-        timeout: configManager.getConfig().emacs.daemonTimeout
+        timeout: configManager.getConfig().emacs.daemonTimeout,
+        env
       });
       
       logger.info('Directory opening command executed', {
@@ -232,20 +292,14 @@ export class EmacsService extends EventEmitter {
   }
 
   async checkEmacsHealth(): Promise<{ isRunning: boolean; message: string }> {
-    try {
-      const { stdout } = await execAsync('emacsclient --eval "(emacs-version)" 2>/dev/null', {
-        timeout: 2000
-      });
-      return {
-        isRunning: true,
-        message: 'Emacs daemon is running'
-      };
-    } catch (error) {
-      return {
-        isRunning: false,
-        message: 'Emacs daemon is not running or not responding'
-      };
-    }
+    const status = await emacsDaemonManager.getStatus();
+    
+    return {
+      isRunning: status.isRunning,
+      message: status.isRunning 
+        ? `Emacs daemon is running (PID: ${status.daemonPid}, Socket: ${status.socketName})`
+        : status.lastError || 'Emacs daemon is not running'
+    };
   }
 
   async batchOpenFiles(filePaths: string[]): Promise<EmacsOpenResult[]> {

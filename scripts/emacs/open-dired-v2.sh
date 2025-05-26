@@ -31,6 +31,13 @@ fi
 
 log_debug "Opening directory: $DIRECTORY_PATH"
 
+# Use socket name from environment if available
+SOCKET_ARG=""
+if [ -n "$CAFEDELIC_SOCKET_NAME" ]; then
+    SOCKET_ARG="--socket-name=$CAFEDELIC_SOCKET_NAME"
+    log_debug "Using socket: $CAFEDELIC_SOCKET_NAME"
+fi
+
 # Open directory in dired mode
 ELISP_CODE="(progn
   (dired \"$DIRECTORY_PATH\")
@@ -38,7 +45,7 @@ ELISP_CODE="(progn
   \"Directory opened in dired\")"
 
 # Execute emacsclient command
-emacsclient --eval "$ELISP_CODE" 2>&1 || {
+emacsclient $SOCKET_ARG --eval "$ELISP_CODE" 2>&1 || {
     log_debug "Error: Failed to open directory in emacs"
     exit 1
 }
