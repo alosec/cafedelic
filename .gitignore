@@ -9,3 +9,4 @@ logs/*.log
 .idea/
 .vscode/
 scripts/logs
+src/database/schema.sql
