@@ -70,16 +70,18 @@ Split-window approach revealed UX issues:
 - Left/right split not ideal for multiple files
 - Learned we need better context visualization
 
-### 📋 Full Frame UI (Current)
+### ✅ Full Frame UI (Completed)
 New approach with better UX:
 - [x] cafedelic-frame.el - Core elisp functions
 - [x] init-claude-frame.sh - Set up full frame UI
 - [x] open-claude-file.sh - Add files to recent list
 - [x] Recent files list at top of frame
 - [x] Current file content in main area
+- [x] Fixed to left sidebar with tree view
+- [x] Integrated generate-file-tree.sh
+- [x] Stable window management
 - [ ] Connect to DC log watcher
 - [ ] Add relative timestamps
-- [ ] Implement file tree view
 
 ## Technical Decisions
 
