@@ -95,14 +95,26 @@ export class EmacsService extends EventEmitter {
       const bufferCountMatch = stdout.match(/Total files in context: (\d+)/);
       const bufferCount = bufferCountMatch ? parseInt(bufferCountMatch[1]) : undefined;
       
+      logger.info('File opening command executed', {
+        filePath,
+        bufferCount,
+        stdout: stdout.trim(),
+        stderr: stderr.trim()
+      });
+      
       return {
         success: true,
         filePath,
-        message: 'File opened successfully',
+        message: 'File opened successfully (routed to tmux pane 9:0.2)',
         bufferCount
       };
     } catch (error) {
       const err = error as Error;
+      logger.error('File opening command failed', {
+        filePath,
+        error: err.message,
+        command
+      });
       throw new Error(`Emacs file open failed: ${err.message}`);
     }
   }
@@ -156,13 +168,24 @@ export class EmacsService extends EventEmitter {
         timeout: configManager.getConfig().emacs.daemonTimeout
       });
       
+      logger.info('Directory opening command executed', {
+        directoryPath,
+        stdout: stdout.trim(),
+        stderr: stderr.trim()
+      });
+      
       return {
         success: true,
         directoryPath,
-        message: 'Directory opened successfully in dired'
+        message: 'Directory opened successfully in dired (routed to tmux pane 9:0.2)'
       };
     } catch (error) {
       const err = error as Error;
+      logger.error('Directory opening command failed', {
+        directoryPath,
+        error: err.message,
+        command
+      });
       throw new Error(`Emacs directory open failed: ${err.message}`);
     }
   }

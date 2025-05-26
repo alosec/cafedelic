@@ -81,12 +81,20 @@ export class WatcherService extends EventEmitter {
     
     for (const line of lines) {
       try {
-        // Parse pipe-delimited format: TIMESTAMP | COMMAND | Arguments: JSON
-        const parts = line.split('|').map(p => p.trim());
+        // Parse format: TIMESTAMP | COMMAND [tabs] | Arguments: JSON
+        // Handle both pipes and tabs as separators
+        const parts = line.split(/\s*\|\s*/).map(p => p.trim());
+        
         if (parts.length >= 3) {
           const timestamp = parts[0];
-          const command = parts[1];
-          const argsString = parts[2].replace('Arguments: ', '');
+          // Command may have extra whitespace/tabs, clean it up
+          const command = parts[1].replace(/\s+/g, ' ').trim();
+          const argsString = parts[2].replace(/^Arguments:\s*/, '');
+          
+          if (!argsString) {
+            logger.info('No arguments found in log line', { line, warning: true });
+            continue;
+          }
           
           const entry: DCLogEntry = {
             timestamp,
@@ -95,9 +103,16 @@ export class WatcherService extends EventEmitter {
           };
           
           this.emit('log-entry', entry);
+        } else {
+          logger.info('Unexpected log line format', { line, parts: parts.length, warning: true });
         }
       } catch (error) {
-        logger.info('Failed to parse log line', { line, error, warning: true });
+        const err = error as Error;
+        logger.info('Failed to parse log line', { 
+          line: line.substring(0, 200), // Truncate long lines for readability
+          error: err.message, 
+          warning: true 
+        });
       }
     }
   }

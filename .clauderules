@@ -77,14 +77,17 @@ The "hello world" success (log → transformation → display) opens the door fo
 `~/.claude-server-commander/claude_tool_call.log`
 
 ### Log Format (Discovered)
-Pipe-delimited format: `TIMESTAMP | COMMAND | Arguments: JSON`
-Example: `2025-05-26T00:06:01.904Z | execute_command | Arguments: {"command":"ls -la"}`
+Pipe-delimited format with **tab characters**: `TIMESTAMP | COMMAND \t| Arguments: JSON`
+Example: `2025-05-26T19:20:59.401Z | list_directory      \t| Arguments: {"path":"/home/alex"}`
+
+**CRITICAL**: Tab characters appear between command and arguments separator - must use regex parsing, not simple split.
 
 ### Common Commands to Translate
 - read_file → "Claude is reading [filename]"
 - write_file → "Claude is updating [filename]"
 - execute_command → "Claude executed: [command]"
 - search_code → "Claude searched for [pattern]"
+- **list_directory** → "Claude is exploring [path]" (fixed parsing 2025-05-26)
 
 ### Translation Philosophy
 Make the activity human-readable and meaningful, not just technically accurate.
@@ -136,6 +139,11 @@ Layout structure:
 ```
 
 This provides predictable pane IDs (0-4) that can be named and targeted reliably.
+
+**Emacs Output Routing (Fixed 2025-05-26)**:
+- Route emacsclient output to session 9:0.2 using `tmux run-shell`
+- Provides visibility into file/directory opening actions
+- Falls back gracefully if target pane doesn't exist
 
 ## State Management Architecture (2025-05-26)
 

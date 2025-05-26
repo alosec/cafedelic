@@ -7,10 +7,12 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 
 ### What's Working Well ✅
 1. **DC Log Watching**: Successfully monitors and translates Desktop Commander logs
-2. **Basic Activity Tracking**: Shows what Claude is doing in human-readable format  
-3. **Simple MCP Integration**: `get_active_context` returns activity summaries
-4. **Dired Integration**: Auto-opens directories when Claude explores them
-5. **IDE Layout**: Clean 5-pane tmux layout with tmex
+2. **Tab Character Parsing**: Fixed robust parsing of DC logs with tab characters
+3. **Basic Activity Tracking**: Shows what Claude is doing in human-readable format  
+4. **Simple MCP Integration**: `get_active_context` returns activity summaries
+5. **Dired Integration**: Auto-opens directories when Claude explores them
+6. **Tmux Output Routing**: Routes emacs output to session 9:0.2 for visibility
+7. **IDE Layout**: Clean 5-pane tmux layout with tmex
 
 ### Immediate Focus Areas
 

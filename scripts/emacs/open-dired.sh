@@ -53,12 +53,22 @@ ELISP_CODE="(progn
   (message \"Opened directory in dired: %s\" \"$DIRECTORY_PATH\")
   \"Directory opened in dired\")"
 
-# Always use emacsclient directly to evaluate the code
-log_debug "Using emacsclient to open dired"
-emacsclient --eval "$ELISP_CODE" 2>&1 || {
-    log_debug "Error: Failed to open directory in emacs"
-    exit 1
-}
+# Route emacsclient output to session 9, window 0, pane 2
+TARGET_PANE="9:0.2"
+
+# Check if target pane exists
+if tmux list-panes -t "$TARGET_PANE" >/dev/null 2>&1; then
+    log_debug "Routing emacsclient output to pane $TARGET_PANE"
+    # Run emacsclient and display output in target pane
+    tmux run-shell -t "$TARGET_PANE" "echo 'Opening dired: $DIRECTORY_PATH' && emacsclient --eval '$ELISP_CODE' 2>&1 || echo 'Error: Failed to open directory in emacs'"
+else
+    log_debug "Target pane $TARGET_PANE not found, using emacsclient directly"
+    # Fall back to direct emacsclient if pane doesn't exist
+    emacsclient --eval "$ELISP_CODE" 2>&1 || {
+        log_debug "Error: Failed to open directory in emacs"
+        exit 1
+    }
+fi
 
 log_debug "Successfully opened directory in dired"
 echo "Opened: $DIRECTORY_PATH"
