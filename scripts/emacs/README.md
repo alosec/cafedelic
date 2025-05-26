@@ -15,41 +15,31 @@ After testing split-window approaches, we've moved to a full-frame UI that bette
 [Current file content shown below]
 ```
 
-## New Full Frame Scripts
+## New Full Frame Scripts (Current Implementation)
 
 ### cafedelic-frame.el
-Core elisp functions for managing the full frame UI and recent files list.
+Core elisp functions with minimal file tree display.
+- Builds tree structure from file paths
+- Groups by directories
+- No decorative elements
 
 ### init-claude-frame.sh  
-Initializes the full frame layout with recent files list at top.
-
-**Usage:**
-```bash
-./init-claude-frame.sh
-```
+Initializes the full frame layout with file tree at top.
 
 ### open-claude-file.sh
-Opens a file and adds it to the recent files list.
+Opens a file and updates the tree. Files display immediately for rapid flipping effect.
+
+### test-rapid-flip.sh
+Demonstrates rapid file access with tree view updates.
 
 **Usage:**
 ```bash
+# Initialize and test
+./init-claude-frame.sh
+./test-rapid-flip.sh
+
+# Or open individual files
 ./open-claude-file.sh <file-path>
-```
-
-### show-claude-status.sh
-Displays current Cafedelic state and recent files.
-
-**Usage:**
-```bash
-./show-claude-status.sh
-```
-
-### test-full-frame.sh
-Demonstrates the full frame workflow.
-
-**Usage:**
-```bash
-./test-full-frame.sh
 ```
 
 ## Previous Scripts (Split Window Approach)
