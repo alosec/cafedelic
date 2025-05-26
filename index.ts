@@ -4,10 +4,13 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getActiveContext, setActivityStore } from './src/tools/get-active-context.js';
+import { splitPaneHorizontal } from './src/tools/split_pane_horizontal.js';
+import { splitPaneVertical } from './src/tools/split_pane_vertical.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { TranslatorService } from './src/services/translator.service.js';
 import { ActivityStore } from './src/services/activity.store.js';
+import { stateManager } from './src/services/state-manager.service.js';
 
 // Initialize services
 const watcher = new WatcherService();
@@ -27,6 +30,33 @@ watcher.on('log-entry', (entry) => {
   
   activityStore.add(activity);
   logger.info('Activity detected', { activity: activity.translated });
+  
+  // Emit to state manager
+  stateManager.emit('dc:activity-logged', {
+    rawLog: entry,
+    translated: activity.translated,
+    command: entry.command,
+    args: entry.args
+  });
+  
+  // Check for file access
+  if (entry.command === 'read_file' && entry.args?.path) {
+    stateManager.emit('dc:file-accessed', {
+      filePath: entry.args.path,
+      accessType: 'read',
+      command: entry.command,
+      args: entry.args,
+      shouldDisplay: true
+    });
+  } else if (entry.command === 'write_file' && entry.args?.path) {
+    stateManager.emit('dc:file-accessed', {
+      filePath: entry.args.path,
+      accessType: 'write',
+      command: entry.command,
+      args: entry.args,
+      shouldDisplay: false
+    });
+  }
 });
 
 // Initialize MCP server
@@ -61,6 +91,56 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           }
         }
       }
+    },
+    {
+      name: 'split_pane_horizontal',
+      description: 'Split the current pane horizontally',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          target: {
+            type: 'string',
+            description: 'Target pane (name or ID)'
+          },
+          size: {
+            type: 'number',
+            description: 'Size in percentage or lines'
+          },
+          command: {
+            type: 'string',
+            description: 'Command to run in new pane'
+          },
+          name: {
+            type: 'string',
+            description: 'Name for the new pane'
+          }
+        }
+      }
+    },
+    {
+      name: 'split_pane_vertical',
+      description: 'Split the current pane vertically',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          target: {
+            type: 'string',
+            description: 'Target pane (name or ID)'
+          },
+          size: {
+            type: 'number',
+            description: 'Size in percentage or lines'
+          },
+          command: {
+            type: 'string',
+            description: 'Command to run in new pane'
+          },
+          name: {
+            type: 'string',
+            description: 'Name for the new pane'
+          }
+        }
+      }
     }
   ]
 }));
@@ -87,6 +167,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case 'get_active_context':
         result = await getActiveContext(args || {});
+        break;
+      
+      case 'split_pane_horizontal':
+        result = {
+          content: [{
+            type: 'text',
+            text: await splitPaneHorizontal(args || {})
+          }]
+        };
+        break;
+      
+      case 'split_pane_vertical':
+        result = {
+          content: [{
+            type: 'text',
+            text: await splitPaneVertical(args || {})
+          }]
+        };
         break;
       
       default:
@@ -117,6 +215,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   try {
     await logger.info('Starting Cafedelic MCP server...');
+    
+    // Initialize state manager
+    const projectPath = process.cwd();
+    await stateManager.initialize(projectPath);
+    await logger.info('State manager initialized');
     
     // Start the DC log watcher
     await watcher.start();

@@ -30,10 +30,10 @@ fi
 
 # Ensure elisp is loaded
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-emacsclient --eval "(load \"$SCRIPT_DIR/cafedelic-frame.el\")" >/dev/null 2>&1
+emacsclient --eval "(load \"$SCRIPT_DIR/cafedelic-editor.el\")" >/dev/null 2>&1
 
-# Add file to recent list and open it
-RESULT=$(emacsclient --eval "(cafedelic-add-file \"$FILE_PATH\")" 2>&1)
+# Open the file
+RESULT=$(emacsclient --eval "(cafedelic-open-file \"$FILE_PATH\")" 2>&1)
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}File opened successfully!${NC}"

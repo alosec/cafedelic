@@ -25,9 +25,9 @@ fi
 # This creates: 1 row on top, 3 columns in middle, 1 row on bottom
 echo "🔨 Creating layout with tmex..."
 "$SCRIPT_DIR/tmex" "$SESSION" --layout="131" --transpose \
-    "clear && echo '🎯 Activity Monitor'; echo 'Ready for future features...'" \
+    "clear && echo '🎯 Activity Monitor'; echo 'Ready for context tracking...'" \
     "clear && echo '🌳 Loading file tree...'" \
-    "if ! pgrep -x 'emacs' > /dev/null; then emacs --daemon; fi && emacsclient -nw -c" \
+    "if ! pgrep -x 'emacs' > /dev/null; then emacs --daemon; fi && emacsclient -nw -c -e '(load \"$SCRIPT_DIR/emacs/cafedelic-editor.el\")'" \
     "clear && echo '💻 Terminal Ready'" \
     "clear && echo '📊 Starting DC log monitor...'; cd '$PROJECT_DIR' && node ./scripts/monitor-dc-logs.js"
 
