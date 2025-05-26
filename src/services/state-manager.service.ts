@@ -56,6 +56,7 @@ export class StateManager extends EventEmitter {
     private setupEventHandlers(): void {
         // Wire up internal event handling
         this.on('dc:file-accessed', this.handleFileAccess.bind(this));
+        this.on('dc:directory-listed', this.handleDirectoryListing.bind(this));
         this.on('dc:command-executed', this.handleCommand.bind(this));
         this.on('dc:activity-logged', this.handleActivity.bind(this));
     }
@@ -86,9 +87,25 @@ export class StateManager extends EventEmitter {
             if (event.accessType === 'read' && event.shouldDisplay) {
                 this.openFileInEmacs(event.filePath);
             }
+            // Trigger automatic directory opening in dired for list operations
+            else if (event.accessType === 'list' && event.shouldDisplay) {
+                this.openDirectoryInEmacs(event.filePath);
+            }
         } catch (error) {
             console.error('Failed to log file access:', error);
         }
+    }
+
+    // Handle directory listing events from DC logs
+    async handleDirectoryListing(event: FileAccessEvent): Promise<void> {
+        if (!this.currentSessionId) return;
+        
+        // Forward to handleFileAccess with list type
+        await this.handleFileAccess({
+            ...event,
+            accessType: 'list',
+            shouldDisplay: true
+        });
     }
 
     // Open file in emacs (async, non-blocking)
@@ -102,6 +119,20 @@ export class StateManager extends EventEmitter {
             }
         } catch (error) {
             console.error(`❌ Failed to auto-open file: ${filePath}`, error);
+        }
+    }
+
+    // Open directory in emacs dired (async, non-blocking)
+    private async openDirectoryInEmacs(directoryPath: string): Promise<void> {
+        try {
+            const result = await emacsService.openDirectory(directoryPath);
+            if (result.success) {
+                console.error(`📁 Auto-opened directory in dired: ${directoryPath}`);
+            } else {
+                console.error(`⚠️  Auto-open directory skipped: ${result.message} - ${directoryPath}`);
+            }
+        } catch (error) {
+            console.error(`❌ Failed to auto-open directory: ${directoryPath}`, error);
         }
     }
 

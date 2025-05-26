@@ -3,7 +3,7 @@ export interface FileAccess {
     id?: number;
     timestamp: Date;
     filePath: string;
-    accessType: 'read' | 'write' | 'create' | 'delete';
+    accessType: 'read' | 'write' | 'create' | 'delete' | 'list';
     command: string;
     sessionId?: string;
     paneId?: string;
@@ -12,7 +12,7 @@ export interface FileAccess {
 
 export interface FileAccessEvent {
     filePath: string;
-    accessType: 'read' | 'write' | 'create' | 'delete';
+    accessType: 'read' | 'write' | 'create' | 'delete' | 'list';
     command: string;
     args?: any;
     shouldDisplay?: boolean;

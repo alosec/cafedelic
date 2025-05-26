@@ -15,6 +15,12 @@ export interface EmacsOpenResult {
   bufferCount?: number;
 }
 
+export interface EmacsDirectoryResult {
+  success: boolean;
+  directoryPath: string;
+  message: string;
+}
+
 export class EmacsService extends EventEmitter {
   private pendingOpens = new Set<string>();
   private openQueue: string[] = [];
@@ -98,6 +104,66 @@ export class EmacsService extends EventEmitter {
     } catch (error) {
       const err = error as Error;
       throw new Error(`Emacs file open failed: ${err.message}`);
+    }
+  }
+
+  async openDirectory(directoryPath: string): Promise<EmacsDirectoryResult> {
+    const config = configManager.getConfig();
+    
+    // Check if auto-open directories is enabled
+    if (!config.emacs.autoOpenDirectories) {
+      return {
+        success: false,
+        directoryPath,
+        message: 'Auto-open directories is disabled'
+      };
+    }
+
+    // Avoid duplicate opens
+    if (this.pendingOpens.has(directoryPath)) {
+      return {
+        success: false,
+        directoryPath,
+        message: 'Directory open already in progress'
+      };
+    }
+
+    this.pendingOpens.add(directoryPath);
+
+    try {
+      const result = await this.executeDirectoryOpen(directoryPath);
+      this.emit('directory-opened', { directoryPath, success: result.success });
+      return result;
+    } catch (error) {
+      const err = error as Error;
+      logger.error('Failed to open directory in emacs', { directoryPath, error: err.message });
+      return {
+        success: false,
+        directoryPath,
+        message: `Error: ${err.message}`
+      };
+    } finally {
+      this.pendingOpens.delete(directoryPath);
+    }
+  }
+
+  private async executeDirectoryOpen(directoryPath: string): Promise<EmacsDirectoryResult> {
+    const scriptPath = path.join(this.scriptsPath, 'open-dired.sh');
+    const command = `bash "${scriptPath}" "${directoryPath}"`;
+    
+    try {
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: configManager.getConfig().emacs.daemonTimeout
+      });
+      
+      return {
+        success: true,
+        directoryPath,
+        message: 'Directory opened successfully in dired'
+      };
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Emacs directory open failed: ${err.message}`);
     }
   }
 

@@ -58,6 +58,14 @@ watcher.on('log-entry', (entry) => {
       args: entry.args,
       shouldDisplay: false
     });
+  } else if (entry.command === 'list_directory' && entry.args?.path) {
+    stateManager.emit('dc:directory-listed', {
+      filePath: entry.args.path,
+      accessType: 'list',
+      command: entry.command,
+      args: entry.args,
+      shouldDisplay: true
+    });
   }
 });
 

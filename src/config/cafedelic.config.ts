@@ -2,6 +2,7 @@
 export interface CafedelicConfig {
   emacs: {
     autoOpen: boolean;
+    autoOpenDirectories: boolean;
     daemonTimeout: number;
     supportedExtensions: string[];
     scriptsPath: string;
@@ -19,6 +20,7 @@ export interface CafedelicConfig {
 export const defaultConfig: CafedelicConfig = {
   emacs: {
     autoOpen: true,
+    autoOpenDirectories: true,
     daemonTimeout: 5000,
     supportedExtensions: [
       '.js', '.ts', '.jsx', '.tsx',
