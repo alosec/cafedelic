@@ -6,6 +6,8 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { getActiveContext, setActivityStore } from './src/tools/get-active-context.js';
 import { splitPaneHorizontal } from './src/tools/split_pane_horizontal.js';
 import { splitPaneVertical } from './src/tools/split_pane_vertical.js';
+import { toggleAutoOpen } from './src/tools/toggle_auto_open.js';
+import { getEmacsStatus } from './src/tools/get_emacs_status.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { TranslatorService } from './src/services/translator.service.js';
@@ -141,6 +143,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           }
         }
       }
+    },
+    {
+      name: 'toggle_auto_open',
+      description: 'Toggle or set automatic file opening in Emacs when Claude accesses files',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          enable: {
+            type: 'boolean',
+            description: 'Set to true/false to enable/disable, or omit to toggle current state'
+          }
+        }
+      }
+    },
+    {
+      name: 'get_emacs_status',
+      description: 'Get current status of Emacs integration and configuration',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          detailed: {
+            type: 'boolean',
+            description: 'Include detailed configuration information (default: false)'
+          }
+        }
+      }
     }
   ]
 }));
@@ -185,6 +213,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             text: await splitPaneVertical(args || {})
           }]
         };
+        break;
+      
+      case 'toggle_auto_open':
+        result = await toggleAutoOpen(args || {});
+        break;
+      
+      case 'get_emacs_status':
+        result = await getEmacsStatus(args || {});
         break;
       
       default:
