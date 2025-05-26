@@ -43,7 +43,9 @@ Successfully simplified architecture:
 - **Activity Tracking**: Human-readable activity summaries
 - **Dired Integration**: Auto-opens directories in Emacs
 - **IDE Layout**: Clean 5-pane tmux setup with tmex
-- **MCP Tools**: get_active_context, split_pane_*, toggle_auto_open
+- **MCP Tools**: get_active_context, split_pane_*, toggle_auto_open, assign_pane_role, get_output_routing
+- **Output Routing**: Messages route to configured panes (9:0.2)
+- **Emacs Daemon**: Managed by EmacsDaemonManager (needs socket fix)
 
 ### 📋 Implementation Queue
 

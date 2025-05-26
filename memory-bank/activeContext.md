@@ -33,12 +33,39 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 - Ensure directory auto-opening works with emacs daemon
 - Gather feedback on what's most helpful
 
+## Active Development
+
+### Emacs Daemon Management (GitHub Issue #5)
+**Status**: Implemented by Marcel - Socket Fix Needed
+- Marcel successfully implemented EmacsDaemonManager service
+- Daemon runs with socket name: cafedelic-[PID]
+- **Issue Found**: EmacsService doesn't pass socket name to scripts
+- **Fix Required**: Add CAFEDELIC_SOCKET_NAME to script environment
+- See `/docs/issues/update-issue-4-socket-fix.md` for details
+
+### Agent Messaging Tool (GitHub Issue #6)
+**Status**: Documented for implementation
+- Current `send_to_pane` strips code blocks and formatting
+- Proposed `send_message_to_agent(mode, content)` tool
+- Will preserve technical content and code examples
+- Essential for multi-agent coordination
+
+## Pane Organization (Session 9)
+
+All panes now have French names for easy reference:
+- **Pierre** (9:0.0): Activity Monitor - DC logs human-readable view
+- **Amelie** (9:0.1): File Tree - Project navigation  
+- **Sophie** (9:0.2): Emacs Editor - Main editing pane
+- **Marcel** (9:0.3): Claude Code - Implementation agent
+- **Jacques** (9:0.4): DC Logs Monitor - Raw log view
+- **Henri** (9:0.5): Additional workspace
+
 ## Next Steps
 
-1. **Test Current Implementation**
-   - Run monitor-dc-logs.js
-   - Use Claude Desktop for real tasks
-   - Verify auto-opening works
+1. **Monitor Marcel's Implementation**
+   - Emacs daemon manager development
+   - Test when implementation complete
+   - Verify auto-file opening works seamlessly
 
 2. **Polish Core Features**
    - Refine translation templates
@@ -67,7 +94,7 @@ By end of next session:
 
 ## What We're NOT Doing (Yet)
 
-- ❌ Multi-agent context management
+- ❌ Multi-agent context management (archived)
 - ❌ Database persistence
 - ❌ Complex pane routing
 - ❌ State management beyond current session
