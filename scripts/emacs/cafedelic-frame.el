@@ -106,14 +106,21 @@
             (message "[Cafedelic] No files to display"))
         ;; Generate file list JSON
         (let* ((files (mapcar #'car cafedelic-recent-files))
-               (json-files (json-encode files))
+               ;; Make paths relative to project root
+               (relative-files 
+                (mapcar (lambda (f) 
+                          (file-relative-name f cafedelic-project-root))
+                        files))
+               (json-files (json-encode relative-files))
                (script-path (expand-file-name 
                              "scripts/generate-file-tree.sh"
                              cafedelic-project-root))
                (tree-output))
           
           ;; Debug: log what we're sending
-          (message "[Cafedelic] Files to tree: %s" json-files)
+          (message "[Cafedelic] Absolute files: %s" files)
+          (message "[Cafedelic] Relative files: %s" relative-files)
+          (message "[Cafedelic] JSON to tree: %s" json-files)
           (message "[Cafedelic] Script path: %s" script-path)
           (message "[Cafedelic] Project root: %s" cafedelic-project-root)
           
