@@ -16,24 +16,21 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 
 ### Immediate Focus Areas
 
-#### 1. Perfect DC Log Translation
+#### 1. Output Routing Management System (GitHub Issue #4)
+**Status**: Documented and tracked for future implementation
+- Replace hard-coded tmux pane destinations with flexible routing system
+- Add emacs daemon lifecycle management 
+- Create dynamic source → destination assignment capabilities
+- Enable runtime configuration without code changes
+
+#### 2. Perfect DC Log Translation
 - Add more command templates as we discover them
 - Improve file path formatting and display
 - Group related activities intelligently
 
-#### 2. Automatic File Opening
-- When Claude reads a file → open in Emacs
-- When Claude explores a directory → open in dired
-- Keep it reactive and simple (no complex state)
-
-#### 3. Activity Dashboard
-- Simple web UI for activity stream
-- Server-Sent Events for real-time updates
-- Clean, readable display of Claude's work
-
-#### 4. Test with Real Claude Desktop
-- Verify all translations are accurate
-- Ensure file/directory opening is smooth
+#### 3. Test with Real Claude Desktop
+- Verify all translations are accurate with fixed tab parsing
+- Ensure directory auto-opening works with emacs daemon
 - Gather feedback on what's most helpful
 
 ## Next Steps

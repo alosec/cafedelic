@@ -94,13 +94,20 @@ Make the activity human-readable and meaningful, not just technically accurate.
 
 ## Future Vision
 
-### Phase 1 (Current)
+### Phase 1 (Current) ✅
 DC log watching and translation - make Claude's actions visible
 
-### Phase 2
+### Phase 2 (Output Routing System - Issue #4)
+Replace hard-coded tmux destinations with flexible routing management:
+- Dynamic source → destination assignment
+- Emacs daemon lifecycle management  
+- Runtime configuration without code changes
+- Support for multiple sources and destinations
+
+### Phase 3 (Intelligence Layer)
 Pattern analysis - understand workflows and development patterns
 
-### Phase 3  
+### Phase 4 (Knowledge Accumulation)
 Intelligence accumulation - build project knowledge over time
 
 ## Lessons from Related Projects

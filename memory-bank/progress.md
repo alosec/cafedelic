@@ -54,12 +54,19 @@ Successfully simplified architecture:
 - [x] **Verify dired auto-opening setup** - Scripts updated and tested
 
 #### Next Session
+- [ ] **Architecture Planning**: Design Output Routing Management System (Issue #4)
 - [ ] Test with running emacs daemon for complete integration
 - [ ] Verify real-time dired opening during Claude Desktop usage
 - [ ] Add file auto-opening (not just directories)
 - [ ] Create simple web dashboard for activity
 - [ ] Improve activity grouping and formatting
 - [ ] Add time-based activity summaries
+
+#### Future (After Output Routing System)
+- [ ] Implement flexible source → destination assignment
+- [ ] Add emacs daemon lifecycle management
+- [ ] Create MCP tools for managing routing rules
+- [ ] Support multiple output destinations per source
 
 #### Future (After Single-Agent Perfect)
 - [ ] Claude Code log discovery and monitoring
