@@ -337,3 +337,38 @@ DC Logs → WatcherService → StateManager → Database
 2. **Loose Coupling**: Services communicate via events
 3. **Progressive Enhancement**: Each feature works independently
 4. **SQLite for Persistence**: Simple, reliable, no external dependencies
+
+## Debug & Logging Information
+
+### Key Log Locations
+- **Desktop Commander Logs**: `~/.claude-server-commander/claude_tool_call.log` 
+- **Claude Desktop MCP Logs**: `~/.config/Claude/logs/mcp-server-cafedelic.log`
+- **Cafedelic Server Logs**: `{project-root}/server.log`
+- **Cafedelic Database**: `{project-root}/cafedelic.db`
+
+### MCP Registration Issues (2025-05-26)
+**Root Cause Identified**: Claude Desktop runs MCP servers from its own working directory, not the project directory. When server uses `process.cwd()`, it gets Claude Desktop's path instead of cafedelic project path, causing schema.sql and database paths to fail.
+
+**Solution**: Use module-relative paths (`__dirname`) instead of `process.cwd()` for all file paths in PersistenceService.
+
+**✅ STATUS: RESOLVED** - Fixed by Marcel, MCP server now connecting successfully!
+
+### MCP Protocol Compliance Pattern (2025-05-26)
+**Critical Rule**: MCP servers must only write valid JSON to stdout. ALL debug/logging messages must use `console.error()` (stderr) instead of `console.log()` (stdout).
+
+**Problem**: Emoji characters in console.log break JSON protocol:
+```
+Unexpected token '✅', "✅ Database"... is not valid JSON
+```
+
+**Solution Pattern**: 
+- ✅ `console.error('✅ Debug message')` - Goes to stderr, safe for emojis
+- ❌ `console.log('✅ Debug message')` - Goes to stdout, breaks MCP JSON
+
+## 🎉 MAJOR SUCCESS (2025-05-26)
+
+### Auto-Open Integration WORKING!
+- **Live File Updates**: Files automatically open in Emacs as Claude accesses them
+- **Real-time Coordination**: DC logs → StateManager → EmacsService → Sophie (emacs pane)
+- **Seamless Experience**: Files appear instantly in editor as they're accessed
+- **Powerful Foundation**: Simple server enabling extremely powerful workflows

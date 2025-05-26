@@ -506,3 +506,37 @@ We have some existing scripts right now but it's pretty half-baked. Not really a
 -- mode:plan --
 
 
+Task: celebrate successes and keep pushing forward
+
+We have built something rather incredible here. 
+
+Claude, meet Cafedelic, a context oriented window manager MCP server built using tmux, emacs, bash, and TypeScript. 
+
+Cafedelic allows one to
+
+- View readable statements about what claude is doing in an actively updated pane e.g.
+
+[3:44am] Claude is reading server.log
+[3:44am] Claude executed: cd /home/alex/code/cafedelic && sqlite3 cafedelic.db "SELECT name FROM sqlite_master WHERE type='table';"
+[3:44am] Claude executed: cd /home/alex/code/cafedelic && sqlite3 cafedelic.db "SELECT * FROM sessions;"
+[3:44am] Claude executed: cd /home/alex/code/cafedelic && sqlite3 cafedelic.db "SELECT COUNT(*) FROM activities;"
+[3:44am] Claude executed: cd /home/alex/code/cafedelic && sqlite3 cafedelic.db "SELECT translated, timestamp FROM activities ORDER BY timestamp DESC;"
+[3:58am] Claude is reading activeContext.md
+[3:59am] Claude is reading activeContext.md
+[3:59am] Claude is editing activeContext.md
+[4:08am] Claude is editing activeContext.md
+
+- In general, read panes and send keys to them including commands, and prompts to other Claude terminals, and hit enter and Ctrl-c when necessary
+
+- share context between claude code instances in terminal easily and quickly
+- work in one terminal and direct another instance to make documentation
+
+In general the model doesn't read the panes enough. We need something like a holistic, clear command for claude to easily interpret hey, this is an important tool to like, idk Read all panes in active working context. Including, a claude code instance maybe, some/ a few files, a log file, etc. And to get a quick dose of the active situation unfolding. That would be a very useful item, I feel. 
+
+Other strong desires are UI/UX improvements for the user, for me the human, like a diff edit view when claude edits files. Also, and this one is very basic -- easy win, color coding for what Marie is serving, the node monitoring claude dc's logs -- should have grayed out time and keep 'Claude is' white and multi color code the action and target with rainbow colors / roygbiv that shit
+
+Anyways, existing server with it now showing updates in real time in emacs is really really damn cool. Very excited about this awesome system we are making. 
+
+So yeah in general this is a multi feature concerned session -- I don't expect us to do all of this right now, but maybe we should consider the code from a comprehensive perspective and then make a few sketches in plans/ -- we already have a notification system idea that we are exploring in plans/ by leveraging the event emitter / sqlite3 architecture 
+
+In general, need to adjust tool schema and instructions to successfully gear claude with intuitive, effective and complex and deep terminal usage. Claude has excellent use of execute_command tool from desktop commander -- but making execute_command and other related tool calls in desktop commander register to a tmux pane is... hmm.. potentially kind of possible. So we might want to check in with /home/alex/DesktopCommanderMCP and see what's up with that repo and see how we might be able to add a custom hook to the execute_command tool-call to integrate with this system. I mean this because what if we just added a "pane" param on execute_command? Simple as pi. Could be totally possible with this framework that we're creating.
