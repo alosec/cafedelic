@@ -2,7 +2,57 @@
 
 This directory contains shell scripts that interface with Emacs via emacsclient.
 
-## Scripts
+## Current Approach: Full Frame UI
+
+After testing split-window approaches, we've moved to a full-frame UI that better visualizes Claude's "context window":
+
+```
+═══ Claude's Recent Files ═══════════════════════════════════
+  test-file.md                    12:34:56
+  README.md                       12:34:52  
+  package.json                    12:34:48
+═════════════════════════════════════════════════════════════
+[Current file content shown below]
+```
+
+## New Full Frame Scripts
+
+### cafedelic-frame.el
+Core elisp functions for managing the full frame UI and recent files list.
+
+### init-claude-frame.sh  
+Initializes the full frame layout with recent files list at top.
+
+**Usage:**
+```bash
+./init-claude-frame.sh
+```
+
+### open-claude-file.sh
+Opens a file and adds it to the recent files list.
+
+**Usage:**
+```bash
+./open-claude-file.sh <file-path>
+```
+
+### show-claude-status.sh
+Displays current Cafedelic state and recent files.
+
+**Usage:**
+```bash
+./show-claude-status.sh
+```
+
+### test-full-frame.sh
+Demonstrates the full frame workflow.
+
+**Usage:**
+```bash
+./test-full-frame.sh
+```
+
+## Previous Scripts (Split Window Approach)
 
 ### open-file-test.sh
 Our "hello world" prototype that tests basic file opening functionality.
@@ -60,44 +110,37 @@ Demonstrates the complete workflow with multiple files.
 - Emacs daemon must be running (`emacs --daemon`)
 - emacsclient must be in PATH
 
-## Testing Steps
+## Testing the New Approach
 
-1. Ensure your emacs daemon is running:
-   ```bash
-   # Check if running
-   emacsclient --eval "(emacs-version)"
-   
-   # If not, start it
-   emacs --daemon
-   ```
-
-2. Run the basic test:
+1. Start fresh:
    ```bash
    cd /home/alex/code/cafedelic/scripts/emacs
-   ./open-file-test.sh test-file.md
+   ./init-claude-frame.sh
    ```
 
-3. Test the two-window system:
+2. Open some files:
    ```bash
-   # Initialize the layout
-   ./init-claude-view.sh
-   
-   # Open files in Claude's buffer
-   ./open-right.sh test-file.md
-   ./open-right.sh ../../README.md
+   ./open-claude-file.sh test-file.md
+   ./open-claude-file.sh ../../README.md
+   ./open-claude-file.sh ../../package.json
    ```
 
-4. Run the complete test suite:
+3. Check status:
    ```bash
-   ./test-window-management.sh
+   ./show-claude-status.sh
    ```
 
-## Current Behavior
+4. Or run the full test:
+   ```bash
+   ./test-full-frame.sh
+   ```
 
-- **init-claude-view.sh**: Creates a split window, preserves your left buffer
-- **open-right.sh**: Opens files in right window with `claude-` prefix
-- Focus returns to your original window after operations
-- Re-opening a file switches to existing buffer instead of creating new one
+## Key Improvements
+
+- **No flashing**: Files don't rapidly replace each other
+- **Context visibility**: See all recently accessed files at once
+- **Simple navigation**: Current file in main area, history above
+- **Clean state**: Full frame takeover avoids buffer confusion
 
 ## Next Iterations
 - [ ] Add buffer positioning (left/right window)

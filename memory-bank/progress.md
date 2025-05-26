@@ -64,12 +64,22 @@ Basic emacsclient communication established:
 - Verified file opening works
 - Established script directory structure
 
-### 📋 Window Management Phase (Current)
-Building two-buffer system:
-- [ ] init-claude-view.sh - Set up split windows
-- [ ] open-right.sh - Open files in Claude's buffer
-- [ ] Buffer naming with claude- prefix
-- [ ] Preserve user's left buffer
+### ✅ Window Management Tested
+Split-window approach revealed UX issues:
+- Files flashing through too quickly
+- Left/right split not ideal for multiple files
+- Learned we need better context visualization
+
+### 📋 Full Frame UI (Current)
+New approach with better UX:
+- [x] cafedelic-frame.el - Core elisp functions
+- [x] init-claude-frame.sh - Set up full frame UI
+- [x] open-claude-file.sh - Add files to recent list
+- [x] Recent files list at top of frame
+- [x] Current file content in main area
+- [ ] Connect to DC log watcher
+- [ ] Add relative timestamps
+- [ ] Implement file tree view
 
 ## Technical Decisions
 

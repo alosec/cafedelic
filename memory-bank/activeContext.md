@@ -147,7 +147,13 @@ See `emacs-integration-plan.md` for detailed design.
 - Can open files programmatically
 - Good error handling for daemon status
 
-📋 **Next Phase**: Two-buffer system implementation
-- Left buffer: User's workspace (untouched)
-- Right buffer: Claude's workspace (managed)
-- Intelligent buffer naming with claude- prefix
+✅ **Window Management Exploration**: Two-buffer system tested
+- Left/right split approach implemented
+- Files flashing through too quickly - poor UX
+- *server* buffer not meaningful for user
+
+📋 **New Direction**: Full frame approach with recent files list
+- Take over entire emacs frame (simpler, cleaner)
+- Top window: List of recently accessed files with timestamps
+- Bottom window: Current file content
+- Better visualization of "context window" concept
