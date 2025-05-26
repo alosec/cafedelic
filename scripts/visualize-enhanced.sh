@@ -2,12 +2,22 @@
 
 # Enhanced Tmux Window Visualizer with ASCII art
 
-SESSION="${1:-2}"
+SESSION="${1:-0}"
 WINDOW="${2:-0}"
 
 echo "╔═══════════════════════════════════════════════════╗"
 echo "║           Tmux Window Layout Visualizer           ║"
 echo "╚═══════════════════════════════════════════════════╝"
+
+# Check if session exists
+if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "❌ Session '$SESSION' not found!"
+    echo ""
+    echo "Available sessions:"
+    tmux list-sessions 2>/dev/null || echo "  No tmux sessions running"
+    exit 1
+fi
+
 echo ""
 
 # Get window info

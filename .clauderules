@@ -114,3 +114,25 @@ Intelligence accumulation - build project knowledge over time
 
 ## Remember
 When in doubt, choose simplicity and clarity over feature completeness. Cafedelic's value is in making development transparent and understandable, not in controlling tools.
+
+
+## Layout Solution Discovered (2025-05-26)
+
+After exploring tmex extensively, found the ideal IDE layout:
+- Use `tmex 131 --transpose` for consistent 5-pane structure
+- Set pane titles with `-T` flag (standard tmux approach)
+- No MCP tool dependencies for layout creation
+- Tmux config uses standard `#{pane_title}` for display
+
+Layout structure:
+```
+┌─────────────────────────────┐
+│      Activity Monitor       │
+├──────┬──────────┬──────────┤
+│ Tree │  Editor  │ Terminal │
+├──────┴──────────┴──────────┤
+│        DC Logs              │
+└─────────────────────────────┘
+```
+
+This provides predictable pane IDs (0-4) that can be named and targeted reliably.

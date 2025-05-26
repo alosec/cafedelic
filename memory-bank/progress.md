@@ -79,6 +79,17 @@ Working left-sidebar file tree implementation:
 - [x] Hard-coded project root for simplicity
 - [x] Cleaned up 10 experimental scripts
 
+### ✅ Tmux Title Infrastructure Complete + Fixed (2025-05-26)
+Comprehensive pane title management system (with working fix):
+- [x] set-pane-titles.sh standalone utility with full features
+- [x] title-functions.sh shell functions for integration  
+- [x] Escape sequence method (ANSI) for dynamic titles
+- [x] Hybrid method combining escape + select-pane
+- [x] **ISSUE IDENTIFIED**: Complex methods caused interference
+- [x] **SIMPLE FIX**: simple-title-fix.sh with direct select-pane calls
+- [x] **VERIFIED WORKING**: Updated create-ide-layout.sh now sets titles correctly
+- [x] Test and verification scripts
+
 Known limitations:
 - Tree state needs manual refresh sometimes
 - Not connected to DC logs yet
@@ -114,7 +125,13 @@ From teemax and deli:
 4. Test end-to-end flow
 5. Document learnings
 
-## Next Phase: State Management & DC Integration
+### ✅ IDE Layout Refactored (2025-05-26)
+- [x] Updated create-ide-layout.sh to use tmex 131 --transpose
+- [x] Direct pane naming without MCP tools
+- [x] Proper content in each pane (logs shows DC monitor)
+- [x] Predictable 5-pane structure every time
+
+### Next Phase: State Management & DC Integration
 
 ### Database Layer
 - [ ] Design SQLite schema for file access history
@@ -140,4 +157,4 @@ Feature #1 complete when:
 - DC logs are watched in real-time
 - Log entries are translated to human readable
 - Activity stream is accessible
-- No tmux dependencies remain
+

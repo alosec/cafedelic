@@ -8,3 +8,4 @@ logs/*.log
 *~
 .idea/
 .vscode/
+scripts/logs

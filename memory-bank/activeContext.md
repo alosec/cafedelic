@@ -123,6 +123,7 @@ By end of session:
 3. **Emacs Integration**: Automatically open files Claude accesses (PLANNED)
 4. **Polish**: Improve time formatting and file path handling
 5. **Documentation**: Create user guide for setup and usage
+6. **Tmex Integration**: Created test-pane.sh for rapid layout testing ✅
 
 ## Emacs Integration Planning (2025-05-25)
 
@@ -170,3 +171,118 @@ Removed 10 experimental scripts, kept 6 working ones:
 - diagnose-emacs.sh
 - test-stable-tree.sh
 - cafedelic-frame.el
+
+## Tmex Layout Testing Tools (2025-05-26)
+
+### New Tool Created
+- `scripts/tmex-tools/test-pane.sh`: Interactive tmex pattern tester
+- Tests layouts in adjacent pane without disrupting workflow
+- Simple REPL interface: type pattern → see result
+- Commands: pattern, clear, help, quit
+- Supports transpose flag for horizontal layouts
+
+### Usage
+```bash
+# Split window and run tester
+tmux split-window -h
+./scripts/tmex-tools/test-pane.sh
+
+# Try patterns
+tmex> 113        # Three columns
+tmex> 1[123]1    # Nested layout
+tmex> 131 -t     # Transposed
+tmex> clear      # Reset
+```
+
+Perfect for rapid tmex pattern discovery and cafedelic layout development.
+
+## Tmux Title Setting Issues Diagnosed and Fixed (2025-05-26)
+
+### 🚨 Problem Identified
+The comprehensive title setting infrastructure was ineffective due to:
+- **Complex escape sequences** interfering with pane state
+- **Timing issues** with commands running in panes
+- **Command conflicts** between escape sequences and running programs
+
+### 🔧 Root Cause Analysis
+Through debugging discovered:
+- Basic `tmux select-pane -T` DOES work correctly
+- Issue was NOT with tmux configuration (pane-border-format was correct)
+- Complex hybrid method was causing command interference
+- Escape sequences were corrupting titles with extra characters
+
+### ✅ Simple Solution Implemented
+Created `simple-title-fix.sh` with:
+- Direct `select-pane -T` calls only
+- No escape sequences or complexity
+- Proper error handling for missing panes
+- Integration into `create-ide-layout.sh`
+
+### 🧪 Verified Working
+- ✅ Manual title setting: `tmux select-pane -t 'session:window.pane' -T 'Title'`
+- ✅ Script works: `./simple-title-fix.sh 'session:window'`
+- ✅ All 5 IDE panes get correct titles: Activity, Files, Editor, Terminal, Logs
+- ✅ `create-ide-layout.sh` updated to use simple method
+
+### 💡 Key Lesson
+**Simple and reliable beats complex and innovative** for core infrastructure. The escape sequence method was interesting but caused more problems than it solved.
+
+## Previous Infrastructure (Still Available)
+
+### Major Infrastructure Addition
+Created comprehensive tmux pane title setting system with multiple approaches:
+
+#### New Scripts Created
+- **`set-pane-titles.sh`**: Full-featured standalone utility
+  - Supports escape sequences, select-pane, and hybrid methods
+  - Batch processing for multiple panes
+  - Template support and verification
+  - Comprehensive error handling and retry logic
+  
+- **`title-functions.sh`**: Shell functions for integration
+  - Simple functions for direct inclusion in other scripts
+  - Hybrid method combining escape sequences + select-pane
+  - IDE-specific convenience functions
+  
+- **`test-title-infrastructure.sh`**: Testing and validation
+- **`verify-title-setup.sh`**: Quick verification of setup
+
+#### Integration Complete
+- **`create-ide-layout.sh`** updated to use new title functions
+- Replaced 20+ line title setting section with 2 line function call
+- Now uses hybrid method (escape sequences + select-pane)
+
+#### Methods Available
+1. **Escape Sequences**: `printf '\033]2;Title\007'` - Dynamic, works from within panes
+2. **Select Pane**: `tmux select-pane -T` - Traditional, reliable
+3. **Hybrid**: Best of both worlds - tries escape then select-pane
+
+#### Why This Matters
+- **Reusable Infrastructure**: Title setting now standardized across all scripts
+- **Innovation**: Escape sequence method enables dynamic titles from running programs
+- **Reliability**: Hybrid approach provides both flexibility and dependability
+- **IDE Foundation**: Core infrastructure for tmux-based development environment
+
+### Previous Context
+
+### create-ide-layout.sh Updated
+- Now uses `tmex 131 --transpose` for consistent 5-pane layout
+- Sets pane titles with `-T` flag (standard tmux approach)
+- Fixed monitor-dc-logs.js path (scripts/ not dist/)
+- Launches appropriate content in each pane:
+  - **activity**: Terminal (top) - future features planned
+  - **filetree**: File tree viewer (left)
+  - **editor**: Emacs (center)
+  - **terminal**: Shell (right)
+  - **logs**: DC log monitor (bottom)
+
+### Tmux Config Updated
+- Changed pane-border-format to use `#{pane_title}` instead of custom variable
+- Ensures pane titles set by scripts are displayed correctly
+
+### Usage
+```bash
+./scripts/create-ide-layout.sh [session-name] [window-name] [project-dir]
+```
+
+Predictable layout every time, named panes for easy targeting.
