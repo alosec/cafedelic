@@ -58,12 +58,18 @@ First live test with Claude Desktop showed immediate value:
 - Detected read_multiple_files patterns
 - Identified opportunity for Emacs integration
 
-### 📋 Emacs Integration Planned
-Created comprehensive plan for next feature:
-- EditorManager service design
-- Shell/elisp script architecture
-- File path extraction from logs
-- Automatic buffer management
+### ✅ Emacs Integration Started (2025-05-26)
+Basic emacsclient communication established:
+- Created hello world script: open-file-test.sh
+- Verified file opening works
+- Established script directory structure
+
+### 📋 Window Management Phase (Current)
+Building two-buffer system:
+- [ ] init-claude-view.sh - Set up split windows
+- [ ] open-right.sh - Open files in Claude's buffer
+- [ ] Buffer naming with claude- prefix
+- [ ] Preserve user's left buffer
 
 ## Technical Decisions
 
