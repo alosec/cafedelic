@@ -249,7 +249,7 @@ flowchart TD
 
 ### Repository Owner
 - Owner: alosec
-- Repository: teemax
+- Repository: cafedelic
 
 ### Issue Comment Guidelines
 When posting issue comments:

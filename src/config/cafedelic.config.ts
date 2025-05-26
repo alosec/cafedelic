@@ -15,6 +15,10 @@ export interface CafedelicConfig {
     batchDelay: number;
     maxConcurrentOpens: number;
   };
+  output: {
+    defaultPane: string;
+    assignments: Record<string, string>;
+  };
 }
 
 export const defaultConfig: CafedelicConfig = {
@@ -31,7 +35,7 @@ export const defaultConfig: CafedelicConfig = {
       '.el', '.lisp', '.clj',
       '.rs', '.go', '.rb', '.php'
     ],
-    scriptsPath: './scripts/emacs'
+    scriptsPath: '/home/alex/code/cafedelic/scripts/emacs'
   },
   logging: {
     level: 'info',
@@ -40,6 +44,12 @@ export const defaultConfig: CafedelicConfig = {
   performance: {
     batchDelay: 500, // ms delay to batch multiple file operations
     maxConcurrentOpens: 3
+  },
+  output: {
+    defaultPane: '9:0.2',  // Current hard-coded value
+    assignments: {
+      'editor-output': '9:0.2'  // Named assignment for cafedelic outputs
+    }
   }
 };
 

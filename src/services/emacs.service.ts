@@ -5,6 +5,7 @@ import { promisify } from 'util';
 import * as path from 'path';
 import { configManager } from '../config/cafedelic.config.js';
 import { logger } from '../utils/logger.js';
+import { outputRouter } from './output-router.service.js';
 
 const execAsync = promisify(exec);
 
@@ -30,7 +31,17 @@ export class EmacsService extends EventEmitter {
   constructor() {
     super();
     const config = configManager.getConfig();
-    this.scriptsPath = path.resolve(config.emacs.scriptsPath);
+    // Always resolve scripts path relative to the project root
+    const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..', '..');
+    this.scriptsPath = path.isAbsolute(config.emacs.scriptsPath) 
+      ? config.emacs.scriptsPath 
+      : path.join(projectRoot, config.emacs.scriptsPath);
+    
+    logger.info('EmacsService initialized', { 
+      scriptsPath: this.scriptsPath,
+      configPath: config.emacs.scriptsPath,
+      cwd: process.cwd()
+    });
   }
 
   async openFile(filePath: string): Promise<EmacsOpenResult> {
@@ -83,7 +94,8 @@ export class EmacsService extends EventEmitter {
   }
 
   private async executeFileOpen(filePath: string): Promise<EmacsOpenResult> {
-    const scriptPath = path.join(this.scriptsPath, 'open-claude-file.sh');
+    // Use v2 script that doesn't have hard-coded tmux routing
+    const scriptPath = path.join(this.scriptsPath, 'open-claude-file-v2.sh');
     const command = `bash "${scriptPath}" "${filePath}"`;
     
     try {
@@ -102,10 +114,18 @@ export class EmacsService extends EventEmitter {
         stderr: stderr.trim()
       });
       
+      // Route success message to configured pane
+      const fileName = path.basename(filePath);
+      const message = bufferCount 
+        ? `Opened file: ${fileName} (${bufferCount} files in context)`
+        : `Opened file: ${fileName}`;
+      
+      await outputRouter.routeToPane(message, 'editor-output');
+      
       return {
         success: true,
         filePath,
-        message: 'File opened successfully (routed to tmux pane 9:0.2)',
+        message: 'File opened successfully',
         bufferCount
       };
     } catch (error) {
@@ -115,6 +135,13 @@ export class EmacsService extends EventEmitter {
         error: err.message,
         command
       });
+      
+      // Route error message to configured pane
+      await outputRouter.routeToPane(
+        `Failed to open: ${path.basename(filePath)} - ${err.message}`,
+        'editor-output'
+      );
+      
       throw new Error(`Emacs file open failed: ${err.message}`);
     }
   }
@@ -160,7 +187,8 @@ export class EmacsService extends EventEmitter {
   }
 
   private async executeDirectoryOpen(directoryPath: string): Promise<EmacsDirectoryResult> {
-    const scriptPath = path.join(this.scriptsPath, 'open-dired.sh');
+    // Use v2 script that doesn't have hard-coded tmux routing
+    const scriptPath = path.join(this.scriptsPath, 'open-dired-v2.sh');
     const command = `bash "${scriptPath}" "${directoryPath}"`;
     
     try {
@@ -174,10 +202,16 @@ export class EmacsService extends EventEmitter {
         stderr: stderr.trim()
       });
       
+      // Route success message to configured pane
+      await outputRouter.routeToPane(
+        `Opening dired: ${directoryPath}`,
+        'editor-output'
+      );
+      
       return {
         success: true,
         directoryPath,
-        message: 'Directory opened successfully in dired (routed to tmux pane 9:0.2)'
+        message: 'Directory opened successfully in dired'
       };
     } catch (error) {
       const err = error as Error;
@@ -186,6 +220,13 @@ export class EmacsService extends EventEmitter {
         error: err.message,
         command
       });
+      
+      // Route error message to configured pane
+      await outputRouter.routeToPane(
+        `Failed to open directory: ${directoryPath} - ${err.message}`,
+        'editor-output'
+      );
+      
       throw new Error(`Emacs directory open failed: ${err.message}`);
     }
   }

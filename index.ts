@@ -8,6 +8,8 @@ import { splitPaneHorizontal } from './src/tools/split_pane_horizontal.js';
 import { splitPaneVertical } from './src/tools/split_pane_vertical.js';
 import { toggleAutoOpen } from './src/tools/toggle_auto_open.js';
 import { getEmacsStatus } from './src/tools/get_emacs_status.js';
+import { assignPaneRole, handleAssignPaneRole } from './src/tools/assign_pane_role.js';
+import { getOutputRouting, handleGetOutputRouting } from './src/tools/get_output_routing.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { TranslatorService } from './src/services/translator.service.js';
@@ -177,7 +179,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           }
         }
       }
-    }
+    },
+    assignPaneRole,
+    getOutputRouting
   ]
 }));
 
@@ -229,6 +233,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       
       case 'get_emacs_status':
         result = await getEmacsStatus(args || {});
+        break;
+      
+      case 'assign_pane_role':
+        result = await handleAssignPaneRole(args || {});
+        break;
+      
+      case 'get_output_routing':
+        result = await handleGetOutputRouting();
         break;
       
       default:
