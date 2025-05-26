@@ -49,19 +49,27 @@ TranslatorService // Only translates logs
 ActivityStore     // Only stores activities
 ```
 
-## Development Workflow
+## Real-World Usage Insights
 
-### Memory Bank Maintenance
-When significant changes occur:
-1. Update activeContext.md with current state
-2. Update progress.md with completed tasks
-3. Revise other docs only if fundamentally changed
+### First Live Test (2025-05-25)
+Monitoring actual Claude Desktop usage revealed:
+- `read_multiple_files` is a common pattern for exploration
+- File paths are embedded in args.paths array
+- Real-time monitoring creates powerful visibility
 
-### Feature Development
-1. Start with simplest working version
-2. Test manually before adding complexity
-3. Keep services isolated and testable
-4. Document learnings in this file
+Example output that sparked Emacs integration idea:
+```
+[7:09pm] Claude is exploring ~/code/teemax/memory-bank
+[7:10pm] Claude used read_multiple_files
+[7:10pm] Claude is reading .clauderules
+```
+
+### Emacs Integration Opportunity
+The "hello world" success (log → transformation → display) opens the door for active coordination:
+- Watch what files Claude accesses
+- Automatically open them in Emacs
+- Create synchronized development environment
+- Build foundation for future caching/SQLite
 
 ## DC Log Intelligence
 
