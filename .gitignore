@@ -10,3 +10,9 @@ logs/*.log
 .vscode/
 scripts/logs
 src/database/schema.sql
+
+# Runtime generated files
+server.log
+cafedelic.db
+*.db
+*.db-journal
