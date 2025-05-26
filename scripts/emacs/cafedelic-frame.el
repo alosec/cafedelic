@@ -1,139 +1,140 @@
-;; cafedelic-frame.el - Core elisp functions for Cafedelic full frame UI
-;; Manages recent files list and frame layout
+;; cafedelic-frame.el - Fixed version with left sidebar tree
+;; Uses external generate-file-tree.sh for tree rendering
 
 (defvar cafedelic-recent-files '()
   "List of recently accessed files. Each entry is (filepath . timestamp)")
 
-(defvar cafedelic-max-recent-files 20
-  "Maximum number of recent files to display")
+(defvar cafedelic-max-recent-files 50
+  "Maximum number of recent files to track")
 
-(defvar cafedelic-files-buffer-name "*Claude-Files*"
-  "Name of the buffer showing recent files")
+(defvar cafedelic-tree-buffer-name "*Claude-Tree*"
+  "Name of the buffer showing file tree")
+
+(defvar cafedelic-tree-width 30
+  "Width of the tree sidebar")
+
+(defvar cafedelic-project-root nil
+  "Project root for tree display")
 
 (defun cafedelic-init-frame ()
-  "Initialize Cafedelic frame with recent files list and content area"
+  "Initialize Cafedelic frame with left tree sidebar and right content area"
   (interactive)
-  ;; Delete other windows for clean slate
+  
+  ;; Clean up any existing cafedelic state
+  (cafedelic-cleanup-state)
+  
+  ;; Delete ALL other windows for truly clean slate
   (delete-other-windows)
   
-  ;; Create recent files buffer
-  (let ((files-buffer (get-buffer-create cafedelic-files-buffer-name)))
-    ;; Split window horizontally (top/bottom)
-    (split-window-vertically 8) ; Reduced from 10 to 8 lines
+  ;; Create tree buffer
+  (let ((tree-buffer (get-buffer-create cafedelic-tree-buffer-name)))
+    ;; Split window vertically (left/right)
+    (split-window-horizontally cafedelic-tree-width)
     
-    ;; Setup top window with files list
-    (set-window-buffer (selected-window) files-buffer)
-    (with-current-buffer files-buffer
+    ;; Left window: tree
+    (set-window-buffer (selected-window) tree-buffer)
+    (with-current-buffer tree-buffer
       (read-only-mode 0)
       (erase-buffer)
-      (cafedelic-render-recent-files)
-      (read-only-mode 1))
+      (insert "No files accessed yet")
+      (read-only-mode 1)
+      ;; Lock window width
+      (setq-local window-size-fixed 'width))
     
-    ;; Move to bottom window
+    ;; Move to right window for content
     (other-window 1)
     
-    ;; Return success message
+    ;; Try to detect project root
+    (when buffer-file-name
+      (setq cafedelic-project-root 
+            (cafedelic-find-project-root buffer-file-name)))
+    
     "Cafedelic frame initialized"))
 
+(defun cafedelic-cleanup-state ()
+  "Clean up any leftover buffers from previous approaches"
+  ;; Kill old claude-* buffers
+  (dolist (buf (buffer-list))
+    (when (string-prefix-p "claude-" (buffer-name buf))
+      (kill-buffer buf)))
+  ;; Kill old file list buffer if exists
+  (when (get-buffer "*Claude-Files*")
+    (kill-buffer "*Claude-Files*")))
+
 (defun cafedelic-add-file (filepath)
-  "Add a file to the recent files list and open it immediately"
+  "Add a file to recent list and display it"
   (let ((timestamp (current-time-string)))
-    ;; Remove if already in list (to move to top)
+    ;; Update project root if needed
+    (unless cafedelic-project-root
+      (setq cafedelic-project-root (cafedelic-find-project-root filepath)))
+    
+    ;; Add to recent files
     (setq cafedelic-recent-files
           (assoc-delete-all filepath cafedelic-recent-files))
-    
-    ;; Add to front of list
     (push (cons filepath timestamp) cafedelic-recent-files)
     
-    ;; Trim list if too long
+    ;; Trim list
     (when (> (length cafedelic-recent-files) cafedelic-max-recent-files)
       (setcdr (nthcdr (1- cafedelic-max-recent-files) cafedelic-recent-files) nil))
     
-    ;; Update the files list display first
-    (cafedelic-update-files-display)
+    ;; Update tree display
+    (cafedelic-update-tree-display)
     
-    ;; Then open the file in bottom window (creates flash effect)
-    (save-selected-window
-      ;; Find the bottom window
-      (select-window (or (window-in-direction 'below)
-                         (split-window-vertically)))
-      ;; Open the file
-      (find-file filepath))
+    ;; Open file in right window
+    (let ((content-window (cafedelic-get-content-window)))
+      (when content-window
+        (select-window content-window)
+        (find-file filepath)))
     
-    ;; Return the filepath
     filepath))
 
-(defun cafedelic-render-recent-files ()
-  "Render the recent files as a minimal tree structure"
-  (if (null cafedelic-recent-files)
-      (insert "No files accessed yet.\n")
-    ;; Build and insert the tree
-    (let ((tree-lines (cafedelic-build-file-tree)))
-      (dolist (line tree-lines)
-        (insert line "\n")))))
+(defun cafedelic-get-content-window ()
+  "Get the content window (right side)"
+  (let ((tree-window (get-buffer-window cafedelic-tree-buffer-name)))
+    (when tree-window
+      ;; Get the window to the right of tree
+      (window-in-direction 'right tree-window))))
 
-(defun cafedelic-build-file-tree ()
-  "Build a tree structure from recent files list"
-  (let ((tree-map (make-hash-table :test 'equal))
-        (root-files '())
-        (result '()))
-    
-    ;; First pass: organize files by directory
-    (dolist (entry cafedelic-recent-files)
-      (let* ((filepath (car entry))
-             (project-relative (cafedelic-make-project-relative filepath))
-             (parts (split-string project-relative "/" t))
-             (filename (car (last parts))))
-        
-        (if (= (length parts) 1)
-            ;; Root level file
-            (push filename root-files)
-          ;; File in subdirectory
-          (let ((dir-path (mapconcat 'identity (butlast parts) "/")))
-            (push filename (gethash dir-path tree-map '()))))))
-    
-    ;; Second pass: build the tree lines
-    ;; Add root files first
-    (dolist (file (reverse root-files))
-      (push (concat "├── " file) result))
-    
-    ;; Add directories and their files
-    (let ((dirs (sort (hash-table-keys tree-map) 'string<)))
-      (dolist (dir dirs)
-        (let* ((parts (split-string dir "/" t))
-               (indent (make-string (* 4 (1- (length parts))) ?\s))
-               (parent-indent (if (> (length parts) 1)
-                                  (make-string (* 4 (- (length parts) 2)) ?\s)
-                                ""))
-               (dir-name (car (last parts)))
-               (files (reverse (gethash dir tree-map))))
+(defun cafedelic-update-tree-display ()
+  "Update the tree display using generate-file-tree.sh"
+  (when-let ((tree-buffer (get-buffer cafedelic-tree-buffer-name)))
+    (with-current-buffer tree-buffer
+      (read-only-mode 0)
+      (erase-buffer)
+      
+      (if (null cafedelic-recent-files)
+          (insert "No files accessed yet")
+        ;; Generate file list JSON
+        (let* ((files (mapcar #'car cafedelic-recent-files))
+               (json-files (json-encode files))
+               (script-path (expand-file-name 
+                             "scripts/generate-file-tree.sh"
+                             (or cafedelic-project-root default-directory)))
+               (tree-output))
           
-          ;; Add directory line
-          (push (concat parent-indent "├── " dir-name "/") result)
+          ;; Call the tree script
+          (if (and cafedelic-project-root (file-exists-p script-path))
+              (let ((default-directory cafedelic-project-root))
+                (setq tree-output
+                      (shell-command-to-string
+                       (format "echo '%s' | %s --root %s"
+                               json-files
+                               script-path
+                               cafedelic-project-root))))
+            ;; Fallback to simple list
+            (setq tree-output
+                  (mapconcat 
+                   (lambda (f) (format "• %s" (file-name-nondirectory f)))
+                   files
+                   "\n")))
           
-          ;; Add files in directory
-          (dolist (file files)
-            (push (concat indent "├── " file) result)))))
-    
-    ;; Fix last item markers
-    (when result
-      (let ((last-line (car (last result))))
-        (setcar (last result) 
-                (replace-regexp-in-string "├──" "└──" last-line))))
-    
-    (reverse result)))
-
-(defun cafedelic-make-project-relative (filepath)
-  "Make filepath relative to project root"
-  ;; Simple heuristic: find common project markers
-  (let ((project-root (cafedelic-find-project-root filepath)))
-    (if project-root
-        (file-relative-name filepath project-root)
-      (file-name-nondirectory filepath))))
+          (insert tree-output)))
+      
+      (read-only-mode 1))))
 
 (defun cafedelic-find-project-root (filepath)
-  "Find project root by looking for markers like .git, package.json"
-  (let ((dir (file-name-directory filepath))
+  "Find project root by looking for markers"
+  (let ((dir (file-name-directory (expand-file-name filepath)))
         (markers '(".git" "package.json" "Cargo.toml" "go.mod")))
     (catch 'found
       (while (and dir (not (string= dir "/")))
@@ -143,27 +144,11 @@
         (setq dir (file-name-directory (directory-file-name dir))))
       nil)))
 
-(defun cafedelic-format-timestamp (timestamp)
-  "Format timestamp to show relative time"
-  ;; For now, just show the time portion
-  ;; TODO: Make this show "2s ago", "5m ago" etc
-  (substring timestamp 11 19))
-
-(defun cafedelic-update-files-display ()
-  "Update the recent files display"
-  (when-let ((files-buffer (get-buffer cafedelic-files-buffer-name))
-             (files-window (get-buffer-window files-buffer)))
-    (with-current-buffer files-buffer
-      (read-only-mode 0)
-      (erase-buffer)
-      (cafedelic-render-recent-files)
-      (read-only-mode 1))))
-
 (defun cafedelic-clear-recent-files ()
   "Clear the recent files list"
   (interactive)
   (setq cafedelic-recent-files '())
-  (cafedelic-update-files-display)
+  (cafedelic-update-tree-display)
   "Recent files cleared")
 
 (provide 'cafedelic-frame)

@@ -37,8 +37,8 @@ RESULT=$(emacsclient --eval "(cafedelic-init-frame)" 2>&1)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Success!${NC}"
     echo "Frame layout ready:"
-    echo "  • Top window: Recent files list"
-    echo "  • Bottom window: Current file content"
+    echo "  • Left sidebar: File tree (30 chars wide)"
+    echo "  • Right area: Current file content"
     echo ""
     echo "Usage:"
     echo "  ./open-claude-file.sh <file>  - Open a file"

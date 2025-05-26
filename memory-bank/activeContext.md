@@ -163,3 +163,10 @@ See `emacs-integration-plan.md` for detailed design.
 - Files organized by directory structure
 - Rapid file switching creates "flipping through codebase" effect
 - Clean, space-efficient display
+
+📋 **Fixed Layout Issues**: Stable left-sidebar approach
+- Left sidebar: File tree using generate-file-tree.sh
+- Right area: Current file content
+- Proper cleanup of old buffers
+- Consistent window management
+- Integrated existing tree generation script

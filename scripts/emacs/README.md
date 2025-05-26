@@ -2,17 +2,39 @@
 
 This directory contains shell scripts that interface with Emacs via emacsclient.
 
-## Current Approach: Full Frame UI
+## Current Implementation: Left Sidebar Tree
 
-After testing split-window approaches, we've moved to a full-frame UI that better visualizes Claude's "context window":
-
+### Layout
 ```
-═══ Claude's Recent Files ═══════════════════════════════════
-  test-file.md                    12:34:56
-  README.md                       12:34:52  
-  package.json                    12:34:48
-═════════════════════════════════════════════════════════════
-[Current file content shown below]
+┌─────────────────┬──────────────────────────┐
+│ cafedelic/      │                          │
+│ ├── README.md   │  [Current file content]  │
+│ ├── src/        │                          │
+│ │   └── index.ts│                          │
+│ └── package.json│                          │
+└─────────────────┴──────────────────────────┘
+```
+
+### Key Scripts
+
+**cafedelic-frame.el** - Fixed frame management with:
+- Proper window cleanup
+- Left sidebar for tree (30 chars wide)
+- Integration with generate-file-tree.sh
+- Stable buffer management
+
+**test-stable-tree.sh** - Test the new stable layout
+
+**diagnose-emacs.sh** - Check buffer/window state
+
+### Usage
+```bash
+# Initialize and test
+./init-claude-frame.sh
+./test-stable-tree.sh
+
+# Diagnose issues
+./diagnose-emacs.sh
 ```
 
 ## New Full Frame Scripts (Current Implementation)
