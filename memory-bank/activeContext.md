@@ -157,3 +157,9 @@ See `emacs-integration-plan.md` for detailed design.
 - Top window: List of recently accessed files with timestamps
 - Bottom window: Current file content
 - Better visualization of "context window" concept
+
+✅ **Minimalist Tree View**: Implemented file tree structure
+- Removed decorative elements (title, bars)
+- Files organized by directory structure
+- Rapid file switching creates "flipping through codebase" effect
+- Clean, space-efficient display
