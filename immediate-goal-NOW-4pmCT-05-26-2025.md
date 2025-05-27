@@ -1,2 +1,3 @@
 # Immediate Project Goals
-	- In progress
+## Red Green Blue Multi-Server Development Platform
+	gh Issue 10
