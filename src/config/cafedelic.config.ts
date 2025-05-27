@@ -32,6 +32,7 @@ export interface CafedelicConfig {
   desktopMCP: {
     enabled: boolean;
     logBaseDir: string;
+    targetLogs?: string[];
     watchInterval: number;
     discoveryInterval: number;
     maxLogAge: number; // days
@@ -56,10 +57,9 @@ export const defaultConfig: CafedelicConfig = {
     scriptsPath: '/home/alex/code/cafedelic/scripts/emacs',
     mode: 'daemon', // default to daemon mode for backward compatibility
     paneServers: {
-      defaultPane: '9:0.2',
+      defaultPane: '', // No default - user must configure
       mapping: {
-        'editor-output': '9:0.2',
-        'secondary': '9:0.5'
+        // Dynamic assignments managed by RoutingManager
       },
       autoStart: true
     },
@@ -82,14 +82,18 @@ export const defaultConfig: CafedelicConfig = {
     maxConcurrentOpens: 3
   },
   output: {
-    defaultPane: '9:0.2',  // Current hard-coded value
+    defaultPane: '',  // No default - managed by RoutingManager
     assignments: {
-      'editor-output': '9:0.2'  // Named assignment for cafedelic outputs
+      // Dynamic assignments managed by RoutingManager
     }
   },
   desktopMCP: {
     enabled: true,
-    logBaseDir: '~/.config/Code/logs',
+    logBaseDir: '/home/alex/.config/Claude/logs',
+    targetLogs: [
+      'mcp-server-desktop-commander.log',  // Primary monitoring target
+      'mcp.log'                           // General MCP activity
+    ],
     watchInterval: 500,
     discoveryInterval: 30000,
     maxLogAge: 2, // days

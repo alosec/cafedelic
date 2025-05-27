@@ -3,71 +3,88 @@ import * as path from 'path';
 import * as os from 'os';
 import { DesktopMCPLogFile, DesktopMCPDiscoveryResult } from '../types/desktop-mcp.types.js';
 import { logger } from './logger.js';
+import { configManager } from '../config/cafedelic.config.js';
 
-// Base directory for VS Code logs
-const LOG_BASE_DIR = path.join(os.homedir(), '.config', 'Code', 'logs');
+/**
+ * Get the Claude Desktop log directory from config
+ */
+function getLogBaseDir(): string {
+  const config = configManager.getConfig();
+  let logDir = config.desktopMCP.logBaseDir;
+  
+  // Expand tilde if present
+  if (logDir.startsWith('~')) {
+    logDir = path.join(os.homedir(), logDir.slice(1));
+  }
+  
+  return logDir;
+}
 
-// Pattern for MCP server log files
-const MCP_LOG_PATTERN = /^mcpServer\.claude-desktop\.null\.(.*)\.log$/;
+// Pattern for MCP server log files in Claude Desktop
+const MCP_LOG_PATTERN = /^mcp-server-(.*)\.log$|^mcp\.log$|^mcp\d+\.log$/;
 
 /**
  * Discover active Desktop MCP log files
  */
 export async function discoverDesktopMCPLogs(): Promise<DesktopMCPDiscoveryResult> {
   try {
+    const LOG_BASE_DIR = getLogBaseDir();
+    
     // Check if log directory exists
     if (!fs.existsSync(LOG_BASE_DIR)) {
       return {
         found: false,
         logFiles: [],
         activeCount: 0,
-        error: 'VS Code log directory not found'
+        error: `Claude Desktop log directory not found: ${LOG_BASE_DIR}`
       };
     }
 
     const logFiles: DesktopMCPLogFile[] = [];
+    const config = configManager.getConfig();
+    const targetLogs = config.desktopMCP.targetLogs || [];
     
-    // Read date directories (e.g., 2025-05-26T08_20_05)
-    const dateDirs = fs.readdirSync(LOG_BASE_DIR)
-      .filter(dir => dir.match(/^\d{4}-\d{2}-\d{2}T/))
-      .sort()
-      .reverse(); // Most recent first
+    // Read all files in the Claude logs directory
+    const files = fs.readdirSync(LOG_BASE_DIR);
     
-    // Only check recent directories (last 2 days)
-    const cutoffTime = Date.now() - (2 * 24 * 60 * 60 * 1000);
-    
-    for (const dateDir of dateDirs) {
-      const dateDirPath = path.join(LOG_BASE_DIR, dateDir);
-      const stats = fs.statSync(dateDirPath);
-      
-      if (stats.mtime.getTime() < cutoffTime) {
-        continue; // Skip old directories
-      }
-      
-      // Look for window directories
-      const windowDirs = fs.readdirSync(dateDirPath)
-        .filter(dir => dir.startsWith('window'));
-      
-      for (const windowDir of windowDirs) {
-        const windowPath = path.join(dateDirPath, windowDir);
+    for (const file of files) {
+      const match = file.match(MCP_LOG_PATTERN);
+      if (match) {
+        const filePath = path.join(LOG_BASE_DIR, file);
         
-        // Find MCP server logs
-        const files = fs.readdirSync(windowPath);
-        
-        for (const file of files) {
-          const match = file.match(MCP_LOG_PATTERN);
-          if (match) {
-            const filePath = path.join(windowPath, file);
-            const fileStats = fs.statSync(filePath);
-            
-            logFiles.push({
-              path: filePath,
-              windowId: windowDir,
-              serverName: match[1],
-              lastModified: fileStats.mtime,
-              size: fileStats.size
-            });
+        try {
+          const fileStats = fs.statSync(filePath);
+          
+          // Skip if file is empty or too old
+          if (fileStats.size === 0) continue;
+          
+          const cutoffTime = Date.now() - (config.desktopMCP.maxLogAge * 24 * 60 * 60 * 1000);
+          if (fileStats.mtime.getTime() < cutoffTime) continue;
+          
+          // Determine server name from filename
+          let serverName = 'unknown';
+          if (file === 'mcp.log') {
+            serverName = 'mcp-general';
+          } else if (file.match(/^mcp\d+\.log$/)) {
+            serverName = 'mcp-rotated';
+          } else if (match[1]) {
+            serverName = match[1];
           }
+          
+          // If targetLogs specified, only include those
+          if (targetLogs.length > 0 && !targetLogs.includes(file)) {
+            continue;
+          }
+          
+          logFiles.push({
+            path: filePath,
+            windowId: 'claude-desktop', // Claude Desktop doesn't use window concept like VS Code
+            serverName,
+            lastModified: fileStats.mtime,
+            size: fileStats.size
+          });
+        } catch (statError) {
+          logger.warn(`Failed to stat log file ${file}`, { error: statError });
         }
       }
     }
@@ -80,8 +97,10 @@ export async function discoverDesktopMCPLogs(): Promise<DesktopMCPDiscoveryResul
     const activeCount = logFiles.filter(log => log.lastModified.getTime() > activeTime).length;
     
     logger.info('Desktop MCP log discovery complete', {
+      logDirectory: LOG_BASE_DIR,
       found: logFiles.length,
-      active: activeCount
+      active: activeCount,
+      targetLogs: targetLogs.length > 0 ? targetLogs : 'all'
     });
     
     return {
@@ -114,6 +133,14 @@ export async function findActiveDesktopMCPLog(): Promise<DesktopMCPLogFile | nul
   // Return the most recently modified log that's still active
   const activeTime = Date.now() - (10 * 60 * 1000);
   const activeLog = discovery.logFiles.find(log => log.lastModified.getTime() > activeTime);
+  
+  // Priority order: desktop-commander > general mcp > others
+  if (activeLog) {
+    const desktopCommanderLog = discovery.logFiles.find(log => 
+      log.serverName === 'desktop-commander' && log.lastModified.getTime() > activeTime
+    );
+    if (desktopCommanderLog) return desktopCommanderLog;
+  }
   
   return activeLog || discovery.logFiles[0]; // Fallback to most recent
 }

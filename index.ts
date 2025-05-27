@@ -15,6 +15,11 @@ import { captureLayoutState } from './src/tools/capture_layout_state.js';
 import { clearTmuxPanes } from './src/tools/clear_tmux_panes.js';
 import { handler as setEmacsMode } from './src/tools/set-emacs-mode.tool.js';
 import { handler as getPaneServersStatus } from './src/tools/get-pane-servers-status.tool.js';
+import { 
+  setEditorDestination, 
+  getRoutingAssignments, 
+  clearRoutingAssignment 
+} from './src/tools/set-editor-destination.tool.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { DesktopMCPWatcherService } from './src/services/desktop-mcp-watcher.service.js';
@@ -23,6 +28,7 @@ import { ActivityStore } from './src/services/activity.store.js';
 import { stateManager } from './src/services/state-manager.service.js';
 import { emacsDaemonManager } from './src/services/emacs-daemon-manager.service.js';
 import { paneEmacsManager } from './src/services/pane-emacs-manager.service.js';
+import { routingManager } from './src/services/routing-manager.service.js';
 import { configManager } from './src/config/cafedelic.config.js';
 
 // Initialize services
@@ -272,6 +278,46 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: 'object',
         properties: {}
       }
+    },
+    {
+      name: 'set_editor_destination',
+      description: 'Set the editor destination pane for cafedelic output routing',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          paneSpec: {
+            type: 'string',
+            description: 'Target pane specification (e.g., "0:0.1" for session 0, window 0, pane 1)'
+          },
+          description: {
+            type: 'string',
+            description: 'Optional description for this assignment'
+          }
+        },
+        required: ['paneSpec']
+      }
+    },
+    {
+      name: 'get_routing_assignments',
+      description: 'Get current routing assignments for output destinations',
+      inputSchema: {
+        type: 'object',
+        properties: {}
+      }
+    },
+    {
+      name: 'clear_routing_assignment',
+      description: 'Clear routing assignment for a specific role',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          role: {
+            type: 'string',
+            description: 'Role to clear (e.g., "editor", "activity", "logs")'
+          }
+        },
+        required: ['role']
+      }
     }
   ]
 }));
@@ -367,6 +413,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       
       case 'get_pane_servers_status':
         result = await getPaneServersStatus();
+        break;
+      
+      case 'set_editor_destination':
+        result = {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(await setEditorDestination(args as any || {}), null, 2)
+          }]
+        };
+        break;
+      
+      case 'get_routing_assignments':
+        result = {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(await getRoutingAssignments(), null, 2)
+          }]
+        };
+        break;
+      
+      case 'clear_routing_assignment':
+        result = {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(await clearRoutingAssignment(args as any || {}), null, 2)
+          }]
+        };
         break;
       
       default:

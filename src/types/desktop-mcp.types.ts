@@ -4,6 +4,7 @@ export interface DesktopMCPLogEntry {
   timestamp: string;
   level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
   message: string;
+  serverName?: string;
   toolCall?: DesktopMCPToolCall;
 }
 

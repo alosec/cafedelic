@@ -177,18 +177,19 @@ export class DesktopMCPWatcherService extends EventEmitter {
 
   private parseLogLine(line: string): DesktopMCPParseResult {
     try {
-      // Parse format: "2025-05-26T08:20:42.682Z [DEBUG] Tool execution: read_file with args: {...}"
-      const match = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:\.]+Z) \[(\w+)\] (.+)$/);
+      // Parse actual Claude Desktop format: "2025-05-27T16:39:53.398Z [desktop-commander] [info] Message from client: {...}"
+      const match = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:\.]+Z) \[([^\]]+)\] \[(\w+)\] (.+)$/);
       
       if (!match) {
         return { success: false, error: 'Invalid log format' };
       }
       
-      const [, timestamp, level, message] = match;
+      const [, timestamp, serverName, level, message] = match;
       const entry: DesktopMCPLogEntry = {
         timestamp,
         level: level as any,
-        message
+        message,
+        serverName
       };
       
       // Extract tool call information
@@ -229,7 +230,25 @@ export class DesktopMCPWatcherService extends EventEmitter {
       };
     }
     
-    // Pattern 3: Request/response format (from actual logs)
+    // Pattern 3: Claude Desktop client request format
+    // "Message from client: {"method":"tools/call","params":{"name":"read_file","arguments":{...}}}"
+    const clientMatch = message.match(/^Message from client: (.+)$/);
+    if (clientMatch) {
+      try {
+        const requestData = JSON.parse(clientMatch[1]);
+        if (requestData.method === 'tools/call' && requestData.params?.name) {
+          return {
+            name: requestData.params.name,
+            args: requestData.params.arguments || {},
+            status: 'started'
+          };
+        }
+      } catch (error) {
+        logger.debug('Failed to parse client message', { message, error });
+      }
+    }
+    
+    // Pattern 4: Legacy format for backward compatibility
     // "Received request: method=tools/call, params={\"name\":\"read_file\",...}"
     const requestMatch = message.match(/^Received request: method=tools\/call, params=(.+)$/);
     if (requestMatch) {
