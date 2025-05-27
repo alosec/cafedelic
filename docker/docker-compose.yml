@@ -1,0 +1,33 @@
+services:
+  cafedelic-red:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: cafedelic-red
+    environment:
+      - CAFEDELIC_SERVER_NAME=red
+      - CAFEDELIC_PORT=3001
+      - CAFEDELIC_COLOR=red
+      - CAFEDELIC_DATA_DIR=/app/data
+      - CAFEDELIC_LOG_DIR=/app/logs
+      # Tmux pane assignments (to be used in future phases)
+      - CAFEDELIC_EDITOR_PANE=
+      - CAFEDELIC_TERMINAL_PANE=
+      - CAFEDELIC_CLAUDE_PANE=
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount source for development (remove for production)
+      - ../src:/app/src:ro
+      - ../index.ts:/app/index.ts:ro
+      # Shared data directory
+      - cafedelic-data:/app/data
+      # Logs
+      - ../logs:/app/logs
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  cafedelic-data:
+    name: cafedelic-shared-data

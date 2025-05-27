@@ -2,6 +2,24 @@
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
 
+## Docker Compose Best Practices
+
+### Version Field
+- The `version` field in docker-compose.yml is deprecated in recent Docker versions
+- Remove it from both docker-compose.yml and docker-compose.override.yml files
+- Modern Docker Compose automatically handles compatibility
+
+### Command Syntax
+- Use `docker compose` (with space) instead of `docker-compose` (with hyphen)
+- The hyphenated version is the older Python-based tool
+- The space version is the newer Go-based implementation included with Docker
+
+### Network Issues During Build
+- If Docker build fails with DNS resolution errors, create a docker-compose.override.yml
+- Set `network: host` in the build configuration to use host networking
+- This file is automatically merged with docker-compose.yml
+- See docker/DOCKER_NETWORK_ISSUE.md for detailed troubleshooting
+
 ## PREFIX EVERY RESPONSE WITH FILES UNDER REVIEW:
 - ALWAYS begin each message with a code block containing "Files under review:"
 - Include a directory tree of files under review INSIDE the same code block

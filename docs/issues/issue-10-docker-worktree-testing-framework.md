@@ -45,7 +45,9 @@ Each server instance:
 
 ## Implementation Phases
 
-### Phase 1: Docker Foundation (First Step)
+The deployment strategy will gradually evolve from manual processes to fully automated MCP tool-based orchestration. See [worktree-understanding.md](10-docker-worktree-testing-framework/worktree-understanding.md) for detailed evolution path.
+
+### Phase 1: Docker Foundation (First Step) ✅ COMPLETE
 Create basic Debian 12 Docker image and verify single server:
 
 ```dockerfile
@@ -97,24 +99,40 @@ CAFEDELIC_PORT=3001
 - Pane assignment scripts
 - Visual feedback system
 
-### Phase 4: Enhanced Agent Communication
-Improve Claude Code interaction:
+### Phase 4: Enhanced Agent Communication & MCP Tool Orchestration
+Evolve from scripts to MCP tool-based deployment:
 
 ```typescript
+// Deploy servers via MCP tools
+async function deploy_cafedelic(options: {
+  branch: string;
+  servers: string[];
+  layout: "grid" | "horizontal" | "vertical" | "focus";
+  panes?: PaneAssignment;
+}) {
+  // Create/checkout worktrees
+  // Generate Docker services
+  // Create tmux layout
+  // Assign panes
+  // Start servers
+}
+
 // Better agent messaging
 async function send_message_to_agent(options: {
-  pane: string;
+  target: "@red" | "@blue" | "@green" | "@yellow";
   message: string;
-  readFirst: boolean;
-  confirmAfter: boolean;
-  pressEnter: boolean;
+  waitForResponse: boolean;
 }) {
-  // Read current state
-  // Send message
-  // Confirm delivery
+  // Route to specific server
   // Handle response
 }
 ```
+
+**Tool Evolution Path**:
+1. Script-based deployment helpers
+2. Basic MCP tools wrapping scripts
+3. Intelligent orchestration tools
+4. Full deployment automation via Claude
 
 ## Milestones & Next Steps
 

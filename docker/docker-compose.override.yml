@@ -1,0 +1,16 @@
+# Docker Compose Override - Local Development Network Fix
+# 
+# This file is automatically picked up by docker-compose and merges with docker-compose.yml
+# It solves network issues during Docker builds on local development machines
+#
+# Problem: Docker build fails with "Temporary failure resolving 'deb.debian.org'"
+# Solution: Use host network mode during build process only
+#
+# Note: This only affects the build process, not running containers
+
+services:
+  cafedelic-red:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      network: host
