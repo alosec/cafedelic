@@ -1,32 +1,52 @@
-# Claude Desktop Log System Documentation
+# Claude Desktop MCP Log System Documentation
 
 ## Overview
 
-Claude Desktop generates multiple types of logs for MCP servers, VS Code extensions, and general application activity.
+Claude Desktop generates comprehensive logs for MCP (Model Context Protocol) servers and general application activity. These logs provide visibility into AI-assisted development workflows and tool executions.
 
 ## Primary Log Locations
 
-### 1. MCP Server Logs
-**Location**: `~/.config/Code/logs/[date]/window[N]/mcpServer.claude-desktop.null.[server-name].log`
-**Format**: Plain text with timestamps
-**Content**: MCP server stdout/stderr output and communication logs
+### 1. Claude Desktop MCP Logs (Primary)
+**Location**: `/home/alex/.config/Claude/logs/`
+**Format**: Structured log files with timestamps and JSON payloads
+**Content**: MCP server communications, tool executions, and application events
 
-### 2. VS Code Extension Logs
-**Location**: `~/.config/Code/logs/[date]/window[N]/exthost/Anthropic.claude-code/`
+#### Available Log Files
 
-### 3. Application Logs
-**Location**: `~/.config/Claude/logs/`
+**MCP Server Logs:**
+- `mcp-server-cafedelic.log` - Cafedelic intelligence framework server
+- `mcp-server-browser-use.log` - Browser automation server  
+- `mcp-server-github.log` - GitHub integration server
+- `mcp-server-notion.log` - Notion workspace integration
+- `mcp-server-playwright-*.log` - Various Playwright automation servers
+- `mcp-server-puppeteer.log` - Puppeteer web automation
+- `mcp-server-supabase.log` - Supabase database integration
+- `mcp-server-webresearch.log` - Web research capabilities
+- `mcp-server-desktop-commander.log` - Desktop Commander tool server
+- `mcp-server-firecrawl-mcp.log` - Firecrawl web scraping server
 
-### 4. User Configuration
-**Location**: `~/.config/Claude/`
+**General MCP Logs:**
+- `mcp.log` - Main MCP protocol communication log
+- `mcp1.log` - Additional MCP log (likely rotated)
 
-## MCP Server Log Analysis
+### 2. Desktop Commander Legacy Logs (Secondary)
+**Location**: `~/.claude-server-commander/claude_tool_call.log`
+**Format**: Pipe-delimited with JSON-like structure  
+**Content**: Desktop Commander tool calls and results (legacy format)
 
-### Log Format
+#### Sample DC Log Entry
 ```
-2025-05-26T08:20:05.428Z [INFO] Server starting
+2025-05-26T15:42:33.921Z|read_file|{"path":"/home/alex/project/README.md"}|success
+```
+
+## MCP Log Analysis
+
+### Log Format (MCP Server Logs)
+```
+2025-05-26T08:20:05.428Z [INFO] Server starting: mcp-server-cafedelic
 2025-05-26T08:20:05.430Z [DEBUG] Tool registered: get_active_context
-2025-05-26T08:20:42.682Z [ERROR] Tool execution failed: SyntaxError
+2025-05-26T08:20:42.682Z [DEBUG] Tool execution: read_file with args: {"path": "/home/alex/code/project/README.md"}
+2025-05-26T08:20:42.685Z [INFO] Tool completed: read_file (success)
 ```
 
 ### Common Log Patterns
@@ -34,112 +54,124 @@ Claude Desktop generates multiple types of logs for MCP servers, VS Code extensi
 #### Server Initialization
 ```
 [INFO] Starting [server-name] MCP server...
-[INFO] [server-name] MCP server started successfully
+[INFO] [server-name] MCP server started successfully  
 [DEBUG] Registered tools: [tool1, tool2, tool3]
 ```
 
-#### Tool Execution
+#### Tool Execution Lifecycle
 ```
-[DEBUG] Executing tool: tool_name with args: {...}
-[INFO] Tool execution completed: tool_name
-[ERROR] Tool execution failed: tool_name - Error message
+[DEBUG] Received request: method=tools/call, params={"name":"read_file","arguments":{"path":"..."}}
+[DEBUG] Tool execution: read_file with args: {...}
+[INFO] Tool completed: read_file (success)
+[ERROR] Tool execution failed: read_file - Error message
 ```
-
-## Desktop Commander Integration
-
-### DC Log Location
-**Primary**: `~/.claude-server-commander/claude_tool_call.log`
-**Format**: Pipe-delimited with JSON-like structure
-**Content**: All Desktop Commander tool calls and results
-
-#### Sample DC Log Entry
-```
-2025-05-26T15:42:33.921Z|read_file|{"path":"/home/alex/project/README.md"}|success
-```
-
-### Cross-System Correlation
-Desktop Commander logs can be correlated with Claude Desktop MCP logs to understand the full activity flow:
-
-1. **Claude Desktop** → Uses MCP tool
-2. **MCP Server** → Calls Desktop Commander
-3. **Desktop Commander** → Logs tool execution
-4. **Results** → Flow back through MCP to Claude Desktop
 
 ## Monitoring Implementation
 
-### Log Watcher for MCP Servers
-```javascript
-import chokidar from 'chokidar';
+### Claude Desktop MCP Log Watcher
+```typescript
+import { EventEmitter } from 'events';
+import * as fs from 'fs';
 
-class ClaudeDesktopLogWatcher {
-  constructor() {
-    this.logDir = `${os.homedir()}/.config/Code/logs`;
+class ClaudeDesktopMCPWatcher extends EventEmitter {
+  private logDir = '/home/alex/.config/Claude/logs';
+  
+  async discoverLogs() {
+    const files = await fs.promises.readdir(this.logDir);
+    return {
+      mcpServerLogs: files.filter(f => f.startsWith('mcp-server-')),
+      generalMcpLogs: files.filter(f => f.match(/^mcp\d*\.log$/)),
+      targetLogs: ['mcp-server-desktop-commander.log', 'mcp.log']
+    };
   }
   
-  watch() {
-    // Watch for new log directories (new sessions)
-    const watcher = chokidar.watch(`${this.logDir}/*/window*/mcpServer.*.log`);
-    watcher.on('change', (path) => this.handleMCPLogUpdate(path));
-  }
-  
-  async handleMCPLogUpdate(filePath) {
-    const content = await readFile(filePath, 'utf8');
-    const lines = content.trim().split('\n');
-    const lastLine = lines[lines.length - 1];
-    
-    if (lastLine.includes('[ERROR]')) {
-      this.emit('mcp-error', { server: this.extractServerName(filePath), error: lastLine });
-    }
+  watchLog(logPath: string) {
+    const watcher = fs.watchFile(logPath, (curr, prev) => {
+      if (curr.mtime > prev.mtime) {
+        this.processNewLogEntries(logPath, prev.size, curr.size);
+      }
+    });
   }
 }
 ```
 
-## Integration with Cafedelic
+### Activity Correlation
+The MCP logs provide richer context than legacy DC logs:
+1. **MCP Protocol Layer** → Tool requests and responses with full context
+2. **Server Execution Layer** → Individual tool execution with timing
+3. **Application Layer** → High-level activity patterns and workflows
 
-### Combined Activity Stream
-```javascript
-// Combine Claude Desktop MCP logs with Desktop Commander logs
-class UnifiedActivityWatcher {
-  constructor() {
-    this.desktopWatcher = new ClaudeDesktopLogWatcher();
-    this.dcWatcher = new DesktopCommanderWatcher();
+## Integration with Cafedelic Intelligence Framework
+
+### Primary Targets for Monitoring
+1. **mcp-server-desktop-commander.log** - File operations, system commands
+2. **mcp.log** - General MCP protocol activity and coordination  
+3. **mcp-server-cafedelic.log** - Our own server's activity and performance
+
+### Activity Translation
+```typescript
+// Translate MCP logs to human-readable insights
+const patterns = {
+  'read_file': (args) => `Claude is reading ${path.basename(args.path)}`,
+  'write_file': (args) => `Claude is updating ${path.basename(args.path)}`, 
+  'list_directory': (args) => `Claude is exploring ${args.path}`,
+  'execute_command': (args) => `Claude executed: ${args.command}`
+};
+```
+
+### Benefits Over Legacy DC Logs
+- **Structured JSON Arguments** - No parsing of pipe-delimited text
+- **Rich Context** - Full MCP protocol context available
+- **Multiple Servers** - Monitor all MCP integrations simultaneously  
+- **Better Timing** - Request/response correlation with precise timing
+- **Error Details** - Detailed error context and stack traces
+
+## Configuration for Cafedelic
+
+### Updated Configuration
+```typescript
+export const config = {
+  desktopMCP: {
+    enabled: true,
+    logBaseDir: '/home/alex/.config/Claude/logs',  // CORRECTED PATH
+    targetLogs: [
+      'mcp-server-desktop-commander.log',  // Primary target
+      'mcp.log'                           // General activity
+    ],
+    watchInterval: 500,
+    discoveryInterval: 30000,
+    fallbackToDC: true  // Use legacy DC logs as backup
   }
-  
-  start() {
-    this.desktopWatcher.on('mcp-tool-call', (event) => {
-      this.correlateActivity('claude-desktop', event);
-    });
-    
-    this.dcWatcher.on('tool-execution', (event) => {
-      this.correlateActivity('desktop-commander', event);
-    });
-  }
-}
+};
 ```
 
 ## Limitations and Considerations
 
 ### What's Available
-- MCP server communication logs (stdout/stderr)
-- Tool execution timing and success/failure
-- Server startup and shutdown events
-- Protocol-level errors
+- Complete MCP tool execution lifecycle
+- Structured arguments and return values
+- Server health and performance metrics
+- Protocol-level error details
+- Multi-server activity coordination
 
-### What's Missing
-- Claude Desktop's internal reasoning process
-- User interaction details
-- Token usage and cost tracking
-- Session persistence across restarts
+### Performance Notes  
+- Log files accumulate based on usage patterns
+- Multiple active MCP servers generate concurrent logs
+- File watching should use efficient polling intervals
+- Consider log rotation for long-running sessions
 
-### Performance Notes
-- Log files can accumulate quickly
-- Daily rotation helps manage disk space
-- MCP error logs are separate from activity logs
+## Migration from VS Code Logs
 
-## Future Enhancements
+**Previous Incorrect Configuration:**
+```typescript
+// WRONG - This was based on incorrect documentation
+logBaseDir: '~/.config/Code/logs'
+```
 
-### Planned Integrations
-1. **Unified Activity Dashboard** - Combine all log sources into single view
-2. **Real-time Error Monitoring** - Alert on MCP server failures
-3. **Performance Analytics** - Track tool execution times and patterns
-4. **Cost Correlation** - Link Desktop Commander usage to Claude Desktop activity
+**Correct Configuration:**
+```typescript  
+// CORRECT - Actual Claude Desktop MCP log location
+logBaseDir: '/home/alex/.config/Claude/logs'
+```
+
+This correction addresses the root cause of non-functional MCP log discovery in the current implementation.
