@@ -21,7 +21,7 @@ export async function createTmexLayout(params: CreateTmexLayoutParams): Promise<
         logger.info('Creating tmex layout', { targetPane, layout });
         
         // Use the send-tmex.sh script
-        const scriptPath = '/home/alex/code/cafedelic/scripts/send-tmex.sh';
+        const scriptPath = '/app/scripts/send-tmex.sh';
         const cmd = `${scriptPath} "${layout}" "${targetPane}"`;
         
         const { stdout, stderr } = await execAsync(cmd);

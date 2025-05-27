@@ -308,7 +308,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = {
           content: [{
             type: 'text',
-            text: await createTmexLayout(args || {})
+            text: await createTmexLayout(args as any || {})
           }]
         };
         break;
@@ -326,7 +326,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = {
           content: [{
             type: 'text',
-            text: JSON.stringify(await clearTmuxPanes(args || {}), null, 2)
+            text: JSON.stringify(await clearTmuxPanes(args as any || {}), null, 2)
           }]
         };
         break;

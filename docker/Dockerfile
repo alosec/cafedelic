@@ -33,6 +33,7 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY index.ts ./
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 
 # Build TypeScript
 RUN npm run build

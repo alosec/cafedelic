@@ -33,7 +33,7 @@ export async function captureLayoutState(params: CaptureLayoutStateParams = {}):
         logger.info('Capturing tmux layout state', { target });
         
         // Use the capture-tmux-layout.sh script
-        const scriptPath = '/home/alex/code/cafedelic/scripts/capture-tmux-layout.sh';
+        const scriptPath = '/app/scripts/capture-tmux-layout.sh';
         const cmd = `${scriptPath} "${target}" console`;
         
         const { stdout } = await execAsync(cmd);

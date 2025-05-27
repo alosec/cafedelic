@@ -39,7 +39,7 @@ export async function clearTmuxPanes(params: ClearTmuxPanesParams): Promise<Clea
         // Capture before state if verify is enabled
         if (verify && (mode === 'reset-layout' || mode === 'reset-keep-two')) {
             try {
-                const sessionWindow = mode === 'pane' ? target.split('.')[0] : target;
+                const sessionWindow = target.includes('.') ? target.split('.')[0] : target;
                 result.beforeState = await captureLayoutState({ target: sessionWindow });
             } catch (e) {
                 logger.warn('Could not capture before state', { error: (e as Error).message });
@@ -47,7 +47,7 @@ export async function clearTmuxPanes(params: ClearTmuxPanesParams): Promise<Clea
         }
         
         // Use the tmux-clear.sh script
-        const scriptPath = '/home/alex/code/cafedelic/scripts/tmux-clear.sh';
+        const scriptPath = '/app/scripts/tmux-clear.sh';
         const cmd = `${scriptPath} "${target}" "${mode}"`;
         
         const { stdout, stderr } = await execAsync(cmd);
@@ -66,7 +66,7 @@ export async function clearTmuxPanes(params: ClearTmuxPanesParams): Promise<Clea
             await new Promise(resolve => setTimeout(resolve, 100));
             
             try {
-                const sessionWindow = mode === 'pane' ? target.split('.')[0] : target;
+                const sessionWindow = target.includes('.') ? target.split('.')[0] : target;
                 result.afterState = await captureLayoutState({ target: sessionWindow });
                 
                 // Verify the operation worked as expected
