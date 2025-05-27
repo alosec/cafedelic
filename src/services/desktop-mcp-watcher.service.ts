@@ -1,5 +1,8 @@
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import * as path from 'path';
 import { 
   DesktopMCPLogEntry, 
   DesktopMCPCompatibleEntry,
@@ -15,6 +18,11 @@ export class DesktopMCPWatcherService extends EventEmitter {
   private discoveryInterval = 30000; // Rediscover logs every 30 seconds
   private discoveryTimer?: NodeJS.Timeout;
   private isRunning = false;
+  
+  // Emacs integration configuration
+  private targetPane = '0:0.0'; // Pane 000 as specified by user
+  private scriptsPath = '/home/alex/code/cafedelic/scripts/emacs/pane-server';
+  private execFileAsync = promisify(execFile);
 
   async start() {
     if (this.isRunning) return;
@@ -49,6 +57,54 @@ export class DesktopMCPWatcherService extends EventEmitter {
       clearInterval(this.discoveryTimer);
       this.discoveryTimer = undefined;
     }
+  }
+
+  // Emacs integration methods
+  private async triggerEmacsFileOpen(filePath: string): Promise<void> {
+    try {
+      const scriptPath = path.join(this.scriptsPath, 'open-file-in-pane.sh');
+      logger.info('Triggering emacs file open', { file: filePath, pane: this.targetPane });
+      
+      await this.execFileAsync(scriptPath, [filePath, this.targetPane]);
+      logger.info('Successfully opened file in emacs', { file: filePath });
+    } catch (error) {
+      logger.warn('Failed to open file in emacs', { file: filePath, error: (error as Error).message });
+    }
+  }
+
+  private async triggerEmacsDirectoryOpen(dirPath: string): Promise<void> {
+    try {
+      const scriptPath = path.join(this.scriptsPath, 'open-directory-in-pane.sh');
+      logger.info('Triggering emacs directory open', { directory: dirPath, pane: this.targetPane });
+      
+      await this.execFileAsync(scriptPath, [dirPath, this.targetPane]);
+      logger.info('Successfully opened directory in emacs dired', { directory: dirPath });
+    } catch (error) {
+      logger.warn('Failed to open directory in emacs', { directory: dirPath, error: (error as Error).message });
+    }
+  }
+
+  private shouldTriggerEmacsOpen(command: string, args: any): { shouldOpen: boolean; path?: string; isDirectory?: boolean } {
+    // Only trigger for read_file and list_directory operations
+    if (command === 'read_file' && args?.path) {
+      const filePath = args.path;
+      // Skip if it's a log file or temporary file
+      if (filePath.includes('/logs/') || filePath.endsWith('.log') || filePath.includes('/tmp/')) {
+        return { shouldOpen: false };
+      }
+      return { shouldOpen: true, path: filePath, isDirectory: false };
+    }
+    
+    if (command === 'list_directory' && args?.path) {
+      const dirPath = args.path;
+      // Skip common system directories
+      if (dirPath.includes('/proc/') || dirPath.includes('/sys/') || dirPath === '/') {
+        return { shouldOpen: false };
+      }
+      return { shouldOpen: true, path: dirPath, isDirectory: true };
+    }
+    
+    return { shouldOpen: false };
   }
 
   private async discoverAndWatch() {
@@ -170,6 +226,22 @@ export class DesktopMCPWatcherService extends EventEmitter {
           
           // Also emit rich MCP entry for future use
           this.emit('mcp-entry', entry);
+          
+          // 🎯 NEW: Trigger emacs integration for file operations
+          const emacsAction = this.shouldTriggerEmacsOpen(entry.toolCall.name, entry.toolCall.args);
+          if (emacsAction.shouldOpen && emacsAction.path) {
+            if (emacsAction.isDirectory) {
+              // Trigger directory opening in dired (async, don't wait)
+              this.triggerEmacsDirectoryOpen(emacsAction.path).catch(err => {
+                logger.debug('Emacs directory open failed', { error: err.message });
+              });
+            } else {
+              // Trigger file opening (async, don't wait)
+              this.triggerEmacsFileOpen(emacsAction.path).catch(err => {
+                logger.debug('Emacs file open failed', { error: err.message });
+              });
+            }
+          }
         }
       }
     }

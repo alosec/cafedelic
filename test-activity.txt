@@ -1,6 +1,0 @@
-This is a test file to demonstrate MCP watcher activity detection.
-
-The watcher should detect this write_file operation and translate it to:
-"Claude is updating test-activity.txt"
-
-Created at: $(date)
