@@ -50,6 +50,21 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 - Will preserve technical content and code examples
 - Essential for multi-agent coordination
 
+### Emacs Integration Improvements (GitHub Issue #9)
+**Status**: Documented for implementation
+- Implement plain `emacs` mode alongside daemon mode
+- Fix tmux overlay display issues
+- Add configuration toggle between modes
+- Multiple overlay fix strategies documented
+
+### Docker Worktree Testing Framework (GitHub Issue #10)
+**Status**: Documented for implementation
+- 4+ parallel server configurations in Docker
+- Git worktrees for isolated experiments
+- Tmux visualization of all experiments
+- Automated testing with Claude Code
+- Staging branch workflow for successful experiments
+
 ## Pane Organization (Session 9)
 
 All panes now have French names for easy reference:
