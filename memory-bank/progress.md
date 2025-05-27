@@ -76,6 +76,15 @@ Successfully simplified architecture:
 - [ ] Pattern detection and insights
 - [ ] Consider persistence (SQLite) only when needed
 
+#### Cafedelic Vision Platform (After Core Features)
+- [ ] Dockerize server with Debian 12 base
+- [ ] Dynamic worktree discovery system
+- [ ] Four colored servers (Red, Blue, Green, Yellow) in tmux grid
+- [ ] 3 panes per server (editor, terminal, Claude Code)
+- [ ] Enhanced agent communication tool
+- [ ] `deploy_cafedelic()` automation function
+- [ ] Multi-agent orchestration capabilities
+
 ## Definition of Done
 
 ### Phase 1: DC Monitoring ✅
