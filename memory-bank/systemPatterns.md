@@ -80,6 +80,30 @@ Each service has a single responsibility:
 3. **Template-Based**: Easy to add new translations
 4. **Progressive Enhancement**: Each layer adds value
 5. **Stateless Where Possible**: Simplifies recovery and testing
+6. **Shell Script Wrappers**: Leverage existing scripts via simple MCP wrappers
+
+## Architectural Patterns
+
+### Shell Script Wrapper Pattern
+When functionality already exists as robust shell scripts:
+```typescript
+// Thin wrapper pattern
+export async function mcpTool(params: ToolParams): Promise<Result> {
+    const scriptPath = '/path/to/script.sh';
+    const { stdout } = await execAsync(`${scriptPath} ${args}`);
+    return parseOutput(stdout);
+}
+```
+
+Benefits:
+- Reuse battle-tested scripts
+- Keep MCP tools simple
+- Easy to maintain and debug
+- Scripts can be used standalone
+
+Applied to:
+- TMEX layout tools (create_tmex_layout, capture_layout_state, clear_tmux_panes)
+- Future shell-based integrations
 
 ## Anti-Patterns to Avoid
 

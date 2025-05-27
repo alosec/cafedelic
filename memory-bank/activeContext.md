@@ -13,6 +13,10 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 5. **Dired Integration**: Auto-opens directories when Claude explores them
 6. **Tmux Output Routing**: Routes emacs output to session 9:0.2 for visibility
 7. **IDE Layout**: Clean 5-pane tmux layout with tmex
+8. **TMEX Layout Tools**: New MCP tools for tmux layout manipulation
+   - `create_tmex_layout()`: Deploy tmex layouts to any pane
+   - `capture_layout_state()`: Get geometric analysis of layouts
+   - `clear_tmux_panes()`: Clear panes with verification
 
 ### Immediate Focus Areas
 
@@ -66,6 +70,16 @@ After exploring multi-agent orchestration, we've returned to focusing on perfect
 - Shared database across all instances
 - Ultimate goal: `deploy_cafedelic()` function for instant environment setup
 - First meaningful milestone: "Four Colors Dancing" - all servers visible in grid
+
+### TMEX Layout Tools (2025-05-26)
+**Status**: Implemented as simple shell script wrappers
+- Created three MCP tools for tmux layout control:
+  - `create_tmex_layout(targetPane, layout)`: Deploy any tmex layout pattern
+  - `capture_layout_state(target?)`: Get geometric analysis with pane positions/sizes
+  - `clear_tmux_panes(target, mode, verify?)`: Clear with multiple strategies
+- Architecture decision: Simple wrappers over existing shell scripts
+- Enables Claude to experiment with layouts and debug clearing issues
+- Supports worktree container deployment vision (Issue #10)
 
 ## Pane Organization (Session 9)
 

@@ -46,6 +46,7 @@ Successfully simplified architecture:
 - **MCP Tools**: get_active_context, split_pane_*, toggle_auto_open, assign_pane_role, get_output_routing
 - **Output Routing**: Messages route to configured panes (9:0.2)
 - **Emacs Daemon**: Managed by EmacsDaemonManager (needs socket fix)
+- **TMEX Layout Tools**: create_tmex_layout, capture_layout_state, clear_tmux_panes
 
 ### 📋 Implementation Queue
 
@@ -54,6 +55,10 @@ Successfully simplified architecture:
 - [x] **Route emacs output to tmux** - Output now goes to session 9:0.2
 - [x] **Test complete parsing flow** - All `list_directory` commands now parse correctly
 - [x] **Verify dired auto-opening setup** - Scripts updated and tested
+- [x] **Create TMEX MCP tools** - Simple wrappers for tmux layout control
+  - [x] create_tmex_layout() - Deploy layouts to any pane
+  - [x] capture_layout_state() - Get geometric analysis
+  - [x] clear_tmux_panes() - Clear with verification
 
 #### Next Session
 - [ ] **Architecture Planning**: Design Output Routing Management System (Issue #4)

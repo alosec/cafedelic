@@ -10,6 +10,9 @@ import { toggleAutoOpen } from './src/tools/toggle_auto_open.js';
 import { getEmacsStatus } from './src/tools/get_emacs_status.js';
 import { assignPaneRole, handleAssignPaneRole } from './src/tools/assign_pane_role.js';
 import { getOutputRouting, handleGetOutputRouting } from './src/tools/get_output_routing.js';
+import { createTmexLayout } from './src/tools/create_tmex_layout.js';
+import { captureLayoutState } from './src/tools/capture_layout_state.js';
+import { clearTmuxPanes } from './src/tools/clear_tmux_panes.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { DesktopMCPWatcherService } from './src/services/desktop-mcp-watcher.service.js';
@@ -185,7 +188,61 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       }
     },
     assignPaneRole,
-    getOutputRouting
+    getOutputRouting,
+    {
+      name: 'create_tmex_layout',
+      description: 'Create a tmex layout in a specified pane',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          targetPane: {
+            type: 'string',
+            description: 'Target pane identifier (e.g., "9:0.1" or "%1")'
+          },
+          layout: {
+            type: 'string',
+            description: 'Tmex layout string (e.g., "111", "222", "12[34]5")'
+          }
+        },
+        required: ['targetPane', 'layout']
+      }
+    },
+    {
+      name: 'capture_layout_state',
+      description: 'Capture the current tmux layout state with geometric information',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          target: {
+            type: 'string',
+            description: 'Target session:window (default: current window)'
+          }
+        }
+      }
+    },
+    {
+      name: 'clear_tmux_panes',
+      description: 'Clear or reset tmux panes with various strategies',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          target: {
+            type: 'string',
+            description: 'Target pane/session identifier (e.g., "%1", "9:0.1", "mysession")'
+          },
+          mode: {
+            type: 'string',
+            enum: ['pane', 'session', 'reset-layout', 'reset-keep-two'],
+            description: 'Clear mode: pane (clear single pane), session (kill session), reset-layout (single pane), reset-keep-two (keep panes 0 and 1)'
+          },
+          verify: {
+            type: 'boolean',
+            description: 'Capture before/after states to verify operation (default: false)'
+          }
+        },
+        required: ['target', 'mode']
+      }
+    }
   ]
 }));
 
@@ -245,6 +302,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       
       case 'get_output_routing':
         result = await handleGetOutputRouting();
+        break;
+      
+      case 'create_tmex_layout':
+        result = {
+          content: [{
+            type: 'text',
+            text: await createTmexLayout(args || {})
+          }]
+        };
+        break;
+      
+      case 'capture_layout_state':
+        result = {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(await captureLayoutState(args || {}), null, 2)
+          }]
+        };
+        break;
+      
+      case 'clear_tmux_panes':
+        result = {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(await clearTmuxPanes(args || {}), null, 2)
+          }]
+        };
         break;
       
       default:
