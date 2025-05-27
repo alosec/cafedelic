@@ -7,6 +7,7 @@ import { configManager } from '../config/cafedelic.config.js';
 import { logger } from '../utils/logger.js';
 import { outputRouter } from './output-router.service.js';
 import { emacsDaemonManager } from './emacs-daemon-manager.service.js';
+import { paneEmacsManager } from './pane-emacs-manager.service.js';
 import { EmacsDaemonError } from '../types/emacs-daemon.types.js';
 
 const execAsync = promisify(exec);
@@ -58,6 +59,21 @@ export class EmacsService extends EventEmitter {
       };
     }
 
+    // Check if file type is supported
+    if (!configManager.isFileSupported(filePath)) {
+      return {
+        success: false,
+        filePath,
+        message: 'File type not supported for auto-open'
+      };
+    }
+    
+    // Handle based on mode
+    if (config.emacs.mode === 'pane-server') {
+      return await this.openFileInPaneServer(filePath);
+    }
+
+    // Default daemon mode behavior
     // Ensure daemon is running (lazy initialization)
     try {
       await emacsDaemonManager.ensureRunning();
@@ -71,15 +87,6 @@ export class EmacsService extends EventEmitter {
         };
       }
       throw error;
-    }
-
-    // Check if file type is supported
-    if (!configManager.isFileSupported(filePath)) {
-      return {
-        success: false,
-        filePath,
-        message: 'File type not supported for auto-open'
-      };
     }
 
     // Avoid duplicate opens
@@ -188,7 +195,13 @@ export class EmacsService extends EventEmitter {
         message: 'Auto-open directories is disabled'
       };
     }
+    
+    // Handle based on mode
+    if (config.emacs.mode === 'pane-server') {
+      return await this.openDirectoryInPaneServer(directoryPath);
+    }
 
+    // Default daemon mode behavior
     // Ensure daemon is running (lazy initialization)
     try {
       await emacsDaemonManager.ensureRunning();
@@ -292,6 +305,28 @@ export class EmacsService extends EventEmitter {
   }
 
   async checkEmacsHealth(): Promise<{ isRunning: boolean; message: string }> {
+    const config = configManager.getConfig();
+    
+    if (config.emacs.mode === 'pane-server') {
+      // Check pane server status
+      const servers = await paneEmacsManager.getServerStatus();
+      const defaultPane = config.emacs.paneServers?.defaultPane || '9:0.2';
+      const server = servers.get(defaultPane);
+      
+      if (server && server.status === 'ready') {
+        return {
+          isRunning: true,
+          message: `Pane server running: ${server.serverName} in pane ${server.paneId}`
+        };
+      } else {
+        return {
+          isRunning: false,
+          message: 'No pane server running'
+        };
+      }
+    }
+    
+    // Default daemon mode
     const status = await emacsDaemonManager.getStatus();
     
     return {
@@ -300,6 +335,86 @@ export class EmacsService extends EventEmitter {
         ? `Emacs daemon is running (PID: ${status.daemonPid}, Socket: ${status.socketName})`
         : status.lastError || 'Emacs daemon is not running'
     };
+  }
+
+  // Pane server methods
+  private async openFileInPaneServer(filePath: string): Promise<EmacsOpenResult> {
+    const config = configManager.getConfig();
+    const paneConfig = config.emacs.paneServers || { defaultPane: '9:0.2', mapping: {}, autoStart: true };
+    
+    // Determine which pane to use
+    const targetPane = paneConfig.defaultPane;
+    
+    try {
+      await paneEmacsManager.openFileInPane(targetPane, filePath);
+      
+      // Route success message
+      const fileName = path.basename(filePath);
+      await outputRouter.routeToPane(
+        `Opened file: ${fileName} in pane ${targetPane}`,
+        'editor-output'
+      );
+      
+      return {
+        success: true,
+        filePath,
+        message: `File opened in pane ${targetPane}`
+      };
+    } catch (error) {
+      const err = error as Error;
+      logger.error('Failed to open file in pane server', { filePath, error: err.message });
+      
+      // Route error message
+      await outputRouter.routeToPane(
+        `Failed to open: ${path.basename(filePath)} - ${err.message}`,
+        'editor-output'
+      );
+      
+      return {
+        success: false,
+        filePath,
+        message: `Error: ${err.message}`
+      };
+    }
+  }
+  
+  private async openDirectoryInPaneServer(directoryPath: string): Promise<EmacsDirectoryResult> {
+    const config = configManager.getConfig();
+    const paneConfig = config.emacs.paneServers || { defaultPane: '9:0.2', mapping: {}, autoStart: true };
+    
+    // Determine which pane to use
+    const targetPane = paneConfig.defaultPane;
+    
+    try {
+      await paneEmacsManager.openDirectoryInPane(targetPane, directoryPath);
+      
+      // Route success message
+      await outputRouter.routeToPane(
+        `Opened directory: ${directoryPath} in pane ${targetPane}`,
+        'editor-output'
+      );
+      
+      return {
+        success: true,
+        directoryPath,
+        message: `Directory opened in pane ${targetPane}`
+      };
+    } catch (error) {
+      const err = error as Error;
+      logger.error('Failed to open directory in pane server', { directoryPath, error: err.message });
+      
+      // Route error message
+      await outputRouter.routeToPane(
+        `Failed to open directory: ${directoryPath} - ${err.message}`,
+        'editor-output'
+      );
+      
+      return {
+        success: false,
+        directoryPath,
+        message: `Error: ${err.message}`
+      };
+    }
   }
 
   async batchOpenFiles(filePaths: string[]): Promise<EmacsOpenResult[]> {

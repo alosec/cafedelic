@@ -13,6 +13,8 @@ import { getOutputRouting, handleGetOutputRouting } from './src/tools/get_output
 import { createTmexLayout } from './src/tools/create_tmex_layout.js';
 import { captureLayoutState } from './src/tools/capture_layout_state.js';
 import { clearTmuxPanes } from './src/tools/clear_tmux_panes.js';
+import { handler as setEmacsMode } from './src/tools/set-emacs-mode.tool.js';
+import { handler as getPaneServersStatus } from './src/tools/get-pane-servers-status.tool.js';
 import { logger } from './src/utils/logger.js';
 import { WatcherService } from './src/services/watcher.service.js';
 import { DesktopMCPWatcherService } from './src/services/desktop-mcp-watcher.service.js';
@@ -20,6 +22,7 @@ import { TranslatorService } from './src/services/translator.service.js';
 import { ActivityStore } from './src/services/activity.store.js';
 import { stateManager } from './src/services/state-manager.service.js';
 import { emacsDaemonManager } from './src/services/emacs-daemon-manager.service.js';
+import { paneEmacsManager } from './src/services/pane-emacs-manager.service.js';
 import { configManager } from './src/config/cafedelic.config.js';
 
 // Initialize services
@@ -242,6 +245,33 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
         required: ['target', 'mode']
       }
+    },
+    {
+      name: 'set_emacs_mode',
+      description: 'Set the emacs integration mode (daemon, pane-server, or plain)',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          mode: {
+            type: 'string',
+            enum: ['daemon', 'pane-server', 'plain'],
+            description: 'The emacs mode to use'
+          },
+          defaultPane: {
+            type: 'string',
+            description: 'Default pane for pane-server mode (e.g., "9:0.2")'
+          }
+        },
+        required: ['mode']
+      }
+    },
+    {
+      name: 'get_pane_servers_status',
+      description: 'Get the status of all pane-specific emacs servers',
+      inputSchema: {
+        type: 'object',
+        properties: {}
+      }
     }
   ]
 }));
@@ -331,6 +361,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
         break;
       
+      case 'set_emacs_mode':
+        result = await setEmacsMode(args as any || {});
+        break;
+      
+      case 'get_pane_servers_status':
+        result = await getPaneServersStatus();
+        break;
+      
       default:
         logger.error('Unknown tool requested', { tool: name });
         result = {
@@ -385,6 +423,12 @@ async function main() {
     // Note: Emacs daemon manager uses lazy initialization
     // It will start automatically on first file operation
     await logger.info('Emacs daemon manager ready (lazy init)');
+    
+    // Start pane emacs manager monitoring if in pane-server mode
+    if (config.emacs.mode === 'pane-server') {
+      paneEmacsManager.startHealthMonitoring();
+      await logger.info('Pane emacs manager health monitoring started');
+    }
     
     const transport = new StdioServerTransport();
     await server.connect(transport);

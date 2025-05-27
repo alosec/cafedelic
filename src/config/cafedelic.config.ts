@@ -8,6 +8,13 @@ export interface CafedelicConfig {
     daemonTimeout: number;
     supportedExtensions: string[];
     scriptsPath: string;
+    mode?: 'daemon' | 'pane-server' | 'plain';
+    paneServers?: {
+      defaultPane: string;
+      mapping: Record<string, string>;
+      autoStart: boolean;
+      initFile?: string;
+    };
     daemon?: Partial<EmacsDaemonConfig>;
   };
   logging: {
@@ -47,6 +54,15 @@ export const defaultConfig: CafedelicConfig = {
       '.rs', '.go', '.rb', '.php'
     ],
     scriptsPath: '/home/alex/code/cafedelic/scripts/emacs',
+    mode: 'daemon', // default to daemon mode for backward compatibility
+    paneServers: {
+      defaultPane: '9:0.2',
+      mapping: {
+        'editor-output': '9:0.2',
+        'secondary': '9:0.5'
+      },
+      autoStart: true
+    },
     daemon: {
       manageDaemon: true,
       lazyInit: true,
