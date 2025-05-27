@@ -1,49 +1,59 @@
 # Cafedelic Project Brief
 
 ## Project Name
-Cafedelic - Development Intelligence Framework
+Cafedelic - AI Development Transparency & Orchestration Framework
 
 ## Vision
-Create an intelligence layer that makes AI-assisted development transparent and analyzable by watching, translating, and understanding development activity.
+Create a transparent development environment that makes AI-assisted development visible, analyzable, and orchestratable by watching development activity, providing real-time insights, and enabling flexible output routing to tmux panes.
 
 ## Core Problem
-Developers working with AI tools like Claude Desktop lack visibility into what the AI is doing. Log files are opaque, activities are hidden, and there's no accumulated understanding of the development process.
+Developers working with AI tools like Claude Desktop lack:
+1. **Visibility**: What is the AI doing right now?
+2. **Integration**: How can AI actions trigger editor responses?
+3. **Flexibility**: How to route AI activity to different displays?
+4. **Orchestration**: How to manage multiple development contexts?
 
 ## Solution
-An intelligence framework that:
-1. Watches development activity logs (starting with Desktop Commander)
-2. Translates technical logs into human-readable insights
-3. Analyzes patterns and accumulates project knowledge
-4. Provides high-level context understanding
+A framework that:
+1. **Watches** development activity logs (Desktop Commander, Claude Desktop MCP)
+2. **Translates** technical logs into human-readable insights
+3. **Routes** output dynamically to user-configured tmux panes
+4. **Integrates** with development tools (Emacs, tmux)
+5. **Orchestrates** development environments flexibly
 
 ## Success Metrics
-- Real-time translation of Desktop Commander logs
-- Clear visibility into AI development activities
-- Accumulated project intelligence over time
-- Zero dependency on tmux layout management
+- Real-time translation of MCP logs into human insights
+- Dynamic routing of output to any tmux pane
+- Automatic file/directory opening in Emacs
+- Zero hard-coded layout assumptions
+- Flexible pane assignment via MCP tools
 
 ## Scope
 ### In Scope
-- DC log watching and translation
-- Activity pattern analysis
-- Context summarization
-- Project intelligence accumulation
-- High-level MCP tool interface
+- MCP log watching and translation
+- Dynamic output routing system
+- Emacs integration (file/directory opening)
+- TMEX layout management tools
+- Pane-specific server management
+- Activity context via MCP tools
+- Shell script integration patterns
 
-### Out of Scope
-- Tmux session management
-- Layout control
-- Low-level pane operations
-- Terminal launching
-- Direct tmux manipulation
+### Out of Scope (Current Phase)
+- Multi-agent orchestration (archived for future)
+- Docker container deployment
+- Database persistence beyond session
+- Complex pattern analysis
+- Intelligence accumulation
 
 ## Technical Constraints
-- Express.js server for real-time processing
-- File watching without tmux dependencies
-- Simple, proven approaches (inspired by teemax success)
-- High-level abstractions only
+- Express.js server with TypeScript
+- Event-driven service architecture
+- Shell script wrappers for proven functionality
+- Flexible routing without hard-coded assumptions
+- Real-time log processing
 
 ## Timeline
-- Phase 1: DC log watch & translate (immediate)
-- Phase 2: Pattern analysis & context (next)
-- Phase 3: Intelligence accumulation (future)
+- Phase 1: MCP log watch & translate ✅ (completed)
+- Phase 2: Output routing system ✅ (completed)
+- Phase 3: Pane display abstraction (current focus)
+- Phase 4: Multi-server platform (future vision)

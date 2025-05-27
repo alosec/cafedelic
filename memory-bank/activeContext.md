@@ -1,133 +1,106 @@
 # Active Context
 
-## Current State (2025-05-26)
+## Current State (2025-05-27)
 
-### Back to Basics - Single Agent Focus
-After exploring multi-agent orchestration, we've returned to focusing on perfecting single-agent Claude Desktop integration. The multi-agent work has been archived in `feature/multi-agent-experiment` branch for potential future use.
+### Working Features ✅
 
-### What's Working Well ✅
-1. **DC Log Watching**: Successfully monitors and translates Desktop Commander logs
-2. **Tab Character Parsing**: Fixed robust parsing of DC logs with tab characters
-3. **Basic Activity Tracking**: Shows what Claude is doing in human-readable format  
-4. **Simple MCP Integration**: `get_active_context` returns activity summaries
-5. **Dired Integration**: Auto-opens directories when Claude explores them
-6. **Tmux Output Routing**: Routes emacs output to session 9:0.2 for visibility
-7. **IDE Layout**: Clean 5-pane tmux layout with tmex
-8. **TMEX Layout Tools**: New MCP tools for tmux layout manipulation
-   - `create_tmex_layout()`: Deploy tmex layouts to any pane
-   - `capture_layout_state()`: Get geometric analysis of layouts
-   - `clear_tmux_panes()`: Clear panes with verification
+1. **MCP Log Monitoring**: Successfully watches Claude Desktop logs at `/home/alex/.config/Claude/logs/`
+2. **Dynamic Output Routing**: RoutingManager allows flexible pane assignment
+3. **Emacs Integration**: Auto-opens files/directories via pane-specific servers
+4. **TMEX Layout Tools**: MCP tools for layout management (create, capture, clear)
+5. **Activity Tracking**: Human-readable translations of AI actions
+6. **Shell Script Integration**: Reliable execution via script wrappers
 
-### Immediate Focus Areas
+### Available MCP Tools
 
-#### 1. Output Routing Management System (GitHub Issue #4)
-**Status**: Documented and tracked for future implementation
-- Replace hard-coded tmux pane destinations with flexible routing system
-- Add emacs daemon lifecycle management 
-- Create dynamic source → destination assignment capabilities
-- Enable runtime configuration without code changes
+**Routing & Configuration**:
+- `setEditorDestination(paneSpec)` - Assign output to any pane
+- `getRoutingAssignments()` - View current routing
+- `clearRoutingAssignment(role)` - Clear assignments
+- `get_active_context()` - Get recent activity summary
 
-#### 2. Perfect DC Log Translation
-- Add more command templates as we discover them
-- Improve file path formatting and display
-- Group related activities intelligently
+**Layout Management**:
+- `create_tmex_layout(targetPane, layout)` - Deploy TMEX layouts
+- `capture_layout_state(target?)` - Get geometric analysis
+- `clear_tmux_panes(target, mode, verify?)` - Clear with strategies
 
-#### 3. Test with Real Claude Desktop
-- Verify all translations are accurate with fixed tab parsing
-- Ensure directory auto-opening works with emacs daemon
-- Gather feedback on what's most helpful
+**Emacs Integration**:
+- `toggle_auto_open(enable?)` - Control auto file opening
+- `get_emacs_status(detailed?)` - Check integration status
+- `set_emacs_mode(mode)` - Configure emacs mode
+- `get_pane_servers_status()` - View pane server status
 
-## Active Development
+### Current Architecture
 
-### Pane-Specific Emacs Servers (2025-05-27) ✅
-**Status**: Shell scripts working, MCP tools need debugging
-- Implemented complete pane-server mode bypassing daemon complexity
-- Each tmux pane can have independent emacs server
-- Shell scripts fully functional for start/open operations
-- MCP tool integration has parameter passing issues
-- **Next Priority**: Fix activity monitor for Claude Desktop MCP logs
+```
+Claude Desktop MCP Logs → DesktopMCPWatcher → Event Bus
+                                    ↓
+                            TranslatorService → Human Insights
+                                    ↓
+                            RoutingManager → User's Tmux Pane
+                                    ↓
+                            Emacs Integration → File Opens
+```
 
-### Agent Messaging Tool (GitHub Issue #6)
-**Status**: Documented for implementation
-- Current `send_to_pane` strips code blocks and formatting
-- Proposed `send_message_to_agent(mode, content)` tool
-- Will preserve technical content and code examples
-- Essential for multi-agent coordination
+### Configuration Example
 
-### Emacs Integration Improvements (GitHub Issue #9)
-**Status**: Documented for implementation
-- Implement plain `emacs` mode alongside daemon mode
-- Fix tmux overlay display issues
-- Add configuration toggle between modes
-- Multiple overlay fix strategies documented
+Current working setup:
+```bash
+# User has session 0 with 2 panes
+tmux list-panes -t 0
+# 0: [180x47] (active)
+# 1: [180x47]
 
-### Cafedelic Multi-Server Development Platform (GitHub Issue #10)
-**Status**: Enhanced vision documented
-- Core cafedelic vision: parallel AI-assisted development
-- Debian 12 Docker containers with color identities (Red, Blue, Green, Yellow)
-- Dynamic worktree discovery (no hardcoding)
-- Tmux grid: 3 panes per server (editor, terminal, Claude Code)
-- Shared database across all instances
-- Ultimate goal: `deploy_cafedelic()` function for instant environment setup
-- First meaningful milestone: "Four Colors Dancing" - all servers visible in grid
+# Set cafedelic output to pane 1
+setEditorDestination("0:0.1")
 
-### TMEX Layout Tools (2025-05-26)
-**Status**: Implemented as simple shell script wrappers
-- Created three MCP tools for tmux layout control:
-  - `create_tmex_layout(targetPane, layout)`: Deploy any tmex layout pattern
-  - `capture_layout_state(target?)`: Get geometric analysis with pane positions/sizes
-  - `clear_tmux_panes(target, mode, verify?)`: Clear with multiple strategies
-- Architecture decision: Simple wrappers over existing shell scripts
-- Enables Claude to experiment with layouts and debug clearing issues
-- Supports worktree container deployment vision (Issue #10)
+# Files now auto-open in pane 1's emacs
+```
 
-## Pane Organization (Session 9)
+### Recent Fixes
 
-All panes now have French names for easy reference:
-- **Pierre** (9:0.0): Activity Monitor - DC logs human-readable view
-- **Amelie** (9:0.1): File Tree - Project navigation  
-- **Sophie** (9:0.2): Emacs Editor - Main editing pane
-- **Marcel** (9:0.3): Claude Code - Implementation agent
-- **Jacques** (9:0.4): DC Logs Monitor - Raw log view
-- **Henri** (9:0.5): Additional workspace
+1. **Correct Log Location**: Fixed from VS Code logs to Claude Desktop logs
+2. **Dynamic Routing**: Replaced hard-coded session 9 assumptions
+3. **Shell Script Integration**: Bypassed MCP parameter passing issues
+4. **Flexible Assignment**: Works with any tmux layout
 
-## Next Steps
+### Known Issues
 
-1. **Monitor Marcel's Implementation**
-   - Emacs daemon manager development
-   - Test when implementation complete
-   - Verify auto-file opening works seamlessly
+1. **No Persistence**: Routing assignments lost on restart
+2. **Limited Error Recovery**: Manual intervention needed for some failures
+3. **No Tests**: Implementation lacks test coverage
+4. **Memory Only**: No database integration yet
 
-2. **Polish Core Features**
-   - Refine translation templates
-   - Improve activity formatting
-   - Add missing DC commands
+### Next Focus Area
 
-3. **Simple Enhancements**
-   - Activity grouping by time
-   - Better path display
-   - Clear activity indicators
+**Pane Display Abstraction** (Issue #7):
+- Unified API for all pane updates
+- State verification and recovery
+- Replace direct tmux commands
+- Foundation for advanced UI features
 
-## Design Principles
+## Active Development Patterns
 
-- **Keep it simple**: No databases, no complex state
-- **Make it reactive**: Respond to Claude's actions immediately
-- **Focus on visibility**: Show what Claude is doing clearly
-- **Perfect one agent**: Before considering multi-agent again
+### Shell Script Wrapper Pattern
+```typescript
+// MCP tools wrap proven shell scripts
+export async function setEditorDestination(params) {
+  const scriptPath = '/home/alex/code/cafedelic/scripts/emacs/pane-server/start-pane-emacs.sh';
+  return await executeScript(scriptPath, params);
+}
+```
 
-## Success Criteria
+### Event-Driven Updates
+```typescript
+// Services communicate via events, not direct calls
+watcher.on('mcp-entry', (entry) => {
+  translator.translate(entry);
+  router.route(translation);
+});
+```
 
-By end of next session:
-- [ ] All common DC commands translated perfectly
-- [ ] File/directory opening works seamlessly
-- [ ] Activity stream is clear and helpful
-- [ ] Ready to add Claude Code support
-
-## What We're NOT Doing (Yet)
-
-- ❌ Multi-agent context management (archived)
-- ❌ Database persistence
-- ❌ Complex pane routing
-- ❌ State management beyond current session
-
-Keep the focus tight and the implementation clean!
+### User-First Configuration
+- No hard-coded pane names or sessions
+- Dynamic discovery and assignment
+- Graceful fallbacks
+- Clear error messages

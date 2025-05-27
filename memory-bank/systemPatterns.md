@@ -2,113 +2,137 @@
 
 ## Architecture Overview
 
-Cafedelic follows a layered architecture focused on intelligence extraction:
+Cafedelic follows an event-driven architecture with flexible routing:
 
 ```
-Input Layer (Logs) → Translation Layer → Analysis Layer → Intelligence Layer
+Input Layer → Translation Layer → Routing Layer → Display Layer
+   (Logs)        (Human Text)      (Dynamic)       (Tmux/Emacs)
 ```
 
-## Core Components
+## Core Patterns
 
-### 1. Watcher Service
-- **Pattern**: File watching with position tracking
-- **Implementation**: Chokidar or native fs.watch
-- **Responsibility**: Monitor log files for changes
-- **Key Decision**: Stateless watching with position memory
+### 1. Shell Script Wrapper Pattern
+**Problem**: Complex tmux/emacs operations need reliable execution
+**Solution**: MCP tools as thin wrappers around proven shell scripts
 
-### 2. Translation Engine
-- **Pattern**: Parser → Transformer → Formatter pipeline
-- **Implementation**: Simple JSON parsing with template-based output
-- **Responsibility**: Convert raw logs to human-readable messages
-- **Key Decision**: Template-based translation for maintainability
-
-### 3. Express Server
-- **Pattern**: Event-driven architecture
-- **Implementation**: Minimal Express.js setup
-- **Responsibility**: Coordinate services and expose MCP tools
-- **Key Decision**: Keep server thin, logic in services
-
-### 4. Intelligence Store (Future)
-- **Pattern**: Time-series data with queryable interface
-- **Implementation**: SQLite3 with simple schema
-- **Responsibility**: Accumulate and query project intelligence
-- **Key Decision**: Start with memory, add persistence later
-
-## Design Patterns
-
-### Translation Templates
-```javascript
-const templates = {
-  'read_file': (args) => `Claude is reading ${path.basename(args.path)}`,
-  'write_file': (args) => `Claude is updating ${path.basename(args.path)}`,
-  'execute_command': (args) => `Claude executed: ${args.command}`
+```typescript
+export async function createTmexLayout(params) {
+  const scriptPath = path.join(SCRIPTS_DIR, 'tmux/create-tmex-layout.sh');
+  const result = await executeScript(scriptPath, [params.targetPane, params.layout]);
+  return parseScriptOutput(result);
 }
 ```
 
-### Event Flow
-```
-Log Change → Watcher → Parse → Translate → Emit → Display
-                            ↓
-                        Analyze → Store
+**Benefits**:
+- Reuse battle-tested scripts
+- Easy debugging (scripts work standalone)
+- Clear separation of concerns
+- Bypass MCP parameter complexities
+
+### 2. Dynamic Routing Pattern
+**Problem**: Hard-coded destinations break with different layouts
+**Solution**: User-configurable routing with runtime assignment
+
+```typescript
+class RoutingManager {
+  async setDestination(role: string, paneSpec: string) {
+    // Validate pane exists
+    // Configure services
+    // Start pane-specific servers
+    // Emit configuration events
+  }
+}
 ```
 
-### Service Isolation
-Each service has a single responsibility:
-- WatcherService: File monitoring only
-- TranslationService: Log to human text only
-- AnalysisService: Pattern detection only
-- StorageService: Data persistence only
+### 3. Event-Driven Service Communication
+**Problem**: Tight coupling between services
+**Solution**: Services extend EventEmitter, communicate via events
 
-## Extension Points
+```typescript
+// Loose coupling via events
+watcher.on('log-entry', (entry) => translator.process(entry));
+translator.on('activity', (activity) => router.route(activity));
+router.on('route', (dest, content) => display.update(dest, content));
+```
+
+### 4. Pane-Specific Server Pattern
+**Problem**: Single emacs daemon conflicts with multiple panes
+**Solution**: Independent emacs servers per pane
+
+```bash
+# Each pane gets its own server
+start-pane-emacs.sh "0:0.1"  # Creates server for specific pane
+open-file-in-pane.sh "/path/file.ts" "0:0.1"  # Uses pane's server
+```
+
+### 5. Progressive Enhancement Pattern
+**Problem**: Complex features before basics work
+**Solution**: Layer functionality progressively
+
+```
+1. Basic log watching → Works
+2. Add translation → Enhanced
+3. Add routing → Flexible  
+4. Add auto-open → Integrated
+5. Add persistence → Future
+```
+
+## Service Patterns
+
+### Single Responsibility Services
+```typescript
+WatcherService      // ONLY watches files
+TranslatorService   // ONLY translates logs
+RoutingManager      // ONLY manages routes
+ActivityStore       // ONLY stores activities
+```
+
+### Graceful Degradation
+```typescript
+async function openInEmacs(file: string, pane: string) {
+  try {
+    await triggerEmacsOpen(file, pane);
+  } catch (error) {
+    logger.warn('Emacs open failed, continuing', { error });
+    // Don't break the flow
+  }
+}
+```
+
+### Configuration Discovery
+```typescript
+// Discover actual environment
+const logs = await discoverDesktopMCPLogs();
+const panes = await discoverTmuxPanes();
+// Adapt to what exists
+```
+
+## Anti-Patterns Avoided
+
+1. **Hard-Coded Assumptions**: No fixed sessions, panes, or layouts
+2. **Synchronous Blocking**: All I/O operations are async
+3. **Direct Service Coupling**: Services don't import each other
+4. **Complex State Management**: Keep state minimal and local
+5. **Premature Optimization**: Simple solutions first
+
+## Extension Patterns
 
 ### Adding New Log Sources
-1. Create new watcher for log type
-2. Add parser for log format
-3. Register templates for translation
-4. Connect to event bus
+1. Create watcher for log type
+2. Add parser for format
+3. Emit standardized events
+4. Existing pipeline handles rest
 
-### Adding Intelligence Features
-1. Subscribe to translation events
-2. Apply analysis logic
-3. Store insights
-4. Expose via MCP tools
+### Adding New Display Targets
+1. Implement display provider
+2. Register with routing manager
+3. Handle routing events
+4. Manage target lifecycle
 
-## Key Decisions
+## Key Architectural Decisions
 
-1. **No Tmux Dependencies**: Pure file and process watching
-2. **Event-Driven**: Loose coupling between components
-3. **Template-Based**: Easy to add new translations
-4. **Progressive Enhancement**: Each layer adds value
-5. **Stateless Where Possible**: Simplifies recovery and testing
-6. **Shell Script Wrappers**: Leverage existing scripts via simple MCP wrappers
-
-## Architectural Patterns
-
-### Shell Script Wrapper Pattern
-When functionality already exists as robust shell scripts:
-```typescript
-// Thin wrapper pattern
-export async function mcpTool(params: ToolParams): Promise<Result> {
-    const scriptPath = '/path/to/script.sh';
-    const { stdout } = await execAsync(`${scriptPath} ${args}`);
-    return parseOutput(stdout);
-}
-```
-
-Benefits:
-- Reuse battle-tested scripts
-- Keep MCP tools simple
-- Easy to maintain and debug
-- Scripts can be used standalone
-
-Applied to:
-- TMEX layout tools (create_tmex_layout, capture_layout_state, clear_tmux_panes)
-- Future shell-based integrations
-
-## Anti-Patterns to Avoid
-
-1. **Tight Coupling**: Don't mix watching with translation
-2. **Complex Parsing**: Keep log parsing simple and forgiving
-3. **Premature Optimization**: Start with working, optimize later
-4. **Framework Overuse**: Use minimal dependencies
-5. **Low-Level Control**: Stay at intelligence layer
+1. **Events Over Imports**: Services communicate via events
+2. **Scripts Over Complexity**: Shell scripts for system operations
+3. **Discovery Over Configuration**: Find what exists, adapt
+4. **User Control Over Automation**: Let users decide routing
+5. **Reliability Over Features**: Working basics before advanced
