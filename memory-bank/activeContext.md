@@ -1,6 +1,52 @@
 # Active Context
 
-## Current State (2025-05-27)
+## Current State (2025-05-28) - MAJOR ARCHITECTURAL PIVOT
+
+### Architectural Decision: Complete Redesign
+
+After analysis of the current implementation, we've identified that the system has become over-engineered relative to its capabilities. Despite ~2000 lines of complex service-oriented architecture, we have only one working feature: watching file operations and opening them in Emacs.
+
+**Decision**: Complete ground-up redesign using the Watch-Transform-Execute (WTE) pattern.
+
+**GitHub Issue**: [#11 - Cafedelic v2: Ground-Up Redesign](https://github.com/alosec/cafedelic/issues/11)
+
+### Why Redesign?
+
+1. **Complexity Mismatch**: Enterprise patterns for simple pipeline operations
+2. **Feature Reality**: Only file→emacs actually works despite all infrastructure
+3. **Extension Difficulty**: Adding simple features requires navigating complex abstractions
+4. **Maintenance Burden**: Current architecture harder to understand than to rebuild
+
+### New Architecture: WTE Pattern
+
+```typescript
+interface WTE<T, A> {
+  watch: () => AsyncIterator<T>
+  transform: (event: T) => A | null
+  execute: (action: A) => Promise<void>
+}
+```
+
+This captures the entire essence without middleware complexity.
+
+### Development Plan
+
+1. **Worktree Development**: `cafedelic-v2` branch for clean slate
+2. **Preserve Scripts**: Keep working shell scripts unchanged
+3. **Direct Implementation**: Functions over services, composition over events
+4. **Incremental Migration**: Prove pattern with existing feature first
+
+### Next Steps
+
+1. Create `cafedelic-v2` worktree
+2. Implement core WTE pattern
+3. Build file-to-emacs pipeline
+4. Validate against current functionality
+5. Extend with write-to-diff pipeline
+
+---
+
+## Previous Implementation Status (Archived)
 
 ### Working Features ✅
 
@@ -73,11 +119,11 @@ setEditorDestination("0:0.1")
 
 ### Next Focus Area
 
-**Pane Display Abstraction** (Issue #7):
-- Unified API for all pane updates
-- State verification and recovery
-- Replace direct tmux commands
-- Foundation for advanced UI features
+**Complete Redesign** (Issue #11):
+- Watch-Transform-Execute pattern
+- Direct function composition
+- Minimal state approach
+- Clear extension points
 
 ## Active Development Patterns
 

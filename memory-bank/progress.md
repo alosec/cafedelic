@@ -1,6 +1,26 @@
 # Progress Tracking
 
-## Completed Features ✅
+## Major Decision: Complete Architectural Redesign (2025-05-28) 🔄
+
+### Context
+After implementing a working but over-engineered system, we've decided on a complete redesign using the Watch-Transform-Execute (WTE) pattern. The current implementation works but has become too complex for its actual capabilities.
+
+### Decision
+- **GitHub Issue**: [#11 - Cafedelic v2: Ground-Up Redesign](https://github.com/alosec/cafedelic/issues/11)
+- **Approach**: Fresh start in worktree `cafedelic-v2`
+- **Pattern**: Simple WTE interface replacing complex service architecture
+- **Timeline**: 3-4 weeks for complete replacement
+
+### Rationale
+- Current: ~2000 lines for one working feature
+- Target: <500 lines core, same functionality
+- Benefit: 10x easier to extend and maintain
+
+---
+
+## Current Implementation (To Be Replaced)
+
+### Completed Features ✅
 
 ### Core Infrastructure (2025-05-25)
 - [x] Project vision and memory bank established
