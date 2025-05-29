@@ -1,6 +1,6 @@
-# Git Clear State Command
+# Git Save Work Command
 
-Review the current git status and prepare to clear the working state with a comprehensive commit that documents architectural decisions.
+Review the current git status and prepare to save the working state with a comprehensive commit that documents architectural decisions.
 
 ## Steps to execute:
 
@@ -30,8 +30,8 @@ Review the current git status and prepare to clear the working state with a comp
      - Any notable patterns or conventions established
      - Future considerations or next steps
 
-5. **Clear working state**:
-   - After committing, verify clean state with `git status`
+5. **Save working state**:
+   - After committing, verify saved state with `git status`
    - Document any intentionally uncommitted files
 
 ## Example commit message format:
