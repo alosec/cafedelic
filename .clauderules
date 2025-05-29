@@ -1,5 +1,26 @@
 # Cafedelic Project Intelligence
 
+## GitHub CLI Safety Rules
+
+**CRITICAL**: Always use temporary file approach for GitHub comments with technical content.
+
+### Safe Pattern (Always Use This)
+```bash
+cat > /tmp/gh-comment-body.md <<'EOF'
+Content with `backticks`, $variables, and $(commands) are all safe here
+EOF
+gh issue comment NUMBER --body-file /tmp/gh-comment-body.md
+rm /tmp/gh-comment-body.md
+```
+
+### Unsafe Pattern (Never Use)
+```bash
+# DANGER: Backticks and $ will be interpreted by shell!
+gh issue comment NUMBER --body "Content with `backticks`"
+```
+
+Use the `/gh-comment` command for guided safe commenting.
+
 ## Project Philosophy
 - **Austere minimalism**: Prefer inconvenience from refusing complexity over complexity itself
 - **Intelligence over control**: We provide understanding, not manipulation

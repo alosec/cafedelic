@@ -1,138 +1,201 @@
 # System Patterns
 
-## Architecture Overview
+## Core Architecture: Watch-Transform-Execute (WTE)
 
-Cafedelic follows an event-driven architecture with flexible routing:
-
-```
-Input Layer → Translation Layer → Routing Layer → Display Layer
-   (Logs)        (Human Text)      (Dynamic)       (Tmux/Emacs)
-```
-
-## Core Patterns
-
-### 1. Shell Script Wrapper Pattern
-**Problem**: Complex tmux/emacs operations need reliable execution
-**Solution**: MCP tools as thin wrappers around proven shell scripts
+The entire cafedelic system is built on a simple, powerful pattern that composes three phases:
 
 ```typescript
-export async function createTmexLayout(params) {
-  const scriptPath = path.join(SCRIPTS_DIR, 'tmux/create-tmex-layout.sh');
-  const result = await executeScript(scriptPath, [params.targetPane, params.layout]);
-  return parseScriptOutput(result);
+interface WTE<W, T, E> {
+  watch: () => AsyncIterator<W>      // Observe data sources
+  transform: (data: W) => T | null   // Shape data for action
+  execute: (action: T) => Promise<void> // Perform side effects
 }
 ```
 
-**Benefits**:
-- Reuse battle-tested scripts
-- Easy debugging (scripts work standalone)
-- Clear separation of concerns
-- Bypass MCP parameter complexities
+## Implementation Pattern
 
-### 2. Dynamic Routing Pattern
-**Problem**: Hard-coded destinations break with different layouts
-**Solution**: User-configurable routing with runtime assignment
-
+### The Pipe Utility
 ```typescript
-class RoutingManager {
-  async setDestination(role: string, paneSpec: string) {
-    // Validate pane exists
-    // Configure services
-    // Start pane-specific servers
-    // Emit configuration events
+// Functional composition for async iterators
+export async function pipe<T, U>(
+  source: AsyncIterator<T>,
+  transform: (value: T) => U | null,
+  execute: (value: U) => Promise<void>
+): Promise<void> {
+  for await (const value of source) {
+    const transformed = transform(value);
+    if (transformed !== null) {
+      await execute(transformed);
+    }
   }
 }
 ```
 
-### 3. Event-Driven Service Communication
-**Problem**: Tight coupling between services
-**Solution**: Services extend EventEmitter, communicate via events
-
+### Real Example
 ```typescript
-// Loose coupling via events
-watcher.on('log-entry', (entry) => translator.process(entry));
-translator.on('activity', (activity) => router.route(activity));
-router.on('route', (dest, content) => display.update(dest, content));
+// Entire file-to-emacs pipeline
+pipe(
+  mcpLogWatcher('/home/alex/.config/Claude/logs/mcp-*.log'),
+  fileOperationTransform,
+  emacsExecutor('/path/to/open-file.sh')
+);
 ```
 
-### 4. Pane-Specific Server Pattern
-**Problem**: Single emacs daemon conflicts with multiple panes
-**Solution**: Independent emacs servers per pane
+## Design Principles
 
-```bash
-# Each pane gets its own server
-start-pane-emacs.sh "0:0.1"  # Creates server for specific pane
-open-file-in-pane.sh "/path/file.ts" "0:0.1"  # Uses pane's server
-```
+### 1. Direct Implementation
+- No abstractions unless they simplify
+- Code reads like what it does
+- Functions over classes
 
-### 5. Progressive Enhancement Pattern
-**Problem**: Complex features before basics work
-**Solution**: Layer functionality progressively
+### 2. Functional Composition
+- Small, focused functions
+- Compose behavior through piping
+- Transform data, don't mutate state
 
-```
-1. Basic log watching → Works
-2. Add translation → Enhanced
-3. Add routing → Flexible  
-4. Add auto-open → Integrated
-5. Add persistence → Future
-```
+### 3. Shell Script Integration
+- Proven scripts do the real work
+- TypeScript orchestrates and composes
+- Clear boundary between coordination and execution
 
-## Service Patterns
+## Component Patterns
 
-### Single Responsibility Services
+### Watchers
 ```typescript
-WatcherService      // ONLY watches files
-TranslatorService   // ONLY translates logs
-RoutingManager      // ONLY manages routes
-ActivityStore       // ONLY stores activities
+// Watchers yield data from sources
+async function* mcpLogWatcher(pattern: string) {
+  const files = await glob(pattern);
+  const latest = files[files.length - 1];
+  
+  const rl = readline.createInterface({
+    input: fs.createReadStream(latest),
+    crlfDelay: Infinity
+  });
+  
+  for await (const line of rl) {
+    yield line;
+  }
+}
 ```
 
-### Graceful Degradation
+### Transforms
 ```typescript
-async function openInEmacs(file: string, pane: string) {
+// Transforms shape data or return null to skip
+function fileOperationTransform(line: string): FileOp | null {
   try {
-    await triggerEmacsOpen(file, pane);
-  } catch (error) {
-    logger.warn('Emacs open failed, continuing', { error });
-    // Don't break the flow
+    const entry = JSON.parse(line);
+    if (entry.method === 'read_file') {
+      return {
+        type: 'file',
+        path: entry.params.path
+      };
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 ```
 
-### Configuration Discovery
+### Executors
 ```typescript
-// Discover actual environment
-const logs = await discoverDesktopMCPLogs();
-const panes = await discoverTmuxPanes();
-// Adapt to what exists
+// Executors perform side effects
+function emacsExecutor(scriptPath: string) {
+  return async (op: FileOp) => {
+    await execAsync(`${scriptPath} "${op.path}"`);
+  };
+}
 ```
-
-## Anti-Patterns Avoided
-
-1. **Hard-Coded Assumptions**: No fixed sessions, panes, or layouts
-2. **Synchronous Blocking**: All I/O operations are async
-3. **Direct Service Coupling**: Services don't import each other
-4. **Complex State Management**: Keep state minimal and local
-5. **Premature Optimization**: Simple solutions first
 
 ## Extension Patterns
 
-### Adding New Log Sources
-1. Create watcher for log type
-2. Add parser for format
-3. Emit standardized events
-4. Existing pipeline handles rest
+### Adding Features
+1. **New Data Source**: Create a watcher
+2. **New Data Shape**: Create a transform
+3. **New Side Effect**: Create an executor
+4. **Combine**: Use `pipe()`
 
-### Adding New Display Targets
-1. Implement display provider
-2. Register with routing manager
-3. Handle routing events
-4. Manage target lifecycle
+### Example: Git Monitoring
+```typescript
+// Watch git operations
+async function* gitLogWatcher() { ... }
 
-## Key Architectural Decisions
+// Transform to git events
+function gitTransform(line: string): GitOp | null { ... }
 
-1. **Events Over Imports**: Services communicate via events
-2. **Scripts Over Complexity**: Shell scripts for system operations
-3. **Discovery Over Configuration**: Find what exists, adapt
-4. **User Control Over Automation**: Let users decide routing
-5. **Reliability Over Features**: Working basics before advanced
+// Execute notifications
+function notifyExecutor(op: GitOp) { ... }
+
+// Compose the pipeline
+pipe(gitLogWatcher(), gitTransform, notifyExecutor);
+```
+
+## Anti-Patterns (What We Avoided)
+
+### ❌ Service Classes
+```typescript
+// Don't do this
+class FileWatcherService extends EventEmitter {
+  constructor(private config: Config) {}
+  start() { ... }
+  stop() { ... }
+}
+```
+
+### ❌ Complex Event Systems
+```typescript
+// Don't do this
+eventBus.on('file:changed', (e) => {
+  eventBus.emit('transform:needed', e);
+});
+```
+
+### ❌ Generic Abstractions
+```typescript
+// Don't do this
+interface Pipeline<T extends Watchable, U extends Transformable> {
+  // ... complex type gymnastics
+}
+```
+
+## Current Implementation Stats
+- **Total Lines**: ~150
+- **Core Pattern**: 15 lines (pipe function)
+- **Main Pipeline**: ~50 lines
+- **Supporting Code**: ~85 lines
+
+## Why This Works
+
+1. **Clarity**: Each piece does one thing
+2. **Testability**: Pure functions, clear boundaries  
+3. **Extensibility**: Add stages without touching existing code
+4. **Debuggability**: Linear flow, obvious data path
+5. **Maintainability**: Less code = less bugs
+
+## Future Patterns
+
+### Conditional Execution
+```typescript
+pipe(
+  watcher,
+  transform,
+  conditionalExecutor(predicate, executorA, executorB)
+);
+```
+
+### Parallel Pipelines
+```typescript
+multipipe([
+  [watcherA, transformA, executorA],
+  [watcherB, transformB, executorB]
+]);
+```
+
+### Pipeline Composition
+```typescript
+const filePipeline = createPipeline(fileWatcher, fileTransform);
+const gitPipeline = createPipeline(gitWatcher, gitTransform);
+mergePipelines(filePipeline, gitPipeline, commonExecutor);
+```
+
+The WTE pattern provides infinite flexibility through simple composition.

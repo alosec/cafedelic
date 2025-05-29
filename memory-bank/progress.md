@@ -1,158 +1,103 @@
-# Progress Tracking
+# Progress
 
-## Major Decision: Complete Architectural Redesign (2025-05-28) 🔄
+## Project Status: V2 Complete - Ready for Features
 
-### Context
-After implementing a working but over-engineered system, we've decided on a complete redesign using the Watch-Transform-Execute (WTE) pattern. The current implementation works but has become too complex for its actual capabilities.
+### Current Implementation (V2)
+**Architecture**: Watch-Transform-Execute (WTE) pattern
+**Codebase**: ~150 lines (from ~2000 in v1)
+**Status**: Fully functional and merged to main
 
-### Decision
-- **GitHub Issue**: [#11 - Cafedelic v2: Ground-Up Redesign](https://github.com/alosec/cafedelic/issues/11)
-- **Approach**: Fresh start in worktree `cafedelic-v2`
-- **Pattern**: Simple WTE interface replacing complex service architecture
-- **Timeline**: 3-4 weeks for complete replacement
+## What Works ✅
 
-### Rationale
-- Current: ~2000 lines for one working feature
-- Target: <500 lines core, same functionality
-- Benefit: 10x easier to extend and maintain
+### Core Functionality
+- **MCP Log Watching**: Direct file watching with readline
+- **File Operation Detection**: Parses Claude Desktop file operations
+- **Emacs Integration**: Auto-opens files/directories in configured panes
+- **Pipeline Composition**: Clean functional data flow with `pipe()`
 
----
+### MCP Tools (From V1, Still Working)
+- `setEditorDestination` - Route output to specific tmux panes
+- `create_tmex_layout` - Create complex tmux layouts
+- `toggle_auto_open` - Control automatic file opening
+- `get_active_context` - Retrieve recent activity
+- All routing and layout management tools
 
-## Current Implementation (To Be Replaced)
+### Technical Achievements
+- 10x code reduction while maintaining all features
+- Eliminated complex service architecture
+- Direct, understandable code flow
+- Easy to extend and modify
 
-### Completed Features ✅
+## Current Capabilities
 
-### Core Infrastructure (2025-05-25)
-- [x] Project vision and memory bank established
-- [x] Basic Express.js MCP server setup
-- [x] TypeScript configuration
-- [x] Initial service architecture
+### File Operations
+- Detects when Claude reads/writes files
+- Automatically opens them in Emacs
+- Routes to user-specified tmux panes
+- Maintains activity context
 
-### Phase 1: MCP Log Monitoring (2025-05-26)
-- [x] DesktopMCPWatcher service implementation
-- [x] Real-time log discovery and watching
-- [x] Tab-delimited log parsing fixed
-- [x] Claude Desktop log location corrected
-- [x] Event-based log entry emission
+### Architecture Benefits
+- Add new watchers for different data sources
+- Create transforms for any data shape
+- Build executors for any action
+- Compose pipelines trivially
 
-### Phase 2: Translation System (2025-05-26)
-- [x] TranslatorService with template patterns
-- [x] Human-readable activity messages
-- [x] Support for common DC commands
-- [x] Activity store for session memory
+## What's Next 🚀
 
-### Phase 3: Output Routing (2025-05-27)
-- [x] RoutingManager service implementation
-- [x] Dynamic pane assignment system
-- [x] MCP tools for routing configuration
-- [x] Validation of pane existence
-- [x] Event-driven routing updates
+### Immediate Priorities
+1. **Claude Desktop Visibility**
+   - Show AI actions in real-time
+   - Create activity dashboards
+   - Build visual feedback systems
 
-### Phase 4: Emacs Integration (2025-05-27)
-- [x] Pane-specific emacs servers
-- [x] Auto file opening on read_file
-- [x] Auto directory opening on list_directory
-- [x] Shell script integration
-- [x] Graceful failure handling
+2. **Claude Code Integration**
+   - Direct tool execution
+   - Code-specific transforms
+   - Enhanced file operations
 
-### Phase 5: TMEX Layout Tools (2025-05-26)
-- [x] create_tmex_layout MCP tool
-- [x] capture_layout_state for analysis
-- [x] clear_tmux_panes with strategies
-- [x] Shell script wrappers
+3. **Pipeline Enhancements**
+   - Conditional routing
+   - Multi-stage transforms
+   - Parallel execution
 
-### MCP Tools Implemented
-- [x] setEditorDestination - Dynamic routing
-- [x] getRoutingAssignments - View config
-- [x] clearRoutingAssignment - Reset routing
-- [x] get_active_context - Activity summary
-- [x] create_tmex_layout - Layout creation
-- [x] capture_layout_state - Layout analysis
-- [x] clear_tmux_panes - Pane management
-- [x] toggle_auto_open - Emacs control
-- [x] get_emacs_status - Integration status
-- [x] set_emacs_mode - Mode configuration
+### Feature Possibilities
+With the clean WTE architecture, we can now easily add:
+- Git operation monitoring
+- Terminal command tracking
+- Browser action visibility
+- Custom notification systems
+- Any transform/execute combination
 
-## Current State Summary
+## Development Status
 
-### What's Working
-- Real-time MCP log monitoring from Claude Desktop
-- Dynamic routing to any user-specified tmux pane
-- Automatic file/directory opening in emacs
-- Flexible layout management with TMEX
-- Human-readable activity translations
-- Event-driven service architecture
+### Completed Milestones
+- [x] V2 architecture design
+- [x] WTE pattern implementation
+- [x] Core pipeline working
+- [x] V1 feature parity
+- [x] 10x code reduction
+- [x] Merge to main
+- [x] Issue #11 closed
 
-### What's Not Working
-- No persistence across restarts
-- Limited error recovery mechanisms
-- No test coverage
-- Some MCP tool parameter issues
+### Ready to Build
+- [ ] Claude Desktop visibility features
+- [ ] Claude Code tool integration
+- [ ] Advanced routing options
+- [ ] Activity analytics
+- [ ] Custom pipelines
 
-## In Progress 🔄
+## Known Limitations
+- No persistence (routing resets on restart)
+- Basic error handling
+- Limited test coverage
+- Single pipeline model (intentionally simple)
 
-### Pane Display Abstraction (Issue #7)
-- [ ] Design unified display API
-- [ ] Implement PaneDisplayManager
-- [ ] Add display providers
-- [ ] Create verification system
+## Technical Foundation
+The v2 implementation provides:
+- Clear extension points
+- Minimal dependencies
+- Direct debugging paths
+- Simple mental model
 
-## Upcoming Priorities 📋
-
-### Near Term (This Week)
-1. **Testing Infrastructure**
-   - [ ] Unit tests for services
-   - [ ] Integration tests for routing
-   - [ ] MCP tool testing
-
-2. **Missing Tmux Tools**
-   - [ ] assign_name_to_pane
-   - [ ] read_pane_by_name
-   - [ ] send_keys_to_pane_by_name
-
-3. **Documentation**
-   - [ ] User guide for routing
-   - [ ] Troubleshooting guide
-   - [ ] Architecture diagrams
-
-### Medium Term (Next Month)
-1. **Persistence Layer**
-   - [ ] SQLite for routing config
-   - [ ] Activity history storage
-   - [ ] Configuration management
-
-2. **Enhanced UI**
-   - [ ] Web dashboard
-   - [ ] Real-time activity view
-   - [ ] Configuration interface
-
-### Long Term (Future)
-1. **Multi-Agent Platform**
-   - [ ] Docker containers
-   - [ ] Agent coordination
-   - [ ] Shared context
-
-2. **Intelligence Features**
-   - [ ] Pattern detection
-   - [ ] Workflow analysis
-   - [ ] Optimization suggestions
-
-## Metrics
-
-### Code Statistics
-- Services: 4 core implementations
-- MCP Tools: 13 functional tools
-- Shell Scripts: 10+ integration scripts
-- Lines of Code: ~2000 (TypeScript)
-
-### Integration Points
-- Claude Desktop: ✅ Full MCP integration
-- Tmux: ✅ Dynamic pane routing
-- Emacs: ✅ Server per pane model
-- TMEX: ✅ Layout automation
-
-### Performance
-- Log Discovery: <100ms
-- Translation: <10ms per entry
-- Routing: <50ms per operation
-- File Opening: <200ms typical
+## Summary
+V2 redesign complete. The system now does exactly what it needs to with minimal complexity. Ready to rapidly build new features on this solid foundation.
