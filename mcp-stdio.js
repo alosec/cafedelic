@@ -1,37 +1,234 @@
 #!/usr/bin/env node
 /**
- * MCP stdio wrapper for cafedelic tools
+ * Modern MCP stdio server for cafedelic tools
+ * Uses McpServer class with modern .tool() syntax
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { toolDefinitions } from './src/mcp-tools/mcp-server.js';
-import { paneNamingTools, paneInteractionTools, routingTools } from './src/mcp-tools/pane-tools.js';
+import { z } from 'zod';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { join } from 'path';
 
-const server = new Server({
+const execAsync = promisify(exec);
+
+// Path to scripts directory
+const SCRIPTS_DIR = process.env.NODE_ENV === 'production' 
+  ? join(process.cwd(), 'scripts')
+  : join(process.cwd(), 'scripts');
+
+// Create MCP server
+const server = new McpServer({
   name: 'cafedelic-pane-tools',
   version: '0.1.0',
-}, {
-  capabilities: {
-    tools: {}
-  }
 });
 
-// Register tool handlers
-server.setRequestHandler('tools/list', async () => ({
-  tools: toolDefinitions
-}));
-
-server.setRequestHandler('tools/call', async (request) => {
-  const { name, arguments: args } = request.params;
-  
-  // Route to appropriate handler
-  switch(name) {
-    case 'assign_name_to_pane':
-      return await paneNamingTools.assignNameToPane(args.session, args.window, args.pane, args.name);
-    // ... add other handlers
+/**
+ * Execute a shell script with error handling
+ */
+async function runScript(scriptPath, args = []) {
+  try {
+    const fullPath = join(SCRIPTS_DIR, scriptPath);
+    const command = `"${fullPath}" ${args.map(arg => `"${arg}"`).join(' ')}`;
+    const { stdout, stderr } = await execAsync(command);
+    return { stdout: stdout.trim(), stderr: stderr.trim() };
+  } catch (error) {
+    throw new Error(error.stderr || error.message);
   }
-});
+}
 
-const transport = new StdioServerTransport();
-server.connect(transport);
+// Pane Naming Tools
+server.tool(
+  'assign_name_to_pane',
+  {
+    session: z.string().describe('The tmux session name'),
+    window: z.union([z.string(), z.number()]).describe('Window name or index'),
+    pane: z.number().describe('Pane index (0-based)'),
+    name: z.string().describe('Custom name for the pane (no spaces, colons, or dots)')
+  },
+  async ({ session, window, pane, name }) => {
+    const result = await runScript('pane-management/assign-name.sh', [
+      session,
+      window.toString(),
+      pane.toString(),
+      name
+    ]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully assigned name '${name}' to pane ${session}:${window}.${pane}`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'read_pane_by_name',
+  {
+    name: z.string().describe('The custom name of the pane'),
+    lines: z.number().default(100).describe('Number of lines to read (default: 100)')
+  },
+  async ({ name, lines }) => {
+    const result = await runScript('pane-management/read-pane.sh', [name, lines.toString()]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Content from pane '${name}':\n\n${result.stdout}`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'send_to_pane',
+  {
+    name: z.string().describe('The custom name of the pane'),
+    text: z.string().describe('Text to send to the pane')
+  },
+  async ({ name, text }) => {
+    const result = await runScript('pane-management/send-to-pane.sh', [name, text]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully sent text to pane '${name}'`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'list_named_panes',
+  {},
+  async () => {
+    const result = await runScript('pane-management/list-named-panes.sh');
+    return {
+      content: [{
+        type: 'text',
+        text: `Named panes:\n${result.stdout}`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'send_special_key_to_pane',
+  {
+    name: z.string().describe('The custom name of the pane'),
+    key: z.enum(['enter', 'escape', 'tab', 'ctrl-c', 'ctrl-d', 'ctrl-z', 
+                 'up', 'down', 'left', 'right', 'home', 'end', 
+                 'page-up', 'page-down']).describe('Special key to send')
+  },
+  async ({ name, key }) => {
+    const result = await runScript('pane-management/send-special-key.sh', [name, key]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully sent '${key}' key to pane '${name}'`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'send_ctrl_c_to_pane_by_name',
+  {
+    name: z.string().describe('The custom name of the pane'),
+    double_tap: z.boolean().default(false).describe('Send C-c twice in quick succession (e.g., for exiting Claude Code)')
+  },
+  async ({ name, double_tap }) => {
+    const result = await runScript('pane-management/send-ctrl-c.sh', [
+      name, 
+      double_tap ? 'true' : 'false'
+    ]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully sent Ctrl-C ${double_tap ? '(double-tap) ' : ''}to pane '${name}'`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'get_details_for_pane_by_name',
+  {
+    name: z.string().describe('The custom name of the pane')
+  },
+  async ({ name }) => {
+    const result = await runScript('pane-management/get-pane-details.sh', [name]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Pane details for '${name}':\n${result.stdout}`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'unname_pane',
+  {
+    name: z.string().describe('The custom name to remove')
+  },
+  async ({ name }) => {
+    const result = await runScript('pane-management/unname-pane.sh', [name]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully removed name '${name}' from pane`
+      }]
+    };
+  }
+);
+
+// Routing Configuration Tools
+server.tool(
+  'set_output_destination',
+  {
+    type: z.enum(['files', 'activity', 'logs', 'errors', 'terminal']).describe('Type of output to route'),
+    pane: z.string().describe('Name of the pane to route to')
+  },
+  async ({ type, pane }) => {
+    const result = await runScript('routing/set-output-destination.sh', [type, pane]);
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully configured '${type}' output to go to pane '${pane}'`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'get_routing_config',
+  {},
+  async () => {
+    const result = await runScript('routing/get-routing-config.sh');
+    return {
+      content: [{
+        type: 'text',
+        text: `Current routing configuration:\n${result.stdout}`
+      }]
+    };
+  }
+);
+
+// Start the server
+async function main() {
+  try {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    
+    // Use stderr for startup message to avoid breaking MCP protocol
+    process.stderr.write('Cafedelic MCP server started successfully\n');
+  } catch (error) {
+    process.stderr.write(`Failed to start Cafedelic MCP server: ${error.message}\n`);
+    process.exit(1);
+  }
+}
+
+main().catch((error) => {
+  process.stderr.write(`Fatal error: ${error.message}\n`);
+  process.exit(1);
+});

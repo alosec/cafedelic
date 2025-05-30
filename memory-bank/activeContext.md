@@ -6,11 +6,11 @@
 - **Status**: V2 redesign complete, WTE pattern fully implemented
 
 ## Recent Changes
-- Completed v2 architectural redesign with Watch-Transform-Execute pattern
-- Successfully merged to main (commit 6013806)
-- Reduced codebase from ~2000 to ~150 lines
-- Closed issue #11 documenting the journey
-- Removed redundant cafedelic-v2 worktree
+- **RESOLVED**: Issue #14 Docker build failure from V1/V2 mixed state
+- Successfully cherry-picked modern MCP server implementation from backup branch
+- Updated to McpServer API with modern .tool() syntax and Zod validation
+- Verified Docker build works with modern MCP implementation
+- All 10 MCP tools functional with new API
 
 ## Current Architecture (V2 - WTE)
 ```typescript
