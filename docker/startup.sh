@@ -40,10 +40,12 @@ if [ -n "$CAFEDELIC_TERMINAL_PANE" ]; then
     echo -e "${COLOR}Terminal pane configured: $CAFEDELIC_TERMINAL_PANE${NC}"
 fi
 
-# Start the MCP server
-echo -e "${COLOR}Starting Cafedelic MCP server...${NC}"
+# Start the MCP HTTP server in background
+echo -e "${COLOR}Starting MCP Tools HTTP server on port $CAFEDELIC_PORT...${NC}"
 cd /app
+node dist/src/mcp-server.js &
+MCP_PID=$!
 
-# For Phase 1, just run the server normally
-# In future phases, we'll add tmux integration here
+# Start the main cafedelic server
+echo -e "${COLOR}Starting Cafedelic MCP server...${NC}"
 exec node dist/index.js

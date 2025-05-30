@@ -38,12 +38,16 @@ COPY pipelines/ ./pipelines/
 COPY transforms/ ./transforms/
 COPY watchers/ ./watchers/
 COPY scripts/ ./scripts/
+COPY src/ ./src/
+
+# Make all scripts executable
+RUN find /app/scripts -type f -name "*.sh" -exec chmod +x {} \;
 
 # Build TypeScript
 RUN npm run build
 
 # Create directories for runtime
-RUN mkdir -p /app/logs /app/data
+RUN mkdir -p /app/logs /app/data /root/.cafedelic
 
 # Set environment variables for cafedelic
 ENV CAFEDELIC_SERVER_NAME=red
