@@ -22,3 +22,19 @@ export function chain<T, M, A>(
     return middle !== null ? transform2(middle) : null;
   };
 }
+
+export async function pipe<T>(
+  source: AsyncGenerator<T>,
+  ...transforms: Array<(input: AsyncGenerator<any>) => AsyncGenerator<any>>
+): Promise<void> {
+  let current: AsyncGenerator<any> = source;
+  
+  for (const transform of transforms) {
+    current = transform(current);
+  }
+  
+  // Consume the final generator
+  for await (const _ of current) {
+    // Pipeline complete
+  }
+}
