@@ -9,14 +9,15 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const execAsync = promisify(exec);
 
-// Path to scripts directory
-const SCRIPTS_DIR = process.env.NODE_ENV === 'production' 
-  ? join(process.cwd(), 'scripts')
-  : join(process.cwd(), 'scripts');
+// Path to scripts directory - relative to this module's location
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const SCRIPTS_DIR = join(__dirname, 'scripts');
 
 // Create MCP server
 const server = new McpServer({
