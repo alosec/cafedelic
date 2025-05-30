@@ -13,7 +13,7 @@ export function extractFileOperation(entry: LogEntry): FileAction | null {
     
     // Check for read_file tool
     if (name === 'read_file' && args?.path) {
-      console.log(`[TRANSFORM] Detected file read: ${args.path}`);
+      console.log(`[DESKTOP → EMACS] Opening file: ${args.path}`);
       return {
         type: 'read',
         path: args.path,
@@ -23,7 +23,7 @@ export function extractFileOperation(entry: LogEntry): FileAction | null {
     
     // Check for list_directory tool
     if (name === 'list_directory' && args?.path) {
-      console.log(`[TRANSFORM] Detected directory list: ${args.path}`);
+      console.log(`[DESKTOP → EMACS] Opening directory: ${args.path}`);
       return {
         type: 'list',
         path: args.path,
@@ -33,7 +33,7 @@ export function extractFileOperation(entry: LogEntry): FileAction | null {
     
     // Check for write_file/edit_block tools
     if (name === 'write_file' && args?.path) {
-      console.log(`[TRANSFORM] Detected file write: ${args.path}`);
+      console.log(`[DESKTOP → EMACS] Opening written file: ${args.path}`);
       return {
         type: 'write',
         path: args.file_path,
@@ -42,7 +42,7 @@ export function extractFileOperation(entry: LogEntry): FileAction | null {
     }
     
     if (name === 'edit_block' && args?.file_path) {
-      console.log(`[TRANSFORM] Detected file edit: ${args.file_path}`);
+      console.log(`[DESKTOP → EMACS] Opening edited file: ${args.file_path}`);
       return {
         type: 'write',
         path: args.file_path,

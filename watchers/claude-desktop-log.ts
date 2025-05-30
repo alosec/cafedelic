@@ -1,12 +1,12 @@
 /**
- * MCP Log Watcher
- * Watches Claude Desktop logs and emits parsed entries
+ * Claude Desktop Log Watcher
+ * Watches Claude Desktop MCP logs and emits parsed entries
  */
 
 import { spawn } from 'child_process';
 import { LogEntry } from './types.js';
 
-export async function* watchMCPLogs(): AsyncGenerator<LogEntry> {
+export async function* watchClaudeDesktopLogs(): AsyncGenerator<LogEntry> {
   const logDir = `${process.env.HOME}/.config/Claude/logs`;
   // Watch the Desktop Commander log specifically
   const tail = spawn('tail', ['-f', '-n', '0', `${logDir}/mcp-server-desktop-commander.log`]);
@@ -39,7 +39,22 @@ export async function* watchMCPLogs(): AsyncGenerator<LogEntry> {
         
         const content = JSON.parse(jsonMatch[1]);
         
-        console.log(`[WATCH] ${timestamp} | ${content.method || 'response'}`);
+        // Only log actual file operations, skip MCP protocol noise
+        if (content.method === 'tools/call') {
+          const toolName = content.params?.name;
+          const args = content.params?.arguments;
+          
+          // Only log file-related operations
+          if (toolName && ['read_file', 'write_file', 'edit_block', 'list_directory', 'search_files', 'search_code'].includes(toolName)) {
+            const filePath = args?.path || args?.file_path || args?.pattern;
+            if (filePath) {
+              console.log(`[CLAUDE DESKTOP] ${toolName}(${filePath})`);
+            } else {
+              console.log(`[CLAUDE DESKTOP] ${toolName}()`);
+            }
+          }
+        }
+        // Skip logging responses and protocol messages entirely
         
         yield {
           timestamp,

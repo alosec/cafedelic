@@ -39,7 +39,11 @@ if [ -f "$PANE_NAMES_FILE" ]; then
     mv "$TEMP_FILE" "$PANE_NAMES_FILE"
 fi
 
-# Add the new mapping
+# Add the new mapping to file
 echo "${SESSION}:${WINDOW}.${PANE}=${NAME}" >> "$PANE_NAMES_FILE"
 
+# ALSO set the tmux user option for compatibility with tmux.conf
+tmux set-option -p -t "${SESSION}:${WINDOW}.${PANE}" @pane_name "${NAME}"
+
 echo "Successfully assigned name '${NAME}' to pane ${SESSION}:${WINDOW}.${PANE}"
+echo "Set both file mapping and tmux @pane_name user option"

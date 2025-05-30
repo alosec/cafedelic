@@ -23,7 +23,7 @@ async function* watchWithLogging() {
 function transformWithLogging(entry: ClaudeCodeLogEntry): FileAction | null {
   const action = extractClaudeCodeOperation(entry);
   if (action) {
-    console.log(`[CLAUDE CODE] Detected ${action.type}: ${action.path} → Activating Emacs frame`);
+    console.log(`[CODE → EMACS] Opening file: ${action.path}`);
   }
   return action;
 }
