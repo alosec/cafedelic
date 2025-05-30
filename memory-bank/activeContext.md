@@ -2,15 +2,32 @@
 
 ## Current State
 - **Date**: January 2025
-- **Focus**: Ready for Claude Desktop visibility and Claude Code integration
-- **Status**: V2 redesign complete, WTE pattern fully implemented
+- **Focus**: Multi-dimensional pane property system implementation
+- **Status**: V2 redesign complete, property system for Issue #16 implemented
 
 ## Recent Changes
+- **IMPLEMENTED**: Issue #16 Multi-dimensional pane property system
+  - Added orthogonal `@source` and `@role` properties to panes
+  - Created property-based discovery scripts with fallback logic
+  - Enhanced MCP tools while maintaining backward compatibility
+  - Built property-aware executors for WTE pipeline
 - **RESOLVED**: Issue #14 Docker build failure from V1/V2 mixed state
 - Successfully cherry-picked modern MCP server implementation from backup branch
 - Updated to McpServer API with modern .tool() syntax and Zod validation
 - Verified Docker build works with modern MCP implementation
 - All 10 MCP tools functional with new API
+
+## Property System Architecture
+The new system adds two orthogonal dimensions to pane management:
+- **@source**: "user" | "claude-desktop" | "claude-code" | "system"
+- **@role**: "editor" | "terminal" | "logs" | "tests" | "debug" | "monitor"
+- **@name**: Existing naming system maintained for backward compatibility
+
+### Benefits
+- Multiple AI assistants can have separate panes for same role
+- Survives tmux layout changes (no hardcoded coordinates)
+- Graceful fallbacks when specific panes don't exist
+- Natural language setup: "Make this pane my Claude Desktop editor"
 
 ## Current Architecture (V2 - WTE)
 ```typescript
@@ -19,6 +36,16 @@ pipe(
   mcpLogWatcher(logPath),
   fileOperationTransform,
   emacsExecutor(scriptPath)
+);
+
+// NEW: Property-based routing
+pipe(
+  mcpLogWatcher(),
+  fileOperationTransform,
+  propertyBasedEmacsExecutor({
+    defaultSource: 'claude-desktop',
+    defaultRole: 'editor'
+  })
 );
 ```
 
@@ -71,12 +98,20 @@ pipe(
 - **After**: Single entry point, clear data flow, functional composition
 - **Result**: Same functionality, 10x less code, infinitely more maintainable
 
-## Available MCP Tools (Still Working)
-All the MCP tools developed during v1 remain functional:
+## Available MCP Tools (Enhanced with Properties)
+All the MCP tools developed during v1 remain functional, plus new property-based tools:
+
+### Existing Tools (Still Working)
+- `assign_name_to_pane` - Now uses property system internally
 - `setEditorDestination(paneSpec)` - Route to tmux panes
 - `create_tmex_layout(targetPane, layout)` - Create layouts
 - `toggle_auto_open(enable?)` - Control auto-opening
 - Plus all other routing and layout tools
+
+### New Property-Based Tools
+- `assign_pane_properties` - Set name, source, and/or role on a pane
+- `list_panes_by_properties` - Filter panes by any property combination
+- `find_pane_by_source_and_role` - Direct lookup with exact match
 
 ## Development Velocity
 With the v2 architecture, adding new features is now:
