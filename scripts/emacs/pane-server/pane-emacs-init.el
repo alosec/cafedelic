@@ -56,6 +56,38 @@
   ;; Return success indicator
   (format "Opened: %s" filepath))
 
+;; File opening in read-only mode (for Claude Code)
+(defun cafedelic-pane-open-file-readonly (filepath)
+  "Open a file in read-only mode and track it as recently accessed"
+  (interactive "fFile: ")
+  
+  ;; Expand to absolute path
+  (setq filepath (expand-file-name filepath))
+  
+  ;; Add to recent files
+  (setq cafedelic-recent-files
+        (cons (cons filepath (current-time))
+              (seq-remove (lambda (entry) (string= (car entry) filepath))
+                          cafedelic-recent-files)))
+  
+  ;; Limit list size
+  (when (> (length cafedelic-recent-files) cafedelic-max-recent-files)
+    (setq cafedelic-recent-files 
+          (seq-take cafedelic-recent-files cafedelic-max-recent-files)))
+  
+  ;; Open the file in current window
+  (find-file filepath)
+  
+  ;; Enable read-only mode
+  (read-only-mode 1)
+  
+  ;; Add visual indicator in mode line
+  (setq-local mode-line-misc-info 
+              (append mode-line-misc-info '(" [Claude:RO]")))
+  
+  ;; Return success indicator
+  (format "Opened read-only: %s" filepath))
+
 ;; Directory opening with dired
 (defun cafedelic-pane-open-directory (dirpath)
   "Open a directory in dired"

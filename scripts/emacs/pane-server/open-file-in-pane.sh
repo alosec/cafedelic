@@ -56,8 +56,14 @@ echo -e "${BLUE}Opening file in pane $PANE (server: $SERVER_NAME)${NC}"
 echo -e "File: ${GREEN}$FILE_PATH${NC}"
 
 # Open file using emacsclient
-RESULT=$(emacsclient --socket-name="$SERVER_NAME" \
-         --eval "(cafedelic-pane-open-file \"$FILE_PATH\")" 2>&1)
+if [ "$READ_ONLY" = "1" ]; then
+    echo -e "${YELLOW}Opening in read-only mode${NC}"
+    RESULT=$(emacsclient --socket-name="$SERVER_NAME" \
+             --eval "(cafedelic-pane-open-file-readonly \"$FILE_PATH\")" 2>&1)
+else
+    RESULT=$(emacsclient --socket-name="$SERVER_NAME" \
+             --eval "(cafedelic-pane-open-file \"$FILE_PATH\")" 2>&1)
+fi
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ File opened successfully${NC}"
