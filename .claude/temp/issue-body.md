@@ -12,7 +12,7 @@ Cafedelic V2 has successfully implemented the WTE (Watch-Transform-Execute) patt
 - ✅ Emacs integration functional
 - ❌ No dynamic pane configuration
 - ❌ No MCP tools for routing control
-- ❌ Missing simple sh script implementations
+- ❌ Missing pane interaction capabilities
 
 ## Vision
 
@@ -24,7 +24,7 @@ Create a configurable shared visibility system where:
 ## Implementation Plan
 
 ### Phase 1: Core MCP Tools (Priority)
-Replicate essential tools from deli as simple sh scripts:
+Implement essential pane management tools as simple sh scripts:
 
 **Pane Management Tools:**
 - [ ] `assign_name_to_pane` - Name a pane for easy reference
@@ -32,66 +32,167 @@ Replicate essential tools from deli as simple sh scripts:
 - [ ] `send_to_pane` - Send text to named panes
 - [ ] `list_named_panes` - Show all named panes
 - [ ] `get_pane_details` - Get info about a named pane
+- [ ] `unname_pane` - Remove a pane's custom name
+
+**Pane Interaction Tools:**
+- [ ] `send_special_key_to_pane` - Send special keys (Enter, Escape, Tab, arrows, etc.)
+- [ ] `send_ctrl_c_to_pane` - Send Ctrl-C with optional double-tap for Claude Code
+- [ ] `clear_pane` - Clear a pane's content
+- [ ] `send_key_sequence` - Send complex key combinations
 
 **Routing Configuration Tools:**
 - [ ] `set_output_destination` - Configure where specific output types go
 - [ ] `get_routing_config` - Show current routing configuration
 - [ ] `clear_routing` - Reset routing configuration
+- [ ] `assign_pane_role` - Assign semantic roles (editor, logs, terminal)
 
 ### Phase 2: Shell Script Foundation
-Create simple sh scripts for core operations:
+Create robust sh scripts that handle tmux operations:
 
 ```bash
-# Example: scripts/assign-pane-name.sh
+# scripts/pane-management/send-special-key.sh
 #!/bin/bash
-SESSION=$1
-WINDOW=$2
-PANE=$3
-NAME=$4
+PANE_NAME=$1
+KEY=$2
 
-# Store name in simple key-value file
-echo "${SESSION}:${WINDOW}.${PANE}=${NAME}" >> ~/.cafedelic/pane-names
+# Get pane coordinates from name registry
+COORDS=$(grep "=$PANE_NAME$" ~/.cafedelic/pane-names | cut -d= -f1)
+if [ -z "$COORDS" ]; then
+    echo "Error: Pane '$PANE_NAME' not found"
+    exit 1
+fi
+
+# Map friendly names to tmux key names
+case "$KEY" in
+    enter) TMUX_KEY="Enter" ;;
+    escape) TMUX_KEY="Escape" ;;
+    tab) TMUX_KEY="Tab" ;;
+    ctrl-c) TMUX_KEY="C-c" ;;
+    ctrl-d) TMUX_KEY="C-d" ;;
+    ctrl-z) TMUX_KEY="C-z" ;;
+    up|down|left|right) TMUX_KEY="${KEY^}" ;;
+    page-up) TMUX_KEY="PageUp" ;;
+    page-down) TMUX_KEY="PageDown" ;;
+    *) TMUX_KEY="$KEY" ;;
+esac
+
+tmux send-keys -t "$COORDS" "$TMUX_KEY"
 ```
 
-### Phase 3: WTE Integration
-Connect routing configuration to existing pipelines:
+```bash
+# scripts/pane-management/send-ctrl-c.sh
+#!/bin/bash
+PANE_NAME=$1
+DOUBLE_TAP=$2
 
-1. **Watchers** read routing config
-2. **Transforms** determine target pane based on operation type
-3. **Executors** send output to configured panes
+COORDS=$(grep "=$PANE_NAME$" ~/.cafedelic/pane-names | cut -d= -f1)
+if [ -z "$COORDS" ]; then
+    echo "Error: Pane '$PANE_NAME' not found"
+    exit 1
+fi
 
-### Phase 4: Enhanced Visibility
-Add new pipeline types:
-- Git operation visibility
-- Terminal command tracking
-- Browser action monitoring
-- Activity summaries
+tmux send-keys -t "$COORDS" C-c
 
-## Technical Approach
+# For Claude Code, send C-c twice quickly
+if [ "$DOUBLE_TAP" = "true" ]; then
+    sleep 0.1
+    tmux send-keys -t "$COORDS" C-c
+fi
+```
 
-1. **Storage**: Simple file-based configuration in `~/.cafedelic/`
-2. **Scripts**: Bash scripts in `scripts/` directory
-3. **Integration**: Minimal changes to existing WTE pipelines
-4. **MCP Tools**: Express endpoints that call sh scripts
+### Phase 3: WTE Pipeline Integration
+Enhance existing pipelines with routing configuration:
 
-## Success Criteria
+```typescript
+// watchers/routing-config.ts
+export async function* routingConfigWatcher() {
+  const configPath = '~/.cafedelic/routing-config';
+  // Watch for changes and yield routing updates
+}
 
-- [ ] Can assign names to tmux panes via MCP tools
-- [ ] Can configure routing destinations for different output types
-- [ ] File operations appear in user-configured panes
-- [ ] Configuration persists across restarts
-- [ ] Zero hard-coded pane assumptions
+// transforms/route-by-type.ts
+export function routeByType(routing: RoutingConfig) {
+  return (operation: Operation) => {
+    const destination = routing.getDestination(operation.type);
+    return { ...operation, targetPane: destination };
+  };
+}
 
-## Example Usage
+// executors/pane-output.ts
+export function paneExecutor() {
+  return async (op: RoutedOperation) => {
+    if (op.targetPane) {
+      await execAsync(`scripts/send-to-pane.sh "${op.targetPane}" "${op.content}"`);
+    }
+  };
+}
+```
 
-```javascript
-// Configure routing
-await setOutputDestination({
-  type: 'file-operations',
-  pane: 'editor-output'
-});
+### Phase 4: tmux-mcp Integration Strategy
+Consider integration with tmux-mcp server for advanced features:
 
-// Name a pane
+1. **Hybrid Approach**: 
+   - Cafedelic handles routing logic and orchestration
+   - tmux-mcp provides low-level tmux operations
+   - Shell scripts for simple, reliable operations
+
+2. **Future Capabilities**:
+   - Use tmux-mcp for complex session management
+   - Leverage its command execution features
+   - Maintain our simple sh scripts for core operations
+
+## Technical Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  Claude Desktop │────▶│    Cafedelic     │────▶│   tmux panes    │
+│  Claude Code    │     │  (WTE Pipelines) │     │   (visible)     │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+         │                       │                         ▲
+         │                       │                         │
+         ▼                       ▼                         │
+┌─────────────────┐     ┌──────────────────┐             │
+│   MCP Tools     │     │  Shell Scripts   │─────────────┘
+│  (configure)    │     │   (execute)      │
+└─────────────────┘     └──────────────────┘
+```
+
+## Implementation Details
+
+### Storage Structure
+```
+~/.cafedelic/
+├── pane-names          # name=session:window.pane mappings
+├── routing-config      # type=destination mappings
+├── pane-roles         # pane=role assignments
+└── active-routes      # runtime routing state
+```
+
+### Script Organization
+```
+cafedelic/scripts/
+├── pane-management/
+│   ├── assign-name.sh
+│   ├── read-pane.sh
+│   ├── send-to-pane.sh
+│   ├── send-special-key.sh
+│   ├── send-ctrl-c.sh
+│   ├── clear-pane.sh
+│   └── list-panes.sh
+├── routing/
+│   ├── set-destination.sh
+│   ├── get-config.sh
+│   ├── assign-role.sh
+│   └── clear-routes.sh
+└── utils/
+    ├── find-pane.sh
+    └── validate-coords.sh
+```
+
+### MCP Tool Examples
+
+```typescript
+// Assign a friendly name to a pane
 await assignNameToPane({
   session: '0',
   window: 1,
@@ -99,7 +200,53 @@ await assignNameToPane({
   name: 'editor-output'
 });
 
-// Now all file operations show in that pane
+// Send special keys
+await sendSpecialKeyToPane({
+  name: 'editor-output',
+  key: 'ctrl-c'
+});
+
+// Configure routing
+await setOutputDestination({
+  type: 'file-operations',
+  pane: 'editor-output'
+});
+
+// Send Ctrl-C twice for Claude Code
+await sendCtrlCToPane({
+  name: 'claude-code-pane',
+  double_tap: true
+});
+```
+
+## Success Criteria
+
+- [ ] Can assign names to tmux panes via MCP tools
+- [ ] Can send text and special keys to named panes
+- [ ] Can configure routing destinations for different output types
+- [ ] File operations appear in user-configured panes
+- [ ] Can interact with Claude Code (double Ctrl-C support)
+- [ ] Configuration persists across restarts
+- [ ] Zero hard-coded pane assumptions
+- [ ] Works alongside tmux-mcp if present
+
+## Example Workflow
+
+```bash
+# 1. Name your panes
+claude> assignNameToPane({ session: '0', window: 1, pane: 0, name: 'main-editor' })
+claude> assignNameToPane({ session: '0', window: 1, pane: 1, name: 'activity-log' })
+claude> assignNameToPane({ session: '0', window: 1, pane: 2, name: 'claude-code' })
+
+# 2. Configure routing
+claude> setOutputDestination({ type: 'file-operations', pane: 'main-editor' })
+claude> setOutputDestination({ type: 'activity-summary', pane: 'activity-log' })
+
+# 3. Now all file operations show in main-editor pane
+# Activity summaries appear in activity-log pane
+
+# 4. Control Claude Code
+claude> sendCtrlCToPane({ name: 'claude-code', double_tap: true })
 ```
 
 ## Related Context
@@ -107,7 +254,8 @@ await assignNameToPane({
 - Previous v2 redesign: #11
 - WTE pattern documentation: memory-bank/systemPatterns.md
 - Deli reference implementation: /home/alex/code/deli
+- tmux-mcp integration option: https://github.com/nickgnd/tmux-mcp
 
 ## Notes
 
-This maintains our philosophy of simple, composable tools. Each piece does one thing well, and they combine to create powerful workflows. The sh script approach ensures reliability and easy debugging.
+This implementation maintains our philosophy of simple, composable tools while adding powerful interaction capabilities. The shell script approach ensures reliability and easy debugging, while the optional tmux-mcp integration provides a path to more advanced features. Each piece does one thing well, and they combine to create powerful workflows for shared visibility between Claude and the developer.
