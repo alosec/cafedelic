@@ -4,3 +4,4 @@
  */
 
 export { fileToEmacs } from './file-to-emacs.js';
+export { claudeCodeToEmacs, claudeCodeToEmacsDebounced } from './claude-code-to-emacs.js';
