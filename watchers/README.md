@@ -33,14 +33,12 @@ node dist/test/debug.js
 
 ## Integration
 
-Both watchers can be used with pipelines to automatically open files in Emacs:
+Both watchers integrate with pipelines to automatically open files in Emacs as soon as they're accessed:
 
 ```typescript
-// Simple pipeline
+// Direct pipeline - immediate frame activation
 import { claudeCodeToEmacs } from './pipelines/claude-code-to-emacs.js';
 await runPipeline(claudeCodeToEmacs);
-
-// Debounced pipeline (batches operations)
-import { claudeCodeToEmacsDebounced } from './pipelines/claude-code-to-emacs.js';
-await runPipeline(claudeCodeToEmacsDebounced);
 ```
+
+Files open in Emacs immediately when Claude accesses them, providing a responsive, real-time experience.

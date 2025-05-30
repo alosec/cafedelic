@@ -1,66 +1,40 @@
 /**
  * Claude Code to Emacs Pipeline
- * Watches Claude Code logs and opens files in Emacs with read-only mode
+ * Watches Claude Code logs and immediately opens files in Emacs
  */
 
+import { WTE } from '../core/wte.js';
 import { watchClaudeCodeLogs, ClaudeCodeLogEntry } from '../watchers/claude-code-log.js';
 import { extractClaudeCodeOperation } from '../transforms/claude-code-operations.js';
 import { openInEmacs } from '../executors/emacs.js';
 import { FileAction } from '../transforms/types.js';
 
-// Simple pipeline that opens files immediately
-export async function claudeCodeToEmacs() {
-  console.log('[CLAUDE CODE] Starting simple pipeline');
+// Wrapper to add console logging
+async function* watchWithLogging() {
+  console.log('[CLAUDE CODE] Starting direct pipeline - immediate frame activation');
+  console.log('[CLAUDE CODE] Files will open in Emacs as soon as Claude accesses them');
   
   for await (const entry of watchClaudeCodeLogs()) {
-    const action = extractClaudeCodeOperation(entry);
-    if (action) {
-      await openInEmacs(action, { readOnly: true });
-    }
+    yield entry;
   }
 }
 
-// Debounced pipeline that batches file operations
-export async function claudeCodeToEmacsDebounced() {
-  console.log('[CLAUDE CODE] Starting debounced pipeline');
-  
-  const fileQueue = new Map<string, FileAction>();
-  let debounceTimer: NodeJS.Timeout | null = null;
-  
-  async function flushQueue() {
-    if (fileQueue.size === 0) return;
-    
-    const actions = Array.from(fileQueue.values());
-    console.log(`[CLAUDE CODE] Opening ${actions.length} files`);
-    
-    // Open files sequentially with small delay
-    for (const action of actions) {
-      await openInEmacs(action, { readOnly: true });
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-    
-    fileQueue.clear();
+// Transform with logging
+function transformWithLogging(entry: ClaudeCodeLogEntry): FileAction | null {
+  const action = extractClaudeCodeOperation(entry);
+  if (action) {
+    console.log(`[CLAUDE CODE] Detected ${action.type}: ${action.path} → Activating Emacs frame`);
   }
-  
-  for await (const entry of watchClaudeCodeLogs()) {
-    const action = extractClaudeCodeOperation(entry);
-    if (!action) continue;
-    
-    // Add to queue
-    fileQueue.set(action.path, action);
-    
-    // Reset debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    
-    // Set new timer
-    debounceTimer = setTimeout(() => {
-      flushQueue().catch(console.error);
-      debounceTimer = null;
-    }, 5000); // 5 second window
-  }
-  
-  // Flush any remaining on exit
-  await flushQueue();
+  return action;
 }
+
+// Execute with read-only mode
+async function executeReadOnly(action: FileAction): Promise<void> {
+  await openInEmacs(action, { readOnly: true });
+}
+
+export const claudeCodeToEmacs: WTE<ClaudeCodeLogEntry, FileAction> = {
+  watch: watchWithLogging,
+  transform: transformWithLogging,
+  execute: executeReadOnly
+};
