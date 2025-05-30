@@ -75,26 +75,48 @@ export async function* watchClaudeCodeLogs(): AsyncGenerator<ClaudeCodeLogEntry>
         if (!Array.isArray(content)) continue;
         
         for (const item of content) {
-          if (item.type === 'tool_use' && item.name === 'Read') {
-            console.log(`[CLAUDE CODE] File read: ${item.input.file_path}`);
+          if (item.type === 'tool_use') {
+            let operation: string | null = null;
+            let filePath: string | null = null;
             
-            yield {
-              timestamp: entry.timestamp || new Date().toISOString(),
-              component: 'claude-code',
-              type: 'file-read',
-              sessionId: entry.sessionId || sessionPath,
-              messageRole: 'assistant',
-              toolUse: {
-                id: item.id,
-                name: item.name,
-                input: item.input
-              },
-              content: {
-                filePath: item.input.file_path,
-                operation: 'read'
-              },
-              raw: line
-            };
+            // Determine operation type and file path
+            switch (item.name) {
+              case 'Read':
+                operation = 'read';
+                filePath = item.input.file_path;
+                break;
+              case 'Edit':
+              case 'MultiEdit':
+                operation = 'edit';
+                filePath = item.input.file_path;
+                break;
+              case 'Write':
+                operation = 'write';
+                filePath = item.input.file_path;
+                break;
+              default:
+                continue; // Skip non-file operations
+            }
+            
+            if (operation && filePath) {
+              yield {
+                timestamp: entry.timestamp || new Date().toISOString(),
+                component: 'claude-code',
+                type: `file-${operation}`,
+                sessionId: entry.sessionId || sessionPath,
+                messageRole: 'assistant',
+                toolUse: {
+                  id: item.id,
+                  name: item.name,
+                  input: item.input
+                },
+                content: {
+                  filePath,
+                  operation
+                },
+                raw: line
+              };
+            }
           }
         }
       } catch (error) {
