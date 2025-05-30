@@ -1,6 +1,6 @@
 #!/bin/bash
-# send-to-pane.sh - Send text to a named pane
-# Usage: ./send-to-pane.sh NAME TEXT
+# send-keys-to-pane.sh - Send keys/text to a named pane
+# Usage: ./send-keys-to-pane.sh NAME TEXT
 
 set -e
 

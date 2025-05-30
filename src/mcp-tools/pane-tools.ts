@@ -53,8 +53,8 @@ export const paneNamingTools = {
     };
   },
 
-  sendToPane: async (name: string, text: string) => {
-    const result = await runScript('pane-management/send-to-pane.sh', [name, text]);
+  sendKeysToPane: async (name: string, text: string) => {
+    const result = await runScript('pane-management/send-keys-to-pane.sh', [name, text]);
     return { success: true, message: result.stdout };
   },
 

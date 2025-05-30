@@ -37,13 +37,13 @@ const toolDefinitions = [
     }
   },
   {
-    name: 'send_to_pane',
-    description: 'Send text to a named pane',
+    name: 'send_keys_to_pane',
+    description: 'Send keys/text to a named pane',
     inputSchema: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'The custom name of the pane' },
-        text: { type: 'string', description: 'Text to send to the pane' }
+        text: { type: 'string', description: 'Keys/text to send to the pane' }
       },
       required: ['name', 'text']
     }
@@ -123,8 +123,8 @@ const toolHandlers: Record<string, Function> = {
     return await paneNamingTools.readPaneByName(params.name, params.lines);
   },
   
-  send_to_pane: async (params: any) => {
-    return await paneNamingTools.sendToPane(params.name, params.text);
+  send_keys_to_pane: async (params: any) => {
+    return await paneNamingTools.sendKeysToPane(params.name, params.text);
   },
   
   list_named_panes: async () => {
