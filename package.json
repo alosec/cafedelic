@@ -8,7 +8,10 @@
     "build": "tsc",
     "test": "node dist/test/index.js",
     "debug": "node dist/test/debug.js",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "start": "npm run build && node dist/index.js",
+    "mcp-server": "npm run build && node dist/src/mcp-server.js",
+    "test-pane-tools": "./test-pane-tools.sh"
   },
   "keywords": [
     "mcp",
@@ -21,5 +24,9 @@
   "devDependencies": {
     "@types/node": "^22.15.24",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.2",
+    "express": "^5.1.0"
   }
 }
