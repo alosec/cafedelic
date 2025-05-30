@@ -44,7 +44,6 @@ readPaneByName({ name: 'logs', lines: 50 })
 ### Pane Naming
 - `assignNameToPane` - Give a pane a friendly name
 - `listNamedPanes` - See all named panes
-- `unnamPane` - Remove a pane's name
 
 ### Pane Interaction
 - `sendToPane` - Send text to a named pane

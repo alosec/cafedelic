@@ -165,21 +165,7 @@ server.tool(
   }
 );
 
-server.tool(
-  'unname_pane',
-  {
-    name: z.string().describe('The custom name to remove')
-  },
-  async ({ name }) => {
-    const result = await runScript('pane-management/unname-pane.sh', [name]);
-    return {
-      content: [{
-        type: 'text',
-        text: `Successfully removed name '${name}' from pane`
-      }]
-    };
-  }
-);
+
 
 // Routing Configuration Tools
 server.tool(

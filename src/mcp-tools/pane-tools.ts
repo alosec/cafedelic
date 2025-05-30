@@ -61,11 +61,6 @@ export const paneNamingTools = {
   listNamedPanes: async () => {
     const result = await runScript('pane-management/list-named-panes.sh');
     return { panes: result.stdout };
-  },
-
-  unnamPane: async (name: string) => {
-    // TODO: Implement unname-pane.sh
-    throw new Error('Not implemented yet');
   }
 };
 

@@ -189,12 +189,6 @@ Named Panes:
 - logs: dev:0.2 - Running: tail -f app.log
 ```
 
-#### `unname_pane`
-Removes a custom name from a pane.
-
-**Parameters:**
-- `name`: The custom name to remove
-
 ### Pane Interaction
 
 #### `read_pane_by_name`
@@ -440,10 +434,14 @@ const transform = createRoutingTransform('files', async (input) => {
 
 #### 1. "Pane not found" Error
 - **Cause**: The pane no longer exists but the name mapping remains
-- **Solution**: List panes to identify stale entries, then unname them
+- **Solution**: List panes to identify stale entries, then reassign or manually clean
 ```javascript
 await mcp.callTool('list_named_panes', {});
-await mcp.callTool('unname_pane', { name: 'stale-pane' });
+// Option 1: Reassign the name to a new pane (overwrites stale entry)
+await mcp.callTool('assign_name_to_pane', { 
+  session: 'dev', window: 0, pane: 1, name: 'stale-pane' 
+});
+// Option 2: Manually edit ~/.cafedelic/pane-names to remove stale entries
 ```
 
 #### 2. "Invalid pane name" Error
