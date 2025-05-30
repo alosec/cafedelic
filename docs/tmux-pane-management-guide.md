@@ -212,12 +212,12 @@ Reads the last N lines from a named pane.
 }
 ```
 
-#### `send_to_pane`
-Sends text to a named pane.
+#### `send_keys_to_pane`
+Sends keys/text to a named pane.
 
 **Parameters:**
 - `name`: Pane name
-- `text`: Text to send
+- `text`: Keys/text to send
 
 **Example:**
 ```javascript
@@ -359,7 +359,7 @@ console.log(config);
 
 ```javascript
 // Send test command to terminal
-await mcp.callTool('send_to_pane', {
+await mcp.callTool('send_keys_to_pane', {
   name: 'terminal',
   text: 'npm test'
 });
@@ -385,7 +385,7 @@ await mcp.callTool('send_ctrl_c_to_pane_by_name', {
 
 ```javascript
 // Start log tailing in logs pane
-await mcp.callTool('send_to_pane', {
+await mcp.callTool('send_keys_to_pane', {
   name: 'logs',
   text: 'tail -f /var/log/app.log'
 });
@@ -516,7 +516,7 @@ rm ~/.cafedelic/routing-config
 // Route errors to different panes based on severity
 async function routeError(error, severity) {
   const pane = severity === 'critical' ? 'alerts' : 'logs';
-  await mcp.callTool('send_to_pane', {
+  await mcp.callTool('send_keys_to_pane', {
     name: pane,
     text: `[${severity.toUpperCase()}] ${error.message}`
   });
@@ -575,7 +575,7 @@ async function monitorPane(paneName, pattern, callback) {
 
 // Example: Alert on errors
 monitorPane('logs', 'ERROR', async (content) => {
-  await mcp.callTool('send_to_pane', {
+  await mcp.callTool('send_keys_to_pane', {
     name: 'alerts',
     text: '🚨 Error detected in logs!'
   });
