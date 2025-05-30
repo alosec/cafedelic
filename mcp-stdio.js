@@ -49,12 +49,10 @@ server.tool(
     name: z.string().describe('Custom name for the pane (no spaces, colons, or dots)')
   },
   async ({ session, window, pane, name }) => {
-    const result = await runScript('pane-management/assign-name.sh', [
-      session,
-      window.toString(),
-      pane.toString(),
-      name
-    ]);
+    // Use the new properties script for backward compatibility
+    const args = [session, window.toString(), pane.toString(), '--name', name];
+    const result = await runScript('pane-properties/assign-properties.sh', args);
+    
     return {
       content: [{
         type: 'text',
@@ -82,17 +80,17 @@ server.tool(
 );
 
 server.tool(
-  'send_to_pane',
+  'send_keys_to_pane',
   {
     name: z.string().describe('The custom name of the pane'),
-    text: z.string().describe('Text to send to the pane')
+    text: z.string().describe('Keys/text to send to the pane')
   },
   async ({ name, text }) => {
-    const result = await runScript('pane-management/send-to-pane.sh', [name, text]);
+    const result = await runScript('pane-management/send-keys-to-pane.sh', [name, text]);
     return {
       content: [{
         type: 'text',
-        text: `Successfully sent text to pane '${name}'`
+        text: `Successfully sent keys/text to pane '${name}'`
       }]
     };
   }
@@ -212,6 +210,89 @@ server.tool(
         text: `Current routing configuration:\n${result.stdout}`
       }]
     };
+  }
+);
+
+// New Property-Based Tools
+server.tool(
+  'assign_pane_properties',
+  {
+    session: z.string().describe('The tmux session name'),
+    window: z.union([z.string(), z.number()]).describe('Window name or index'),
+    pane: z.number().describe('Pane index (0-based)'),
+    name: z.string().optional().describe('Custom name for the pane (no spaces, colons, or dots)'),
+    source: z.enum(['user', 'claude-desktop', 'claude-code', 'system']).optional().describe('Source context for the pane'),
+    role: z.enum(['editor', 'terminal', 'logs', 'tests', 'debug', 'monitor']).optional().describe('Semantic role for the pane')
+  },
+  async ({ session, window, pane, name, source, role }) => {
+    // Build arguments for the script
+    const args = [session, window.toString(), pane.toString()];
+    if (name) args.push('--name', name);
+    if (source) args.push('--source', source);
+    if (role) args.push('--role', role);
+    
+    const result = await runScript('pane-properties/assign-properties.sh', args);
+    
+    const properties = [];
+    if (name) properties.push(`name='${name}'`);
+    if (source) properties.push(`source='${source}'`);
+    if (role) properties.push(`role='${role}'`);
+    
+    return {
+      content: [{
+        type: 'text',
+        text: `Successfully assigned properties to pane ${session}:${window}.${pane}: ${properties.join(', ')}`
+      }]
+    };
+  }
+);
+
+server.tool(
+  'list_panes_by_properties',
+  {
+    source: z.enum(['user', 'claude-desktop', 'claude-code', 'system']).optional().describe('Filter by source'),
+    role: z.enum(['editor', 'terminal', 'logs', 'tests', 'debug', 'monitor']).optional().describe('Filter by role'),
+    name: z.string().optional().describe('Filter by name')
+  },
+  async ({ source, role, name }) => {
+    const args = [];
+    if (source) args.push('--source', source);
+    if (role) args.push('--role', role);
+    if (name) args.push('--name', name);
+    
+    const result = await runScript('pane-properties/list-panes-by-properties.sh', args);
+    return {
+      content: [{
+        type: 'text',
+        text: result.stdout || 'No panes found with specified properties'
+      }]
+    };
+  }
+);
+
+server.tool(
+  'find_pane_by_source_and_role',
+  {
+    source: z.enum(['user', 'claude-desktop', 'claude-code', 'system']).describe('Source to find'),
+    role: z.enum(['editor', 'terminal', 'logs', 'tests', 'debug', 'monitor']).describe('Role to find')
+  },
+  async ({ source, role }) => {
+    try {
+      const result = await runScript('pane-properties/find-pane-by-source-and-role.sh', [source, role]);
+      return {
+        content: [{
+          type: 'text',
+          text: `Found pane with source='${source}' and role='${role}': ${result.stdout}`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `No pane found with source='${source}' and role='${role}'`
+        }]
+      };
+    }
   }
 );
 
