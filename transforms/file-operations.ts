@@ -36,7 +36,7 @@ export function extractFileOperation(entry: LogEntry): FileAction | null {
       console.log(`[DESKTOP → EMACS] Opening written file: ${args.path}`);
       return {
         type: 'write',
-        path: args.file_path,
+        path: args.path,
         timestamp: entry.timestamp
       };
     }
