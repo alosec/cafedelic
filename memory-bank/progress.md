@@ -106,3 +106,19 @@ The v2 implementation provides:
 
 ## Summary
 V2 redesign complete. The system now does exactly what it needs to with minimal complexity. Ready to rapidly build new features on this solid foundation.
+## Recent Achievement: Tool Deprecation (2025-05-31)
+
+Successfully deprecated and removed `assign_name_to_pane` tool in favor of the more powerful `assign_pane_properties` tool. This simplifies the API while providing enhanced multi-dimensional pane management capabilities.
+
+**Changes Made**:
+- Removed deprecated tool from both MCP servers (stdio and HTTP)
+- Updated comprehensive documentation with migration guide
+- Cleaned up tool definitions and handlers
+- Added deprecation notes to .clauderules
+
+**Benefits Achieved**:
+- Cleaner API with single pane assignment method
+- Enhanced property system supports source/role combinations
+- Better multi-assistant workflow support
+- Future-proof extensible property model
+

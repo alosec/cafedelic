@@ -39,28 +39,7 @@ async function runScript(scriptPath, args = []) {
   }
 }
 
-// Pane Naming Tools
-server.tool(
-  'assign_name_to_pane',
-  {
-    session: z.string().describe('The tmux session name'),
-    window: z.union([z.string(), z.number()]).describe('Window name or index'),
-    pane: z.number().describe('Pane index (0-based)'),
-    name: z.string().describe('Custom name for the pane (no spaces, colons, or dots)')
-  },
-  async ({ session, window, pane, name }) => {
-    // Use the new properties script for backward compatibility
-    const args = [session, window.toString(), pane.toString(), '--name', name];
-    const result = await runScript('pane-properties/assign-properties.sh', args);
-    
-    return {
-      content: [{
-        type: 'text',
-        text: `Successfully assigned name '${name}' to pane ${session}:${window}.${pane}`
-      }]
-    };
-  }
-);
+// Pane Interaction Tools
 
 server.tool(
   'read_pane_by_name',

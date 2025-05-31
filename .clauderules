@@ -197,3 +197,44 @@ Build from small, individually testable pieces:
 - Database operations are isolated in PersistenceService
 
 This approach creates maintainable, debuggable systems.
+
+
+## Tool Deprecation Decision (2025-05-31)
+
+### Deprecated: assign_name_to_pane Tool
+
+**Decision**: Removed `assign_name_to_pane` from MCP tools in favor of `assign_pane_properties`
+
+**Rationale**:
+- Property-based system provides multi-dimensional pane identification
+- Single-purpose naming tool was redundant with enhanced properties tool
+- Cleaner API with fewer tools to maintain
+- Enhanced capabilities: source (user/claude-desktop/claude-code/system) + role (editor/terminal/logs/tests/debug/monitor)
+
+**Implementation**:
+- Removed from both stdio (mcp-stdio.js) and HTTP (src/mcp-tools/mcp-server.ts) MCP servers
+- Updated documentation to remove deprecated references
+- Added migration section explaining the transition
+- Underlying scripts remain functional (assign-properties.sh handles both cases)
+
+**Benefits**:
+- Simplified tool set - one way to assign pane properties
+- Enhanced discovery capabilities with source/role combinations  
+- Better support for multi-assistant workflows
+- Future-proof property system for complex development scenarios
+
+**Migration Pattern**:
+```javascript
+// OLD (deprecated)
+assign_name_to_pane(session, window, pane, name)
+
+// NEW (enhanced)
+assign_pane_properties(session, window, pane, {
+  name: name,           // Optional
+  source: 'user',       // Optional: who owns this pane
+  role: 'editor'        // Optional: what this pane does
+})
+```
+
+**Key Learning**: When building enhanced replacements, deprecate legacy tools cleanly rather than maintaining dual APIs. The enhanced tool provides all the functionality of the simple tool plus significant additional capabilities.
+

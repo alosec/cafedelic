@@ -11,20 +11,6 @@ const router = express.Router();
 // Tool definitions for MCP
 const toolDefinitions = [
   {
-    name: 'assign_name_to_pane',
-    description: 'Assign a custom name to a tmux pane for easy reference',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        session: { type: 'string', description: 'The tmux session name' },
-        window: { type: ['string', 'number'], description: 'Window name or index' },
-        pane: { type: 'number', description: 'Pane index (0-based)' },
-        name: { type: 'string', description: 'Custom name for the pane (no spaces, colons, or dots)' }
-      },
-      required: ['session', 'window', 'pane', 'name']
-    }
-  },
-  {
     name: 'read_pane_by_name',
     description: 'Read the last N lines from a named pane',
     inputSchema: {
@@ -51,7 +37,7 @@ const toolDefinitions = [
   {
     name: 'list_named_panes',
     description: 'List all panes that have been assigned custom names'
-  },
+  }
   {
     name: 'send_special_key_to_pane',
     description: 'Send a special key sequence to a named pane',
@@ -90,15 +76,6 @@ const toolDefinitions = [
 
 // Tool handlers
 const toolHandlers: Record<string, Function> = {
-  assign_name_to_pane: async (params: any) => {
-    return await paneNamingTools.assignNameToPane(
-      params.session,
-      params.window,
-      params.pane,
-      params.name
-    );
-  },
-  
   read_pane_by_name: async (params: any) => {
     return await paneNamingTools.readPaneByName(params.name, params.lines);
   },
