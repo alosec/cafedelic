@@ -8,8 +8,11 @@ import { LogEntry } from './types.js';
 
 export async function* watchClaudeDesktopLogs(): AsyncGenerator<LogEntry> {
   const logDir = `${process.env.HOME}/.config/Claude/logs`;
+  const logFile = `${logDir}/mcp-server-desktop-commander.log`;
   // Watch the Desktop Commander log specifically
-  const tail = spawn('tail', ['-f', '-n', '0', `${logDir}/mcp-server-desktop-commander.log`]);
+  const tail = spawn('tail', ['-f', '-n', '0', logFile]);
+  
+  console.log('[CLAUDE DESKTOP] Watching session:', logFile);
   
   const decoder = new TextDecoder();
   
