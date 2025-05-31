@@ -82,17 +82,4 @@ export const paneInteractionTools = {
   }
 };
 
-/**
- * Routing configuration tools
- */
-export const routingTools = {
-  setOutputDestination: async (type: string, paneName: string) => {
-    const result = await runScript('routing/set-output-destination.sh', [type, paneName]);
-    return { success: true, message: result.stdout };
-  },
 
-  getRoutingConfig: async () => {
-    const result = await runScript('routing/get-routing-config.sh');
-    return { config: result.stdout };
-  }
-};

@@ -4,7 +4,7 @@
  */
 
 import express from 'express';
-import { paneNamingTools, paneInteractionTools, routingTools } from './pane-tools.js';
+import { paneNamingTools, paneInteractionTools } from './pane-tools.js';
 
 const router = express.Router();
 
@@ -85,26 +85,6 @@ const toolDefinitions = [
       },
       required: ['name']
     }
-  },
-  {
-    name: 'set_output_destination',
-    description: 'Configure where specific output types go',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        type: { 
-          type: 'string', 
-          enum: ['files', 'activity', 'logs', 'errors', 'terminal'],
-          description: 'Type of output to route' 
-        },
-        pane: { type: 'string', description: 'Name of the pane to route to' }
-      },
-      required: ['type', 'pane']
-    }
-  },
-  {
-    name: 'get_routing_config',
-    description: 'Show current routing configuration'
   }
 ];
 
@@ -137,14 +117,6 @@ const toolHandlers: Record<string, Function> = {
   
   send_ctrl_c_to_pane: async (params: any) => {
     return await paneInteractionTools.sendCtrlCToPane(params.name, params.double_tap);
-  },
-  
-  set_output_destination: async (params: any) => {
-    return await routingTools.setOutputDestination(params.type, params.pane);
-  },
-  
-  get_routing_config: async () => {
-    return await routingTools.getRoutingConfig();
   }
 };
 

@@ -1,6 +1,6 @@
 # Tmux Pane Management Guide for Cafedelic MCP Server
 
-This guide explains how to use Cafedelic's MCP (Model Context Protocol) server to manage tmux panes for output assignment and routing. The system enables AI assistants like Claude Desktop and Claude Code to dynamically interact with your development environment.
+This guide explains how to use Cafedelic's MCP (Model Context Protocol) server to manage tmux panes through a property-based system. The system enables AI assistants like Claude Desktop and Claude Code to dynamically interact with your development environment.
 
 ## Table of Contents
 
@@ -8,26 +8,25 @@ This guide explains how to use Cafedelic's MCP (Model Context Protocol) server t
 2. [Architecture](#architecture)
 3. [Setup and Configuration](#setup-and-configuration)
 4. [Available MCP Tools](#available-mcp-tools)
-5. [Output Routing System](#output-routing-system)
+5. [Property-Based Pane Management](#property-based-pane-management)
 6. [Practical Examples](#practical-examples)
-7. [Integration with Pipelines](#integration-with-pipelines)
-8. [Troubleshooting](#troubleshooting)
-9. [Best Practices](#best-practices)
+7. [Troubleshooting](#troubleshooting)
+8. [Best Practices](#best-practices)
 
 ## Overview
 
 Cafedelic's pane management system provides:
 
 - **Dynamic Pane Naming**: Assign meaningful names to tmux panes instead of using coordinates
-- **Output Routing**: Configure where different types of output (files, logs, errors) should go
+- **Property-Based Discovery**: Find panes by their semantic properties (source, role)
 - **MCP Integration**: AI assistants can interact with panes through standardized tools
-- **Flexible Control**: Change routing on-the-fly without modifying code
+- **Flexible Control**: Assign and query pane properties dynamically
 
 ### Key Benefits
 
 - No hard-coded pane destinations in scripts
 - AI assistants can read from and write to specific panes
-- Different output types can be routed to dedicated panes
+- Semantic pane discovery based on properties
 - Easy reconfiguration without code changes
 
 ## Architecture
@@ -58,7 +57,7 @@ The system consists of several components:
         ┌───────────────────────────────┐
         │    Shell Scripts Layer        │
         │  scripts/pane-management/     │
-        │  scripts/routing/             │
+        │  scripts/pane-properties/     │
         └───────────────┬───────────────┘
                         ▼
         ┌───────────────────────────────┐
@@ -71,8 +70,12 @@ The system consists of several components:
 
 Configuration files are stored in `~/.cafedelic/`:
 
-- **`pane-names`**: Maps custom names to pane coordinates
-- **`routing-config`**: Maps output types to pane names
+- **`pane-names`**: Maps custom names to pane coordinates (for backward compatibility)
+
+Pane properties are stored directly in tmux as user options:
+- `@pane_name`: Custom name for the pane
+- `@source`: Source context (user, claude-desktop, claude-code, system)
+- `@role`: Semantic role (editor, terminal, logs, tests, debug, monitor)
 
 ## Setup and Configuration
 
@@ -102,56 +105,38 @@ tmux new-session -s dev
 # Ctrl-B " (horizontal split)
 ```
 
-### 3. Naming Your Panes
+### 3. Assigning Properties to Your Panes
 
-Use the MCP tools to assign names to panes. From Claude Desktop or through the API:
+Use the MCP tools to assign properties to panes. From Claude Desktop or through the API:
 
 ```javascript
-// Example: Name the editor pane
-await mcp.callTool('assign_name_to_pane', {
+// Example: Assign properties to the editor pane
+await mcp.callTool('assign_pane_properties', {
   session: 'dev',
   window: 0,
   pane: 0,
-  name: 'editor'
+  name: 'editor',
+  source: 'user',
+  role: 'editor'
 });
 
-// Name other panes
-await mcp.callTool('assign_name_to_pane', {
+// Assign properties to other panes
+await mcp.callTool('assign_pane_properties', {
   session: 'dev',
   window: 0,
   pane: 1,
-  name: 'terminal'
+  name: 'terminal',
+  source: 'user',
+  role: 'terminal'
 });
 
-await mcp.callTool('assign_name_to_pane', {
+await mcp.callTool('assign_pane_properties', {
   session: 'dev',
   window: 0,
   pane: 2,
-  name: 'logs'
-});
-```
-
-### 4. Configure Output Routing
-
-Set up where different output types should go:
-
-```javascript
-// Route file operations to editor pane
-await mcp.callTool('set_output_destination', {
-  type: 'files',
-  pane: 'editor'
-});
-
-// Route logs to logs pane
-await mcp.callTool('set_output_destination', {
-  type: 'logs',
-  pane: 'logs'
-});
-
-// Route terminal commands to terminal pane
-await mcp.callTool('set_output_destination', {
-  type: 'terminal',
-  pane: 'terminal'
+  name: 'logs',
+  source: 'system',
+  role: 'logs'
 });
 ```
 
@@ -160,7 +145,7 @@ await mcp.callTool('set_output_destination', {
 ### Pane Naming and Management
 
 #### `assign_name_to_pane`
-Assigns a custom name to a tmux pane.
+Assigns a custom name to a tmux pane (backward compatibility).
 
 **Parameters:**
 - `session`: Tmux session name
@@ -178,6 +163,29 @@ Assigns a custom name to a tmux pane.
 }
 ```
 
+#### `assign_pane_properties`
+Assigns properties to a tmux pane (recommended approach).
+
+**Parameters:**
+- `session`: Tmux session name
+- `window`: Window name or index
+- `pane`: Pane index (0-based)
+- `name`: Custom name (optional)
+- `source`: Source context (optional: user, claude-desktop, claude-code, system)
+- `role`: Semantic role (optional: editor, terminal, logs, tests, debug, monitor)
+
+**Example:**
+```javascript
+{
+  "session": "dev",
+  "window": 0,
+  "pane": 1,
+  "name": "main-editor",
+  "source": "user",
+  "role": "editor"
+}
+```
+
 #### `list_named_panes`
 Lists all panes with assigned names, showing their status and running commands.
 
@@ -187,6 +195,42 @@ Named Panes:
 - editor: dev:0.0 (active) - Running: nvim
 - terminal: dev:0.1 - Running: bash
 - logs: dev:0.2 - Running: tail -f app.log
+```
+
+#### `list_panes_by_properties`
+Lists panes filtered by properties.
+
+**Parameters:**
+- `source`: Filter by source (optional)
+- `role`: Filter by role (optional)
+- `name`: Filter by name (optional)
+
+**Example:**
+```javascript
+// Find all editor panes
+{
+  "role": "editor"
+}
+
+// Find all panes from claude-code
+{
+  "source": "claude-code"
+}
+```
+
+#### `find_pane_by_source_and_role`
+Finds a specific pane by source and role combination.
+
+**Parameters:**
+- `source`: Source to find
+- `role`: Role to find
+
+**Example:**
+```javascript
+{
+  "source": "user",
+  "role": "terminal"
+}
 ```
 
 ### Pane Interaction
@@ -207,11 +251,11 @@ Reads the last N lines from a named pane.
 ```
 
 #### `send_keys_to_pane`
-Sends keys/text to a named pane.
+Sends text to a named pane.
 
 **Parameters:**
 - `name`: Pane name
-- `text`: Keys/text to send
+- `text`: Text to send
 
 **Example:**
 ```javascript
@@ -255,62 +299,51 @@ Gets detailed information about a named pane.
 }
 ```
 
-### Routing Configuration
+## Property-Based Pane Management
 
-#### `set_output_destination`
-Configures where a specific output type should be routed.
+The property system allows semantic identification of panes based on their purpose and origin.
 
-**Parameters:**
-- `type`: Output type (files, activity, logs, errors, terminal)
-- `pane`: Target pane name
+### Properties
 
-**Output Types:**
-- `files`: File operations (create, edit, delete)
-- `activity`: General activity updates
-- `logs`: Application logs
-- `errors`: Error messages
-- `terminal`: Terminal commands and output
+1. **name**: A custom identifier for the pane
+   - No spaces, colons, or dots allowed
+   - Must be unique across all panes
 
-#### `get_routing_config`
-Displays the current routing configuration.
+2. **source**: Indicates what created or owns the pane
+   - `user`: Created by the user manually
+   - `claude-desktop`: Created for Claude Desktop
+   - `claude-code`: Created for Claude Code
+   - `system`: System-level panes (logs, monitoring)
 
-**Returns:**
-```
-Current Routing Configuration:
-- files → editor
-- activity → terminal
-- logs → logs
-- errors → logs
-- terminal → terminal
-```
+3. **role**: The semantic purpose of the pane
+   - `editor`: Code editing
+   - `terminal`: Command execution
+   - `logs`: Log viewing
+   - `tests`: Test execution
+   - `debug`: Debugging sessions
+   - `monitor`: System monitoring
 
-## Output Routing System
+### Discovery Patterns
 
-The routing system allows dynamic configuration of where different types of output should go. This is particularly useful when integrating with AI assistants that need to send different types of information to appropriate panes.
+Find panes using property combinations:
 
-### How It Works
+```javascript
+// Find the user's terminal
+const pane = await mcp.callTool('find_pane_by_source_and_role', {
+  source: 'user',
+  role: 'terminal'
+});
 
-1. **Output Classification**: Operations are classified into types (files, logs, errors, etc.)
-2. **Route Lookup**: The system checks the routing configuration for the output type
-3. **Pane Resolution**: The pane name is resolved to actual tmux coordinates
-4. **Delivery**: Output is sent to the appropriate pane
+// List all editor panes
+const editors = await mcp.callTool('list_panes_by_properties', {
+  role: 'editor'
+});
 
-### Configuration File Format
-
-The routing configuration (`~/.cafedelic/routing-config`) uses a simple format:
-```
-files=editor
-logs=logs
-errors=logs
-terminal=terminal
-activity=terminal
-```
-
-The pane names file (`~/.cafedelic/pane-names`) maps names to coordinates:
-```
-dev:0.0=editor
-dev:0.1=terminal
-dev:0.2=logs
+// Find Claude Code's output
+const codeOutput = await mcp.callTool('find_pane_by_source_and_role', {
+  source: 'claude-code',
+  role: 'terminal'
+});
 ```
 
 ## Practical Examples
@@ -319,112 +352,94 @@ dev:0.2=logs
 
 ```javascript
 // 1. Create a three-pane layout (already done in tmux)
-// 2. Name the panes
-await mcp.callTool('assign_name_to_pane', {
-  session: 'dev', window: 0, pane: 0, name: 'editor'
-});
-await mcp.callTool('assign_name_to_pane', {
-  session: 'dev', window: 0, pane: 1, name: 'terminal'
-});
-await mcp.callTool('assign_name_to_pane', {
-  session: 'dev', window: 0, pane: 2, name: 'logs'
-});
-
-// 3. Configure routing
-await mcp.callTool('set_output_destination', {
-  type: 'files', pane: 'editor'
-});
-await mcp.callTool('set_output_destination', {
-  type: 'terminal', pane: 'terminal'
-});
-await mcp.callTool('set_output_destination', {
-  type: 'logs', pane: 'logs'
-});
-await mcp.callTool('set_output_destination', {
-  type: 'errors', pane: 'logs'
+// 2. Assign properties to panes
+await mcp.callTool('assign_pane_properties', {
+  session: 'dev', 
+  window: 0, 
+  pane: 0, 
+  name: 'editor',
+  source: 'user',
+  role: 'editor'
 });
 
-// 4. Verify configuration
-const config = await mcp.callTool('get_routing_config', {});
-console.log(config);
+await mcp.callTool('assign_pane_properties', {
+  session: 'dev', 
+  window: 0, 
+  pane: 1, 
+  name: 'terminal',
+  source: 'user',
+  role: 'terminal'
+});
+
+await mcp.callTool('assign_pane_properties', {
+  session: 'dev', 
+  window: 0, 
+  pane: 2, 
+  name: 'logs',
+  source: 'system',
+  role: 'logs'
+});
+
+// 3. Verify setup
+const panes = await mcp.callTool('list_panes_by_properties', {});
+console.log(panes);
 ```
 
 ### Example 2: Running Tests and Monitoring Output
 
 ```javascript
-// Send test command to terminal
+// Find the user's terminal
+const terminalPane = await mcp.callTool('find_pane_by_source_and_role', {
+  source: 'user',
+  role: 'terminal'
+});
+
+// Send test command
 await mcp.callTool('send_keys_to_pane', {
-  name: 'terminal',
+  name: terminalPane.name,
   text: 'npm test'
 });
 await mcp.callTool('send_special_key_to_pane', {
-  name: 'terminal',
+  name: terminalPane.name,
   key: 'enter'
 });
 
 // Read test output
 const output = await mcp.callTool('read_pane_by_name', {
-  name: 'terminal',
+  name: terminalPane.name,
   lines: 50
 });
 
 // If tests are hanging, send Ctrl-C
 await mcp.callTool('send_ctrl_c_to_pane_by_name', {
-  name: 'terminal',
+  name: terminalPane.name,
   double_tap: false
 });
 ```
 
-### Example 3: Monitoring Logs
+### Example 3: Monitoring System Logs
 
 ```javascript
-// Start log tailing in logs pane
+// Find or create a logs pane
+const logPane = await mcp.callTool('find_pane_by_source_and_role', {
+  source: 'system',
+  role: 'logs'
+});
+
+// Start log tailing
 await mcp.callTool('send_keys_to_pane', {
-  name: 'logs',
+  name: logPane.name,
   text: 'tail -f /var/log/app.log'
 });
 await mcp.callTool('send_special_key_to_pane', {
-  name: 'logs',
+  name: logPane.name,
   key: 'enter'
 });
 
 // Periodically read logs
 const logs = await mcp.callTool('read_pane_by_name', {
-  name: 'logs',
+  name: logPane.name,
   lines: 100
-});
-```
-
-## Integration with Pipelines
-
-Cafedelic's Watch-Transform-Execute (WTE) pipelines can use the routing system to dynamically determine output destinations.
-
-### Using Routing in Custom Pipelines
-
-```typescript
-import { loadRoutingConfig, getTargetPane } from './src/routing/config';
-
-// In your pipeline
-async function routeOutput(type: string, content: string) {
-  const config = await loadRoutingConfig();
-  const targetPane = await getTargetPane(type);
-  
-  if (targetPane) {
-    // Send to the configured pane
-    await sendToPane(targetPane.name, content);
-  }
-}
-```
-
-### Creating Routing-Aware Transforms
-
-```typescript
-import { createRoutingTransform } from './src/routing/config';
-
-// Create a transform that respects routing configuration
-const transform = createRoutingTransform('files', async (input) => {
-  // Your transformation logic
-  return transformedOutput;
 });
 ```
 
@@ -434,30 +449,21 @@ const transform = createRoutingTransform('files', async (input) => {
 
 #### 1. "Pane not found" Error
 - **Cause**: The pane no longer exists but the name mapping remains
-- **Solution**: List panes to identify stale entries, then reassign or manually clean
+- **Solution**: List panes to identify stale entries
 ```javascript
 await mcp.callTool('list_named_panes', {});
-// Option 1: Reassign the name to a new pane (overwrites stale entry)
-await mcp.callTool('assign_name_to_pane', { 
-  session: 'dev', window: 0, pane: 1, name: 'stale-pane' 
-});
-// Option 2: Manually edit ~/.cafedelic/pane-names to remove stale entries
+await mcp.callTool('list_panes_by_properties', {});
 ```
 
 #### 2. "Invalid pane name" Error
 - **Cause**: Name contains forbidden characters (spaces, colons, dots)
 - **Solution**: Use only alphanumeric characters, hyphens, and underscores
 
-#### 3. Output Going to Wrong Pane
-- **Cause**: Routing configuration is incorrect or outdated
-- **Solution**: Check and update routing configuration
+#### 3. Cannot Find Pane by Properties
+- **Cause**: Properties not set or pane doesn't exist
+- **Solution**: List all panes with properties to verify
 ```javascript
-const config = await mcp.callTool('get_routing_config', {});
-// Update as needed
-await mcp.callTool('set_output_destination', {
-  type: 'files',
-  pane: 'correct-pane'
-});
+const allPanes = await mcp.callTool('list_panes_by_properties', {});
 ```
 
 ### Debugging Commands
@@ -467,16 +473,15 @@ Check pane existence:
 tmux list-panes -t dev -F "#{pane_index}: #{pane_current_command}"
 ```
 
+View pane properties:
+```bash
+# Check a specific pane's properties
+tmux show-options -p -t dev:0.0
+```
+
 View configuration files:
 ```bash
 cat ~/.cafedelic/pane-names
-cat ~/.cafedelic/routing-config
-```
-
-Clear all configurations:
-```bash
-rm ~/.cafedelic/pane-names
-rm ~/.cafedelic/routing-config
 ```
 
 ## Best Practices
@@ -486,10 +491,10 @@ rm ~/.cafedelic/routing-config
 - Avoid generic names: `pane1`, `temp`, `misc`
 - Group related panes: `backend-logs`, `backend-terminal`
 
-### 2. Routing Strategy
-- Keep similar outputs together (logs + errors)
-- Separate interactive and non-interactive panes
-- Consider workflow when arranging panes
+### 2. Property Strategy
+- Always set both source and role for better discovery
+- Use consistent source values across your workflow
+- Choose appropriate roles that reflect pane purpose
 
 ### 3. Session Management
 - Use consistent session names across projects
@@ -498,8 +503,8 @@ rm ~/.cafedelic/routing-config
 
 ### 4. Error Handling
 - Always check if panes exist before sending commands
-- Handle routing failures gracefully
-- Provide fallback destinations
+- Handle discovery failures gracefully
+- Provide fallback strategies
 
 ### 5. Security Considerations
 - Validate all input to prevent injection
@@ -508,16 +513,27 @@ rm ~/.cafedelic/routing-config
 
 ## Advanced Usage
 
-### Dynamic Routing Based on Context
+### Dynamic Pane Discovery
 
 ```javascript
-// Route errors to different panes based on severity
-async function routeError(error, severity) {
-  const pane = severity === 'critical' ? 'alerts' : 'logs';
-  await mcp.callTool('send_keys_to_pane', {
-    name: pane,
-    text: `[${severity.toUpperCase()}] ${error.message}`
-  });
+// Find any available terminal pane
+async function findTerminal() {
+  // Try user terminal first
+  try {
+    return await mcp.callTool('find_pane_by_source_and_role', {
+      source: 'user',
+      role: 'terminal'
+    });
+  } catch (e) {
+    // Fall back to any terminal
+    const terminals = await mcp.callTool('list_panes_by_properties', {
+      role: 'terminal'
+    });
+    if (terminals.length > 0) {
+      return terminals[0];
+    }
+    throw new Error('No terminal pane available');
+  }
 }
 ```
 
@@ -528,28 +544,21 @@ Create a script to set up your standard layout:
 ```javascript
 async function setupDevEnvironment() {
   const panes = [
-    { index: 0, name: 'editor', routing: ['files'] },
-    { index: 1, name: 'terminal', routing: ['terminal', 'activity'] },
-    { index: 2, name: 'logs', routing: ['logs', 'errors'] },
-    { index: 3, name: 'tests', routing: [] }
+    { index: 0, name: 'editor', source: 'user', role: 'editor' },
+    { index: 1, name: 'terminal', source: 'user', role: 'terminal' },
+    { index: 2, name: 'logs', source: 'system', role: 'logs' },
+    { index: 3, name: 'tests', source: 'user', role: 'tests' }
   ];
   
   for (const pane of panes) {
-    // Name the pane
-    await mcp.callTool('assign_name_to_pane', {
+    await mcp.callTool('assign_pane_properties', {
       session: 'dev',
       window: 0,
       pane: pane.index,
-      name: pane.name
+      name: pane.name,
+      source: pane.source,
+      role: pane.role
     });
-    
-    // Set up routing
-    for (const type of pane.routing) {
-      await mcp.callTool('set_output_destination', {
-        type: type,
-        pane: pane.name
-      });
-    }
   }
 }
 ```
@@ -572,9 +581,19 @@ async function monitorPane(paneName, pattern, callback) {
 }
 
 // Example: Alert on errors
-monitorPane('logs', 'ERROR', async (content) => {
+const logPane = await mcp.callTool('find_pane_by_source_and_role', {
+  source: 'system',
+  role: 'logs'
+});
+
+monitorPane(logPane.name, 'ERROR', async (content) => {
+  const alertPane = await mcp.callTool('find_pane_by_source_and_role', {
+    source: 'system',
+    role: 'monitor'
+  });
+  
   await mcp.callTool('send_keys_to_pane', {
-    name: 'alerts',
+    name: alertPane.name,
     text: '🚨 Error detected in logs!'
   });
 });
@@ -582,9 +601,9 @@ monitorPane('logs', 'ERROR', async (content) => {
 
 ## Conclusion
 
-Cafedelic's MCP-based tmux pane management system provides a powerful and flexible way to manage output routing in development environments. By naming panes and configuring routing rules, you can create sophisticated workflows that adapt to your needs without modifying code.
+Cafedelic's MCP-based tmux pane management system provides a powerful and flexible way to manage panes in development environments. By using properties to semantically identify panes, you can create sophisticated workflows that adapt to your needs without modifying code.
 
-The integration with AI assistants through MCP makes it possible to build intelligent automation that respects your preferred working environment while maintaining full control over where different types of output appear.
+The integration with AI assistants through MCP makes it possible to build intelligent automation that respects your preferred working environment while maintaining full control over pane interactions.
 
 For more information, see:
 - [Pane Tools Documentation](./pane-tools.md)

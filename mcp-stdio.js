@@ -165,40 +165,6 @@ server.tool(
   }
 );
 
-
-
-// Routing Configuration Tools
-server.tool(
-  'set_output_destination',
-  {
-    type: z.enum(['files', 'activity', 'logs', 'errors', 'terminal']).describe('Type of output to route'),
-    pane: z.string().describe('Name of the pane to route to')
-  },
-  async ({ type, pane }) => {
-    const result = await runScript('routing/set-output-destination.sh', [type, pane]);
-    return {
-      content: [{
-        type: 'text',
-        text: `Successfully configured '${type}' output to go to pane '${pane}'`
-      }]
-    };
-  }
-);
-
-server.tool(
-  'get_routing_config',
-  {},
-  async () => {
-    const result = await runScript('routing/get-routing-config.sh');
-    return {
-      content: [{
-        type: 'text',
-        text: `Current routing configuration:\n${result.stdout}`
-      }]
-    };
-  }
-);
-
 // New Property-Based Tools
 server.tool(
   'assign_pane_properties',
