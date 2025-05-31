@@ -236,5 +236,41 @@ assign_pane_properties(session, window, pane, {
 })
 ```
 
-**Key Learning**: When building enhanced replacements, deprecate legacy tools cleanly rather than maintaining dual APIs. The enhanced tool provides all the functionality of the simple tool plus significant additional capabilities.
+### Deprecated: list_named_panes Tool
+
+**Decision**: Removed `list_named_panes` from MCP tools in favor of `list_panes_by_properties`
+
+**Rationale**:
+- Property-based listing provides superior functionality and accuracy
+- Shows comprehensive property information (name, source, role, status)
+- Better detection of stale vs active panes
+- Supports filtering by any property combination
+- More maintainable single approach to pane discovery
+
+**Implementation**:
+- Removed from both stdio (mcp-stdio.js) and HTTP (src/mcp-tools/mcp-server.ts) MCP servers
+- Removed implementation function from pane-tools.ts
+- Underlying list-named-panes.sh script remains for backward compatibility
+
+**Benefits**:
+- More accurate status reporting (ACTIVE vs STALE)
+- Comprehensive property display shows all pane metadata
+- Filtering capabilities (by source, role, or name)
+- Single discovery mechanism reduces API complexity
+- Better support for multi-assistant property-based workflows
+
+**Migration Pattern**:
+```javascript
+// OLD (deprecated)
+list_named_panes()
+// Returns: Basic name mapping with potential stale entries
+
+// NEW (enhanced)
+list_panes_by_properties()
+// Returns: Comprehensive property info with accurate status
+// Optional: list_panes_by_properties({ source: 'claude-desktop' })
+// Optional: list_panes_by_properties({ role: 'editor' })
+```
+
+**Key Learning**: When building enhanced replacements, deprecate legacy tools cleanly rather than maintaining dual APIs. The enhanced tools provide all the functionality of the simple tools plus significant additional capabilities.
 

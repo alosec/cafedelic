@@ -35,10 +35,6 @@ const toolDefinitions = [
     }
   },
   {
-    name: 'list_named_panes',
-    description: 'List all panes that have been assigned custom names'
-  }
-  {
     name: 'send_special_key_to_pane',
     description: 'Send a special key sequence to a named pane',
     inputSchema: {
@@ -47,29 +43,10 @@ const toolDefinitions = [
         name: { type: 'string', description: 'The custom name of the pane' },
         key: {
           type: 'string',
-          enum: ['enter', 'escape', 'tab', 'ctrl-c', 'ctrl-d', 'ctrl-z', 
-                 'up', 'down', 'left', 'right', 'home', 'end', 
-                 'page-up', 'page-down'],
-          description: 'Special key to send'
+          enum: ['enter', 'escape', 'tab', 'ctrl-c', 'ctrl-d', 'ctrl-z']
         }
       },
       required: ['name', 'key']
-    }
-  },
-  {
-    name: 'send_ctrl_c_to_pane',
-    description: 'Send C-c to a named pane with optional double-tap for applications like Claude Code',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', description: 'The custom name of the pane' },
-        double_tap: {
-          type: 'boolean',
-          description: 'Send C-c twice in quick succession (e.g., for exiting Claude Code)',
-          default: false
-        }
-      },
-      required: ['name']
     }
   }
 ];
@@ -84,16 +61,8 @@ const toolHandlers: Record<string, Function> = {
     return await paneNamingTools.sendKeysToPane(params.name, params.text);
   },
   
-  list_named_panes: async () => {
-    return await paneNamingTools.listNamedPanes();
-  },
-  
   send_special_key_to_pane: async (params: any) => {
     return await paneInteractionTools.sendSpecialKeyToPane(params.name, params.key);
-  },
-  
-  send_ctrl_c_to_pane: async (params: any) => {
-    return await paneInteractionTools.sendCtrlCToPane(params.name, params.double_tap);
   }
 };
 

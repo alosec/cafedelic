@@ -75,19 +75,7 @@ server.tool(
   }
 );
 
-server.tool(
-  'list_named_panes',
-  {},
-  async () => {
-    const result = await runScript('pane-management/list-named-panes.sh');
-    return {
-      content: [{
-        type: 'text',
-        text: `Named panes:\n${result.stdout}`
-      }]
-    };
-  }
-);
+
 
 server.tool(
   'send_special_key_to_pane',
