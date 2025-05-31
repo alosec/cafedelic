@@ -12,10 +12,14 @@
 ### Core Functionality
 - **MCP Log Watching**: Direct file watching with readline
 - **File Operation Detection**: Parses Claude Desktop file operations
-- **Emacs Integration**: Auto-opens files/directories in configured panes
+- **Emacs Integration**: Auto-opens files/directories using property-based pane discovery
 - **Pipeline Composition**: Clean functional data flow with `pipe()`
+- **Property-Based Routing**: Uses @source and @role for intelligent pane selection
 
-### MCP Tools (From V1, Still Working)
+### MCP Tools (Enhanced with Properties)
+- `assign_pane_properties` - Set name, source, and/or role on a pane
+- `list_panes_by_properties` - Filter panes by any property combination
+- `find_pane_by_source_and_role` - Direct lookup with exact match
 - `setEditorDestination` - Route output to specific tmux panes
 - `create_tmex_layout` - Create complex tmux layouts
 - `toggle_auto_open` - Control automatic file opening
@@ -78,6 +82,7 @@ With the clean WTE architecture, we can now easily add:
 - [x] 10x code reduction
 - [x] Merge to main
 - [x] Issue #11 closed
+- [x] Issue #16 property-based consolidation
 
 ### Ready to Build
 - [ ] Claude Desktop visibility features

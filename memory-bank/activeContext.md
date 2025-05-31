@@ -2,10 +2,16 @@
 
 ## Current State
 - **Date**: January 2025
-- **Focus**: Multi-dimensional pane property system implementation
-- **Status**: V2 redesign complete, property system for Issue #16 implemented
+- **Focus**: Property-based system consolidation
+- **Status**: Emacs executor refactored to use property-based pane discovery exclusively
 
 ## Recent Changes
+- **COMPLETED**: Issue #16 - Consolidated to property-based approach
+  - Removed hard-coded pane destinations from emacs.ts
+  - Integrated property-based pane discovery using @source and @role
+  - Deleted duplicate property-based-emacs.ts file
+  - Updated pipelines to specify appropriate sources (claude-desktop, claude-code)
+  - Simplified codebase by removing dual routing approaches
 - **IMPLEMENTED**: Issue #16 Multi-dimensional pane property system
   - Added orthogonal `@source` and `@role` properties to panes
   - Created property-based discovery scripts with fallback logic
@@ -38,15 +44,11 @@ pipe(
   emacsExecutor(scriptPath)
 );
 
-// NEW: Property-based routing
-pipe(
-  mcpLogWatcher(),
-  fileOperationTransform,
-  propertyBasedEmacsExecutor({
-    defaultSource: 'claude-desktop',
-    defaultRole: 'editor'
-  })
-);
+// Property-based executor with smart pane discovery
+await openInEmacs(action, {
+  source: 'claude-desktop',  // or 'claude-code', 'user'
+  role: 'editor'            // or 'terminal', 'logs', etc.
+});
 ```
 
 ### Key Components
