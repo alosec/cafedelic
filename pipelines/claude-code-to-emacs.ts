@@ -28,9 +28,13 @@ function transformWithLogging(entry: ClaudeCodeLogEntry): FileAction | null {
   return action;
 }
 
-// Execute with read-only mode
+// Execute with read-only mode and claude-code source
 async function executeReadOnly(action: FileAction): Promise<void> {
-  await openInEmacs(action, { readOnly: true });
+  await openInEmacs(action, { 
+    readOnly: true,
+    source: 'claude-code',
+    role: 'editor'
+  });
 }
 
 export const claudeCodeToEmacs: WTE<ClaudeCodeLogEntry, FileAction> = {
