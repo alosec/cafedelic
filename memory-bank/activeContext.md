@@ -6,6 +6,12 @@
 - **Status**: Emacs executor refactored to use property-based pane discovery exclusively
 
 ## Recent Changes
+- **COMPLETED**: Tool migration - Replace read_pane_by_name with capture_pane_with_properties
+  - Removed obsolete `read_pane_by_name` tool from MCP server
+  - Added powerful `capture_pane_with_properties` tool with full tmux capture-pane features
+  - Supports property-based filtering (source, role, name)
+  - Includes advanced capture options (range, grep, formatting)
+  - Created supporting shell script for property-aware pane capture
 - **COMPLETED**: Issue #16 - Consolidated to property-based approach
   - Removed hard-coded pane destinations from emacs.ts
   - Integrated property-based pane discovery using @source and @role
@@ -101,19 +107,26 @@ await openInEmacs(action, {
 - **Result**: Same functionality, 10x less code, infinitely more maintainable
 
 ## Available MCP Tools (Enhanced with Properties)
-All the MCP tools developed during v1 remain functional, plus new property-based tools:
+The MCP server now provides 8 property-aware tools:
 
-### Existing Tools (Still Working)
-- `assign_name_to_pane` - Now uses property system internally
-- `setEditorDestination(paneSpec)` - Route to tmux panes
-- `create_tmex_layout(targetPane, layout)` - Create layouts
-- `toggle_auto_open(enable?)` - Control auto-opening
-- Plus all other routing and layout tools
-
-### New Property-Based Tools
+### Property-Based Tools
 - `assign_pane_properties` - Set name, source, and/or role on a pane
 - `list_panes_by_properties` - Filter panes by any property combination
 - `find_pane_by_source_and_role` - Direct lookup with exact match
+- `capture_pane_with_properties` - Advanced pane capture with property filtering
+  - Supports full tmux capture-pane options (range, grep, formatting)
+  - Property-based pane discovery (source, role, name)
+  - Built-in search/filter capabilities
+
+### Pane Interaction Tools
+- `send_keys_to_pane` - Send text/keys to named pane
+- `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
+- `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
+- `get_details_for_pane_by_name` - Get pane information
+
+### Deprecated Tools
+- `read_pane_by_name` - Removed in favor of `capture_pane_with_properties`
+- `assign_name_to_pane` - Removed in favor of `assign_pane_properties`
 
 ## Development Velocity
 With the v2 architecture, adding new features is now:

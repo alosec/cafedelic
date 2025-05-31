@@ -42,23 +42,6 @@ async function runScript(scriptPath, args = []) {
 // Pane Interaction Tools
 
 server.tool(
-  'read_pane_by_name',
-  {
-    name: z.string().describe('The custom name of the pane'),
-    lines: z.number().default(100).describe('Number of lines to read (default: 100)')
-  },
-  async ({ name, lines }) => {
-    const result = await runScript('pane-management/read-pane.sh', [name, lines.toString()]);
-    return {
-      content: [{
-        type: 'text',
-        text: `Content from pane '${name}':\n\n${result.stdout}`
-      }]
-    };
-  }
-);
-
-server.tool(
   'send_keys_to_pane',
   {
     name: z.string().describe('The custom name of the pane'),
@@ -209,6 +192,77 @@ server.tool(
         content: [{
           type: 'text',
           text: `No pane found with source='${source}' and role='${role}'`
+        }]
+      };
+    }
+  }
+);
+
+server.tool(
+  'capture_pane_with_properties',
+  {
+    // Property-based selection
+    source: z.enum(['user', 'claude-desktop', 'claude-code', 'system']).optional().describe('Source context for the pane'),
+    role: z.enum(['editor', 'terminal', 'logs', 'tests', 'debug', 'monitor']).optional().describe('Semantic role for the pane'),
+    name: z.string().optional().describe('Custom name of the pane'),
+    
+    // Capture range options
+    start: z.union([z.number(), z.literal('-')]).optional().describe('Line number or "-" for beginning of history'),
+    end: z.union([z.number(), z.literal('-')]).optional().describe('Line number or "-" for end'),
+    last: z.number().optional().describe('Shortcut for last N lines (overrides start/end)'),
+    
+    // Output options
+    join_lines: z.boolean().optional().describe('Join wrapped lines'),
+    escape_sequences: z.boolean().optional().describe('Preserve colors/formatting'),
+    preserve_trailing: z.boolean().optional().describe('Preserve trailing spaces'),
+    
+    // Search/filter
+    grep: z.string().optional().describe('Pattern to search for in output'),
+    grep_context: z.number().optional().default(0).describe('Lines of context around matches'),
+    invert_match: z.boolean().optional().describe('Show non-matching lines')
+  },
+  async ({ source, role, name, start, end, last, join_lines, escape_sequences, preserve_trailing, grep, grep_context, invert_match }) => {
+    // Build arguments for the script
+    const args = [];
+    
+    // Property filters
+    if (source) args.push('--source', source);
+    if (role) args.push('--role', role);
+    if (name) args.push('--name', name);
+    
+    // Capture range
+    if (last !== undefined) {
+      args.push('--last', last.toString());
+    } else {
+      if (start !== undefined) args.push('--start', start.toString());
+      if (end !== undefined) args.push('--end', end.toString());
+    }
+    
+    // Output options
+    if (join_lines) args.push('--join-lines');
+    if (escape_sequences) args.push('--escape-sequences');
+    if (preserve_trailing) args.push('--preserve-trailing');
+    
+    // Search options
+    if (grep) {
+      args.push('--grep', grep);
+      if (grep_context > 0) args.push('--grep-context', grep_context.toString());
+      if (invert_match) args.push('--invert-match');
+    }
+    
+    try {
+      const result = await runScript('pane-properties/capture-pane-with-properties.sh', args);
+      return {
+        content: [{
+          type: 'text',
+          text: result.stdout
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Failed to capture pane: ${error.message}`
         }]
       };
     }

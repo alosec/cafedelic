@@ -199,3 +199,61 @@ mergePipelines(filePipeline, gitPipeline, commonExecutor);
 ```
 
 The WTE pattern provides infinite flexibility through simple composition.
+
+## Tool Migration Pattern
+
+### From Name-Based to Property-Based
+The system has migrated from simple name-based tool identification to a richer property-based system:
+
+```bash
+# Old approach (deprecated)
+read_pane_by_name "editor" 100
+
+# New approach
+capture_pane_with_properties \
+  --source "claude-desktop" \
+  --role "editor" \
+  --last 100 \
+  --grep "error" \
+  --grep-context 2
+```
+
+### Migration Principles
+1. **Preserve Functionality**: New tools must support all old capabilities
+2. **Add Power**: Expose underlying system features (tmux capture-pane options)
+3. **Property-Aware**: Use multi-dimensional property system for pane discovery
+4. **Graceful Fallback**: Handle missing panes elegantly
+
+### Example: capture_pane_with_properties
+This tool demonstrates the migration pattern:
+- Replaces simple `read_pane_by_name` 
+- Adds full tmux capture-pane power (ranges, grep, formatting)
+- Uses property-based pane discovery
+- Maintains backward compatibility via name parameter
+
+```javascript
+// Rich parameter set exposing tmux capabilities
+{
+  // Property filters
+  source?: 'user' | 'claude-desktop' | 'claude-code' | 'system',
+  role?: 'editor' | 'terminal' | 'logs' | 'tests' | 'debug' | 'monitor',
+  name?: string,
+  
+  // Capture options
+  start?: number | '-',
+  end?: number | '-', 
+  last?: number,
+  
+  // Output formatting
+  join_lines?: boolean,
+  escape_sequences?: boolean,
+  preserve_trailing?: boolean,
+  
+  // Search capabilities
+  grep?: string,
+  grep_context?: number,
+  invert_match?: boolean
+}
+```
+
+This pattern will guide future tool migrations, ensuring we expose system power while maintaining elegant APIs.
