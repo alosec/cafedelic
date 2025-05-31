@@ -22,14 +22,21 @@
     (setq frame-title-format 
           (format "Emacs [%s]" server-name)))
   
+  ;; Enable global auto-revert for seamless WTE integration
+  ;; This makes the pane "Claude's workspace" where files auto-sync
+  (global-auto-revert-mode 1)
+  (setq auto-revert-verbose nil)        ; No "reverted" messages
+  (setq auto-revert-check-vc-info t)    ; Also revert version control info
+  
   ;; Simple, clean scratch buffer
   (switch-to-buffer "*scratch*")
   (erase-buffer)
   (insert (format ";; Cafedelic Pane Server: %s\n" (or server-name "unnamed")))
   (insert ";; Ready for file operations\n")
-  (insert ";; Files will open here via emacsclient\n\n")
+  (insert ";; Files will open here via emacsclient\n")
+  (insert ";; Auto-revert enabled - files sync automatically\n\n")
   
-  (message "Cafedelic pane server initialized"))
+  (message "Cafedelic pane server initialized with auto-revert"))
 
 ;; File opening with tracking
 (defun cafedelic-pane-open-file (filepath)

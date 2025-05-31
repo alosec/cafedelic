@@ -274,3 +274,31 @@ list_panes_by_properties()
 
 **Key Learning**: When building enhanced replacements, deprecate legacy tools cleanly rather than maintaining dual APIs. The enhanced tools provide all the functionality of the simple tools plus significant additional capabilities.
 
+## Pane Server Auto-Revert Configuration (2025-05-31)
+
+### Problem: WTE Workflow Friction
+The Watch-Transform-Execute (WTE) system automatically opens files that Claude accesses, but Emacs would prompt "File changed on disk. Revert buffer?" This broke the seamless auto-open experience.
+
+### Solution: Global Auto-Revert in Pane Servers
+**Philosophy**: Treat pane-servers as "Claude's workspace" where everything auto-syncs.
+
+**Implementation** in `pane-emacs-init.el`:
+```elisp
+;; Enable global auto-revert for seamless WTE integration
+;; This makes the pane "Claude's workspace" where files auto-sync
+(global-auto-revert-mode 1)
+(setq auto-revert-verbose nil)        ; No "reverted" messages
+(setq auto-revert-check-vc-info t)    ; Also revert version control info
+```
+
+**Benefits**:
+- Completely seamless WTE file opening workflow
+- No user prompts or interruptions
+- Pane servers become "live updating" AI workspaces
+- Maintains clear separation: panes auto-sync, main Emacs doesn't
+- Consistent with treating panes as Claude's dedicated environment
+
+**User Experience**: Files in pane servers now automatically reflect any external changes, creating a transparent, live development environment perfectly suited for AI-assisted development.
+
+**Pattern**: When AI workflows need different behavior than traditional user workflows, configure the AI-specific environment (pane servers) rather than compromising the general user environment (main Emacs).
+

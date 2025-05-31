@@ -7,6 +7,19 @@
 **Codebase**: ~150 lines (from ~2000 in v1)
 **Status**: Fully functional and merged to main
 
+### Recent Enhancement: Seamless Auto-Revert (2025-05-31)
+**Problem Solved**: WTE auto-open workflow was interrupted by Emacs revert buffer prompts
+**Solution**: Enabled global auto-revert mode in pane-specific Emacs servers
+**Philosophy**: Treat panes as "Claude's workspace" where files automatically sync
+
+**Implementation**: 
+- Added `global-auto-revert-mode` to `cafedelic-pane-init` function
+- Disabled verbose revert messages for seamless experience  
+- Enabled VC info auto-revert for complete file state synchronization
+- Updated scratch buffer message to indicate auto-revert capability
+
+**Impact**: WTE workflow now provides completely seamless file opening with no user prompts
+
 ## What Works ✅
 
 ### Core Functionality
