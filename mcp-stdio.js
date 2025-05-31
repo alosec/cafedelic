@@ -52,7 +52,7 @@ server.tool(
     return {
       content: [{
         type: 'text',
-        text: `Successfully sent keys/text to pane '${name}'`
+        text: `Successfully sent keys/text to pane '${name}'\n\nTip: Use capture_pane_with_properties to view the updated pane state (e.g., capture_pane_with_properties --name ${name} --last 20)`
       }]
     };
   }
