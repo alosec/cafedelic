@@ -40,16 +40,8 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Find the best pane based on properties
-FIND_ARGS=()
-if [[ -n "$SOURCE" ]]; then
-    FIND_ARGS+=("$SOURCE")
-fi
-if [[ -n "$ROLE" ]]; then
-    FIND_ARGS+=("$ROLE")
-fi
-
-# If name is provided, use direct pane lookup instead
 if [[ -n "$NAME" ]]; then
+    # Use direct pane lookup by name
     PANE_INFO=$(tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_id}" | \
         while read -r pane_spec pane_id; do
             if tmux show-environment -t "$pane_id" "CAFEDELIC_NAME" 2>/dev/null | grep -q "^CAFEDELIC_NAME=$NAME$"; then
@@ -57,13 +49,38 @@ if [[ -n "$NAME" ]]; then
                 break
             fi
         done)
+elif [[ -n "$ROLE" ]]; then
+    # Use property-based discovery with role (and optional source preference)
+    if [[ -n "$SOURCE" ]]; then
+        PANE_INFO=$("$SCRIPT_DIR/find-best-pane-for-role.sh" "$ROLE" "$SOURCE")
+    else
+        PANE_INFO=$("$SCRIPT_DIR/find-best-pane-for-role.sh" "$ROLE")
+    fi
+elif [[ -n "$SOURCE" ]]; then
+    # Only source specified, find any pane with that source
+    PANE_INFO=$(tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index}" | while read -r pane; do
+        pane_source=$(tmux show-options -pqv -t "$pane" @source 2>/dev/null || echo "")
+        if [[ "$pane_source" == "$SOURCE" ]]; then
+            echo "$pane"
+            break
+        fi
+    done)
 else
-    # Use property-based discovery
-    PANE_INFO=$("$SCRIPT_DIR/find-best-pane-for-role.sh" "${FIND_ARGS[@]}")
+    # Default: use current/active pane when no selection criteria provided
+    PANE_INFO=$(tmux display-message -p "#{session_name}:#{window_index}.#{pane_index}")
 fi
 
 if [[ -z "$PANE_INFO" ]]; then
-    echo "Error: No pane found matching the specified criteria" >&2
+    if [[ -n "$NAME" ]]; then
+        echo "Error: No pane found with name='$NAME'" >&2
+    elif [[ -n "$SOURCE" || -n "$ROLE" ]]; then
+        CRITERIA=""
+        [[ -n "$SOURCE" ]] && CRITERIA+="source='$SOURCE' "
+        [[ -n "$ROLE" ]] && CRITERIA+="role='$ROLE'"
+        echo "Error: No pane found matching criteria: $CRITERIA" >&2
+    else
+        echo "Error: No active pane found and no selection criteria provided" >&2
+    fi
     exit 1
 fi
 

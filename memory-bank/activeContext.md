@@ -1,11 +1,22 @@
 # Active Context
 
 ## Current State
-- **Date**: January 2025
-- **Focus**: Property-based system consolidation
-- **Status**: Emacs executor refactored to use property-based pane discovery exclusively
+- **Date**: May 31, 2025
+- **Focus**: Property-based system consolidation and bug fixes
+- **Status**: `capture_pane_with_properties` tool fixed and fully functional
 
 ## Recent Changes
+- **FIXED**: `capture_pane_with_properties` tool bug (2025-05-31)
+  - Fixed parameter validation issue when no properties specified
+  - Added intelligent fallback to current pane when no selection criteria provided
+  - Corrected argument order for `find-best-pane-for-role.sh` (ROLE first, then SOURCE)
+  - Improved error messages with specific criteria feedback
+  - Added source-only selection logic for flexible pane discovery
+  - Tool now works for all usage scenarios: property-based, name-based, and default
+- **COMPLETED**: Pane assignment for Claude Desktop
+  - Set pane 1:0.1 as claude-desktop's editor using `assign_pane_properties`
+  - Verified property storage using tmux @source and @role options
+  - Tested property-based pane discovery works correctly
 - **COMPLETED**: Tool migration - Replace read_pane_by_name with capture_pane_with_properties
   - Removed obsolete `read_pane_by_name` tool from MCP server
   - Added powerful `capture_pane_with_properties` tool with full tmux capture-pane features
