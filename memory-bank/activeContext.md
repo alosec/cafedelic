@@ -1,11 +1,24 @@
 # Active Context
 
 ## Current State
-- **Date**: May 31, 2025
-- **Focus**: Property-based system consolidation and bug fixes
-- **Status**: `capture_pane_with_properties` tool fixed and fully functional
+- **Date**: June 2, 2025
+- **Focus**: Documentation update and demo environment setup
+- **Status**: Complete property-based system documentation and session 4 demo ready
 
 ## Recent Changes
+- **COMPLETED**: Documentation overhaul (2025-06-02)
+  - Completely rewrote tmux-pane-management-guide.md to reflect current property-based system
+  - Removed all references to deprecated tools (read_pane_by_name, assign_name_to_pane, etc.)
+  - Added comprehensive documentation for all current MCP tools
+  - Included detailed examples of property-based workflows
+  - Added migration guide from name-based to property-based system
+- **COMPLETED**: Demo environment setup (2025-06-02)
+  - Configured session 4 with proper property assignments:
+    - Pane 0: source=claude-desktop, role=logs, name=claude-logs (raw Claude logs)
+    - Pane 1: source=claude-desktop, role=editor, name=editor (Claude editor workspace)
+    - Pane 2: source=system, role=logs, name=readable-logs (processed logs)
+  - Started log tailing in pane 0 monitoring ~/.config/Claude/logs/mcp-*.log
+  - Verified all property assignments working correctly
 - **FIXED**: `capture_pane_with_properties` tool bug (2025-05-31)
   - Fixed parameter validation issue when no properties specified
   - Added intelligent fallback to current pane when no selection criteria provided
