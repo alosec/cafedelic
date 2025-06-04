@@ -3,7 +3,7 @@
  * Shows all Claude Code file operations with clear formatting
  */
 
-import { watchClaudeCodeLogs } from '../watchers/claude-code-log.js';
+import { watchClaudeCodeLogs } from '../src/watchers/claude-code-log.js';
 
 const DIVIDER = '─'.repeat(60);
 const COLORS = {

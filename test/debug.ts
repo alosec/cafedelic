@@ -3,8 +3,8 @@
  * Shows all pipeline activity with clear formatting
  */
 
-import { runPipeline } from '../core/runner.js';
-import { fileToEmacs } from '../pipelines/index.js';
+import { runPipeline } from '../src/core/runner.js';
+import { fileToEmacs } from '../src/pipelines/index.js';
 
 const DIVIDER = '─'.repeat(60);
 

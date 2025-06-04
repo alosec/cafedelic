@@ -2,8 +2,8 @@
  * Cafedelic v2 Main Entry Point
  */
 
-import { runPipeline } from './core/runner.js';
-import { fileToEmacs, claudeCodeToEmacs } from './pipelines/index.js';
+import { runPipeline } from './src/core/runner.js';
+import { fileToEmacs, claudeCodeToEmacs } from './src/pipelines/index.js';
 
 console.log('Cafedelic v2 - Watch-Transform-Execute');
 console.log('Starting pipelines...\n');

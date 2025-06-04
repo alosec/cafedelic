@@ -3,8 +3,8 @@
  * Run the file-to-emacs pipeline with debugging
  */
 
-import { runPipeline } from '../core/runner.js';
-import { fileToEmacs } from '../pipelines/index.js';
+import { runPipeline } from '../src/core/runner.js';
+import { fileToEmacs } from '../src/pipelines/index.js';
 
 async function main() {
   console.log('Starting cafedelic v2 test...');
