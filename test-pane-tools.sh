@@ -1,8 +1,8 @@
 #!/bin/bash
-# Test the pane management scripts
+# Test Cafedelic V2 Property-Based Pane Management
 
-echo "Testing Cafedelic Pane Management"
-echo "================================="
+echo "Testing Cafedelic V2 Pane Management"
+echo "===================================="
 
 # Get current session and window
 SESSION=$(tmux display-message -p '#S')
@@ -12,41 +12,54 @@ echo "Current session: $SESSION"
 echo "Current window: $WINDOW"
 echo ""
 
-# Test 1: Assign names to panes
-echo "1. Testing pane naming..."
-./scripts/pane-management/assign-name.sh "$SESSION" "$WINDOW" 0 "test-pane-1"
-./scripts/pane-management/assign-name.sh "$SESSION" "$WINDOW" 1 "test-pane-2"
+# Test 1: Assign properties to panes (V2 approach)
+echo "1. Testing V2 property assignment..."
+./scripts/pane-properties/assign-properties.sh "$SESSION" "$WINDOW" 0 --name "test-editor" --source "user" --role "editor"
+./scripts/pane-properties/assign-properties.sh "$SESSION" "$WINDOW" 1 --name "test-terminal" --source "user" --role "terminal"
 
-# Test 2: List named panes
+# Test 2: List panes by properties
 echo ""
-echo "2. Listing named panes..."
-./scripts/pane-management/list-named-panes.sh
+echo "2. Listing panes by properties..."
+echo "   All user panes:"
+./scripts/pane-properties/list-panes-by-properties.sh --source "user"
+echo "   All editor panes:"
+./scripts/pane-properties/list-panes-by-properties.sh --role "editor"
 
-# Test 3: Send text to a pane
+# Test 3: Find specific pane by source and role
 echo ""
-echo "3. Sending text to test-pane-1..."
-./scripts/pane-management/send-to-pane.sh "test-pane-1" "Hello from cafedelic!"
+echo "3. Finding user editor pane..."
+./scripts/pane-properties/find-pane-by-source-and-role.sh "user" "editor"
 
-# Test 4: Send special key
+# Test 4: Send text to a pane
 echo ""
-echo "4. Sending Enter key to test-pane-1..."
-./scripts/pane-management/send-special-key.sh "test-pane-1" "enter"
+echo "4. Sending text to test-editor..."
+./scripts/pane-management/send-keys-to-pane.sh "test-editor" "echo 'Hello from Cafedelic V2!'"
 
-# Test 5: Read from pane
+# Test 5: Send special key
 echo ""
-echo "5. Reading last 5 lines from test-pane-1..."
-./scripts/pane-management/read-pane.sh "test-pane-1" 5
+echo "5. Sending Enter key to test-editor..."
+./scripts/pane-management/send-special-key.sh "test-editor" "enter"
 
-# Test 6: Configure routing
+# Test 6: Capture pane content with properties
 echo ""
-echo "6. Setting up routing..."
-./scripts/routing/set-output-destination.sh "files" "test-pane-1"
-./scripts/routing/set-output-destination.sh "activity" "test-pane-2"
+echo "6. Reading last 5 lines from user editor..."
+./scripts/pane-properties/capture-pane-with-properties.sh --source "user" --role "editor" --last 5
 
-# Test 7: Show routing config
+# Test 7: Test best pane discovery
 echo ""
-echo "7. Current routing configuration..."
-./scripts/routing/get-routing-config.sh
+echo "7. Finding best pane for editor role..."
+./scripts/pane-properties/find-best-pane-for-role.sh "editor"
+
+# Test 8: Advanced capture with grep
+echo ""
+echo "8. Searching for 'Hello' in editor pane..."
+./scripts/pane-properties/capture-pane-with-properties.sh --name "test-editor" --grep "Hello" --grep-context 1
 
 echo ""
-echo "Testing complete!"
+echo "V2 Testing complete!"
+echo ""
+echo "Key differences from V1:"
+echo "- Uses source + role properties instead of just names"
+echo "- Property-based pane discovery with fallbacks"
+echo "- Advanced capture options (grep, context, ranges)"
+echo "- Multi-dimensional pane organization"

@@ -99,23 +99,7 @@ server.tool(
   }
 );
 
-server.tool(
-  'get_details_for_pane_by_name',
-  {
-    name: z.string().describe('The custom name of the pane')
-  },
-  async ({ name }) => {
-    const result = await runScript('pane-management/get-pane-details.sh', [name]);
-    return {
-      content: [{
-        type: 'text',
-        text: `Pane details for '${name}':\n${result.stdout}`
-      }]
-    };
-  }
-);
-
-// New Property-Based Tools
+// Property-Based Tools
 server.tool(
   'assign_pane_properties',
   {
