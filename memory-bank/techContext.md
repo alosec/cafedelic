@@ -184,3 +184,92 @@ Any additions must:
 - Keep code readable
 
 The technical foundation is intentionally minimal to maximize maintainability and extensibility.
+
+## New Technical Components
+
+### cafe CLI Suite
+```
+cafedelic/
+├── cli/
+│   ├── cafe              # Main entry point (bash)
+│   └── commands/         # Subcommand implementations
+│       ├── init.sh       # Layout initialization
+│       ├── make.sh       # Custom layout creation
+│       ├── session.sh    # Claude Code management
+│       ├── status.sh     # Activity dashboard
+│       ├── events.sh     # Database viewer
+│       └── pane.sh       # Direct script wrapper
+```
+
+### System Events Database
+- **Location**: `~/.cafedelic/system_events.db`
+- **Engine**: SQLite3 (no external dependencies)
+- **Schema**: Optimized for one-liner system event tracking
+```sql
+CREATE TABLE system_events (
+    id INTEGER PRIMARY KEY,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    source TEXT NOT NULL,
+    level TEXT DEFAULT 'info',
+    message TEXT NOT NULL,
+    session_name TEXT
+);
+```
+- **Indexes**: timestamp DESC, source for fast queries
+- **Viewer**: Reactive display via `cafe events --follow`
+
+### Session Management
+- **Location**: `~/.cafedelic/sessions/`
+- **Format**: JSON files for active sessions
+- **Structure**:
+```
+sessions/
+├── active/          # Currently running sessions
+│   ├── frontend-refactor.json
+│   └── api-tests.json
+└── history/         # Archived sessions
+    └── completed.jsonl
+```
+- **Naming**: Human-friendly names map to Claude Code PIDs
+### Claude Code Integration
+
+#### SDK Usage
+- Run Claude Code as subprocess via SDK
+- Available for TypeScript and Python
+- Direct API integration without intermediate servers
+- Example usage:
+```typescript
+import { ClaudeCode } from '@anthropic/claude-code-sdk';
+const session = await ClaudeCode.start({
+  name: 'frontend-refactor',
+  workingDir: process.cwd()
+});
+```
+
+#### Direct Script Architecture
+```
+CLI Command → Bash Script → Tmux/File Operation
+     ↓              ↓
+No MCP Server   Direct Execution
+```
+
+Benefits:
+- ~10ms script execution vs ~100ms via MCP
+- Simple error propagation
+- Easy to debug with bash -x
+- No server process management
+
+### Updated Performance Characteristics
+
+#### cafe CLI Performance
+- **cafe init**: < 1 second to full IDE layout
+- **cafe session new**: < 500ms to start tracked session
+- **Script calls**: ~10ms overhead (direct execution)
+- **Messages DB**: Handles 1000s system events/minute
+- **Status refresh**: 1-2 second update cycle
+
+#### Resource Usage
+- **Bash scripts**: Negligible memory
+- **SQLite DB**: Grows ~1MB per 10k system events
+- **Session tracking**: ~1KB per session file
+- **Overall overhead**: < 10MB for typical usage

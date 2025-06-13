@@ -4,89 +4,121 @@
 
 AI development tools operate as black boxes. When Claude Desktop works on your code, you see results but not the journey. Cafedelic makes the invisible visible while providing control over how and where insights appear.
 
+## The Evolution
+
+Cafedelic started as a transparency framework but evolved into something more powerful: an integrated AI pair programming environment. We kept the transparency features but added active workspace management, transforming from passive observer to active IDE.
+
 ### Problems We Solve
 
-1. **Lost Context**: What files did Claude read? What patterns did it find?
-2. **Opaque Decision-Making**: Why did Claude choose this approach?
-3. **Static Display**: Output trapped in Claude's interface
-4. **Manual Coordination**: No automatic editor synchronization
-5. **Inflexible Layouts**: Hard-coded assumptions about user setup
+1. **Session Chaos**: Multiple Claude Code instances without organization
+2. **Context Switching**: Constant jumping between terminal, editor, logs
+3. **Lost Activity**: No unified view of what AI and developers are doing
+4. **Complex Setup**: Too many commands to create productive workspace
+5. **Static Interfaces**: Can't see live updates across tools
 
-## The Transparency & Control Gap
+## The Integration Gap
 
 Current tools provide either:
-- **Too Low Level**: Raw tmux commands, pane coordinates
-- **Too High Level**: Final outputs without process visibility
-- **Too Rigid**: Fixed layouts and destinations
+- **Too Fragmented**: Separate terminals for each Claude Code session
+- **Too Manual**: Constant tmux commands and pane management
+- **Too Opaque**: No visibility into AI activity across sessions
 
-Cafedelic provides the middle ground - intelligent visibility with flexible control.
+Cafedelic provides seamless integration - one command to productive IDE.
 
 ## How It Works
 
-### Watch & Translate
-Monitor MCP logs and translate to human insights:
-```
-From: {"method":"tools/call","params":{"name":"read_file","arguments":{"path":"/src/auth.js"}}}
-To: "Claude is reading the authentication module"
+### One Command IDE
+```bash
+cafe init  # Instant 30/70/30 layout with file tree, editor, and messages
 ```
 
-### Route Dynamically
-Users configure where insights appear:
-```
-setEditorDestination("0:0.1")  // Your preferred pane
-→ Activity streams to YOUR layout
-→ Files open in YOUR editor setup
+### Session Management  
+```bash
+cafe session new frontend-refactor  # Start Claude Code with friendly name
+cafe session list                   # See all active sessions
+cafe status                        # Live dashboard of AI activity
 ```
 
-### Integrate Intelligently
-- **Emacs Integration**: Files/directories open automatically
-- **Pane Servers**: Independent Emacs servers per pane
-- **TMEX Layouts**: Create and manage complex layouts
-- **Activity Context**: Query current activity via MCP
+### Direct Integration
+- No MCP server overhead for CLI commands
+- Bash scripts called directly for speed
+- SQLite system events database for rich querying
+- Reactive displays that update automatically
+
+## The 30/70/30 Philosophy
+
+Our default layout emerged from real usage patterns:
+```
+┌─────────────┬─────────────────────┐
+│  Directory  │       Editor        │
+│    Tree     │      (Emacs)        │
+│    (30%)    │       (70%)         │
+├─────────────┴─────────────────────┤
+│         System Events              │
+│     (Terminal, Logs, Activity)     │
+│             (30%)                  │
+└────────────────────────────────────┘
+```
+- **30% File Tree**: Always see project structure
+- **70% Editor**: Maximum space for code work  
+- **30% System Events**: Unified activity stream from all sources
 
 ## User Experience
 
 ### For Developers
-Real-time visibility with full control:
+Simple commands, powerful results:
 ```
-[3:42pm] Claude started exploring authentication → Opens in YOUR editor
-[3:43pm] Reading: auth.js, login.js → Visible in YOUR activity pane
-[3:44pm] Testing login flow → Output in YOUR terminal
+[Starting work]
+$ cafe init
+→ Full IDE layout in 1 second
+
+$ cafe session new auth-refactor
+→ Claude Code starts with friendly name
+
+[During work]
+System Events panel shows:
+10:32:15 [claude-code] Started auth-refactor session
+10:32:18 [activity] Claude reading src/auth/login.js
+10:32:20 [terminal] Running: npm test auth
+10:32:25 [logs] All auth tests passing
+
+[Managing sessions]
+$ cafe status
+→ See all Claude Code sessions and activity
 ```
 
 ### Flexible Configuration
-```javascript
-// Set your editor pane
-setEditorDestination("main:dev.1")
+```bash
+# Use different layouts
+cafe make --layout minimal    # Just editor and terminal
+cafe make --layout full      # 5-pane comprehensive
 
-// Query routing state
-getRoutingAssignments()
-
-// Adjust layouts on the fly
-create_tmex_layout("2:0", "222")
+# Direct pane management via CLI
+cafe pane assign editor --source claude-code
+cafe pane send events "Starting new feature"
 ```
 
 ## Design Principles
 
-1. **Transparency First**: Make AI activity visible
-2. **User Control**: No hard-coded assumptions
-3. **Progressive Enhancement**: Start simple, add features
-4. **Integration Over Isolation**: Work with existing tools
-5. **Shell Scripts as Foundation**: Leverage proven solutions
+1. **CLI First**: Everything starts with simple cafe commands
+2. **Direct Execution**: Skip middleware, call scripts directly
+3. **Session Oriented**: Human names for Claude Code instances
+4. **Database Backed**: Rich querying and history, not just text
+5. **Tmux Native**: Deep integration, not abstraction
 
 ## Evolution Path
 
-### Today: Single Agent Transparency
-- One Claude Desktop, full visibility
-- Flexible routing to any pane
-- Automatic editor integration
+### Today: Claude Code IDE
+- Multiple Claude Code sessions with names
+- Unified activity tracking
+- One-command workspace setup
 
-### Tomorrow: Multi-Agent Orchestration  
-- Multiple Claude instances
-- Coordinated development
-- Shared context and state
+### Tomorrow: Intelligent Orchestration
+- AI agents that coordinate
+- Pattern learning from sessions
+- Suggested next actions
 
-### Future: Intelligent Platform
-- Pattern recognition
-- Workflow optimization
-- Accumulated intelligence
+### Future: Adaptive Platform
+- Learns your development patterns
+- Optimizes layouts for tasks
+- Predictive session management

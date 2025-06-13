@@ -1,71 +1,76 @@
 # Active Context
 
 ## Current State
-- **Date**: June 2, 2025
-- **Focus**: Documentation update and demo environment setup
-- **Status**: Complete property-based system documentation and session 4 demo ready
+- **Date**: June 12, 2025
+- **Focus**: Building cafe CLI tool suite for Claude Code IDE
+- **Status**: Architecture defined, implementation starting
 
-## Recent Changes
-- **COMPLETED**: Documentation overhaul (2025-06-02)
-  - Completely rewrote tmux-pane-management-guide.md to reflect current property-based system
-  - Removed all references to deprecated tools (read_pane_by_name, assign_name_to_pane, etc.)
-  - Added comprehensive documentation for all current MCP tools
-  - Included detailed examples of property-based workflows
-  - Added migration guide from name-based to property-based system
-- **COMPLETED**: Demo environment setup (2025-06-02)
-  - Configured session 4 with proper property assignments:
-    - Pane 0: source=claude-desktop, role=logs, name=claude-logs (raw Claude logs)
-    - Pane 1: source=claude-desktop, role=editor, name=editor (Claude editor workspace)
-    - Pane 2: source=system, role=logs, name=readable-logs (processed logs)
-  - Started log tailing in pane 0 monitoring ~/.config/Claude/logs/mcp-*.log
-  - Verified all property assignments working correctly
-- **FIXED**: `capture_pane_with_properties` tool bug (2025-05-31)
-  - Fixed parameter validation issue when no properties specified
-  - Added intelligent fallback to current pane when no selection criteria provided
-  - Corrected argument order for `find-best-pane-for-role.sh` (ROLE first, then SOURCE)
-  - Improved error messages with specific criteria feedback
-  - Added source-only selection logic for flexible pane discovery
-  - Tool now works for all usage scenarios: property-based, name-based, and default
-- **COMPLETED**: Pane assignment for Claude Desktop
-  - Set pane 1:0.1 as claude-desktop's editor using `assign_pane_properties`
-  - Verified property storage using tmux @source and @role options
-  - Tested property-based pane discovery works correctly
-- **COMPLETED**: Tool migration - Replace read_pane_by_name with capture_pane_with_properties
-  - Removed obsolete `read_pane_by_name` tool from MCP server
-  - Added powerful `capture_pane_with_properties` tool with full tmux capture-pane features
-  - Supports property-based filtering (source, role, name)
-  - Includes advanced capture options (range, grep, formatting)
-  - Created supporting shell script for property-aware pane capture
-- **COMPLETED**: Issue #16 - Consolidated to property-based approach
-  - Removed hard-coded pane destinations from emacs.ts
-  - Integrated property-based pane discovery using @source and @role
-  - Deleted duplicate property-based-emacs.ts file
-  - Updated pipelines to specify appropriate sources (claude-desktop, claude-code)
-  - Simplified codebase by removing dual routing approaches
-- **IMPLEMENTED**: Issue #16 Multi-dimensional pane property system
-  - Added orthogonal `@source` and `@role` properties to panes
-  - Created property-based discovery scripts with fallback logic
-  - Enhanced MCP tools while maintaining backward compatibility
-  - Built property-aware executors for WTE pipeline
-- **RESOLVED**: Issue #14 Docker build failure from V1/V2 mixed state
-- Successfully cherry-picked modern MCP server implementation from backup branch
-- Updated to McpServer API with modern .tool() syntax and Zod validation
-- Verified Docker build works with modern MCP implementation
-- All 10 MCP tools functional with new API
+## Recent Architectural Decisions
 
-## Property System Architecture
-The new system adds two orthogonal dimensions to pane management:
+### Keeping All MCP Tools
+Decision: Maintain all 8 existing MCP tools rather than deprecating
+- MCP tools remain available for programmatic access
+- CLI commands will call bash scripts directly for performance
+- This provides maximum flexibility for users
+
+### CLI-First Architecture (UPDATED SCOPE)
+Decision: Create 'cafe' command suite as primary interface
+- `cafe init`: Ensure server running and operational, return errors if missing dependencies
+- `cafe deploy`: Deploy simple 2-pane layout (70% emacs top, 30% system events bottom)
+- `cafe session`: Manage Claude Code instances (future)
+- `cafe status`: Live activity dashboard (future) 
+- `cafe events`: Query and display system events (future)
+
+### Direct Script Invocation
+Decision: CLI bypasses MCP layer, calls scripts directly
+- Example: `cafe pane assign` → `assign-properties.sh`
+- Removes HTTP/stdio overhead
+- Simpler error handling
+- Faster execution
+
+### System Events Database Design
+Decision: SQLite for system events, not flat files
+- Schema: id, timestamp, source, level, message, session_name
+- Enables rich queries across sessions
+- Supports real-time reactive displays
+- One-liner system events for clarity
+
+### Layout Specification (SIMPLIFIED SCOPE)
+Decision: 70/30 split as default (simplified from 3-pane)
+```
+┌─────────────────────────────────────┐
+│            Emacs Editor             │
+│        (Claude Desktop's            │  
+│          primary editor)            │
+│             (70%)                   │
+├─────────────────────────────────────┤
+│          System Events              │
+│     (Activity, Logs, Status)        │
+│             (30%)                   │
+└─────────────────────────────────────┘
+```
+## Claude Code SDK Insights
+- Official SDK released May 2025, replacing deprecated @anthropic-ai/claude-code package
+- Enables subprocess control of Claude Code sessions
+- Can build reactive status displays using SDK
+- Integration point for session management
+- Supports TypeScript and Python bindings
+
+## Session Management Research
+- claude-squad provides tmux-based multi-session management
+- CCmanager offers tmux-free alternative with TUI
+- Both track sessions by ID with human-friendly names
+- We'll integrate best patterns from both approaches
+
+## Previous Completed Work (Foundation)
+
+### Property System Architecture
+The system uses orthogonal dimensions for pane management:
 - **@source**: "user" | "claude-desktop" | "claude-code" | "system"
 - **@role**: "editor" | "terminal" | "logs" | "tests" | "debug" | "monitor"
-- **@name**: Existing naming system maintained for backward compatibility
+- **@name**: Human-friendly names for backward compatibility
 
-### Benefits
-- Multiple AI assistants can have separate panes for same role
-- Survives tmux layout changes (no hardcoded coordinates)
-- Graceful fallbacks when specific panes don't exist
-- Natural language setup: "Make this pane my Claude Desktop editor"
-
-## Current Architecture (V2 - WTE)
+### V2 WTE Implementation
 ```typescript
 // Core pattern - entire system in ~150 lines
 pipe(
@@ -73,90 +78,48 @@ pipe(
   fileOperationTransform,
   emacsExecutor(scriptPath)
 );
-
-// Property-based executor with smart pane discovery
-await openInEmacs(action, {
-  source: 'claude-desktop',  // or 'claude-code', 'user'
-  role: 'editor'            // or 'terminal', 'logs', etc.
-});
 ```
 
-### Key Components
-1. **Watch**: Direct MCP log observation via readline
-2. **Transform**: Simple JSON parsing and filtering
-3. **Execute**: Shell script execution for Emacs
-4. **Compose**: Functional pipeline with `pipe()` utility
+### Available MCP Tools (All Retained)
+1. `assign_pane_properties` - Set name, source, and/or role on a pane
+2. `list_panes_by_properties` - Filter panes by any property combination
+3. `find_pane_by_source_and_role` - Direct lookup with exact match
+4. `capture_pane_with_properties` - Advanced pane capture with property filtering
+5. `send_keys_to_pane` - Send text/keys to named pane
+6. `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
+7. `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
+8. `get_details_for_pane_by_name` - Get pane information
+## Implementation Priorities
 
-## Implementation Status
-- ✅ Core WTE pattern implemented
-- ✅ MCP log watching functional
-- ✅ Emacs integration working
-- ✅ File operations pipeline complete
-- ✅ 10x code reduction achieved
-- ✅ Merged to main and deployed
+### Phase 1: cafe CLI Foundation (IMMEDIATE SCOPE)
+1. Main cafe entry script with subcommand routing
+2. `cafe init` - Ensure server running, check dependencies, return errors
+3. `cafe deploy` - Simple 2-pane layout (70% emacs, 30% system events)
+4. Direct bash script invocation pattern
+5. Basic error handling and validation
 
-## Ready For Next Phase
+### Phase 2: System Events Database (NEXT)
+1. SQLite schema for one-liner system event tracking
+2. cafe events command with --follow mode
+3. Integration points for various sources
+4. Reactive display updates
 
-### Claude Desktop Integration
-- Framework ready for shared workspace visibility
-- Simple pipeline makes feature addition straightforward
-- Can add new watchers/transforms with minimal effort
-- Clean composition model supports any data flow
+### Phase 3: Claude Code Integration (FUTURE)
+1. Session management with human names
+2. SDK subprocess integration
+3. Multi-session status dashboard
+4. Activity aggregation across sessions
 
-### Claude Code Integration
-- Architecture supports direct tool integration
-- No complex abstractions to navigate
-- Each pipeline stage is independent and testable
-- Easy to add new execution targets
+## Next Session Tasks (IMMEDIATE PRIORITIES)
+1. Create cli/cafe main entry script with init/deploy commands
+2. Implement cafe init for server validation and dependency checking
+3. Implement cafe deploy for 2-pane layout (70% emacs, 30% system events)
+4. Test direct script invocation pattern
+5. Validate emacs integration and system events display
 
-## Next Steps
-1. Implement Claude Desktop visibility features
-   - Add more transform types for different operations
-   - Create visual feedback pipelines
-   - Build activity monitoring transforms
-
-2. Add Claude Code tool integration
-   - Create watchers for Code-specific operations
-   - Build transforms for code analysis
-   - Add executors for code actions
-
-3. Enhance pipeline capabilities
-   - Add filtering and routing options
-   - Build conditional execution paths
-   - Create pipeline composition tools
-
-## Technical Achievement
-- **Before**: 17 files, complex services, generic hell
-- **After**: Single entry point, clear data flow, functional composition
-- **Result**: Same functionality, 10x less code, infinitely more maintainable
-
-## Available MCP Tools (Enhanced with Properties)
-The MCP server now provides 8 property-aware tools:
-
-### Property-Based Tools
-- `assign_pane_properties` - Set name, source, and/or role on a pane
-- `list_panes_by_properties` - Filter panes by any property combination
-- `find_pane_by_source_and_role` - Direct lookup with exact match
-- `capture_pane_with_properties` - Advanced pane capture with property filtering
-  - Supports full tmux capture-pane options (range, grep, formatting)
-  - Property-based pane discovery (source, role, name)
-  - Built-in search/filter capabilities
-
-### Pane Interaction Tools
-- `send_keys_to_pane` - Send text/keys to named pane
-- `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
-- `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
-- `get_details_for_pane_by_name` - Get pane information
-
-### Deprecated Tools
-- `read_pane_by_name` - Removed in favor of `capture_pane_with_properties`
-- `assign_name_to_pane` - Removed in favor of `assign_pane_properties`
-
-## Development Velocity
-With the v2 architecture, adding new features is now:
-1. Add a watcher (if new data source)
-2. Add a transform (for new data shape)
-3. Add an executor (for new action)
-4. Compose with `pipe()`
-
-No more navigating service hierarchies or fighting TypeScript generics.
+## Key Technical Decisions Summary
+- **CLI over MCP**: Direct user interface via cafe commands
+- **Scripts over Servers**: Bypass MCP layer for CLI operations
+- **Database over Files**: SQLite for structured system event data
+- **Names over IDs**: Human-friendly session identification
+- **Reactive over Push**: Database-backed displays that poll

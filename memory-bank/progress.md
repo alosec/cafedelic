@@ -1,137 +1,108 @@
 # Progress
 
-## Project Status: V2 Complete - Ready for Features
+## Project Status: Pivoting to Claude Code IDE (V3)
 
-### Current Implementation (V2)
-**Architecture**: Watch-Transform-Execute (WTE) pattern
-**Codebase**: ~150 lines (from ~2000 in v1)
-**Status**: Fully functional and merged to main
+### Foundation Complete (V2 WTE)
+**Architecture**: Watch-Transform-Execute pattern proven
+**Codebase**: ~150 lines core implementation  
+**Integration**: Emacs auto-opening works seamlessly
+**Property System**: Multi-dimensional pane management ready
 
-### Recent Enhancement: Seamless Auto-Revert (2025-05-31)
-**Problem Solved**: WTE auto-open workflow was interrupted by Emacs revert buffer prompts
-**Solution**: Enabled global auto-revert mode in pane-specific Emacs servers
-**Philosophy**: Treat panes as "Claude's workspace" where files automatically sync
+### Current Focus: Claude Code IDE & cafe CLI
+**Vision**: Integrated AI pair programming environment
+**Approach**: CLI-first with direct script execution
+**Status**: Architecture designed, implementation starting
 
-**Implementation**: 
-- Added `global-auto-revert-mode` to `cafedelic-pane-init` function
-- Disabled verbose revert messages for seamless experience  
-- Enabled VC info auto-revert for complete file state synchronization
-- Updated scratch buffer message to indicate auto-revert capability
+## Completed Decisions ✅
 
-**Impact**: WTE workflow now provides completely seamless file opening with no user prompts
+### Architectural Choices (UPDATED SCOPE)
+- **Keep all MCP tools**: No deprecation, maximum flexibility
+- **CLI-first interface**: cafe command suite as primary UX
+- **Direct script calls**: Bypass MCP layer for CLI operations
+- **70/30 layout**: Simple 2-pane default (emacs/system events)
+- **SQLite messages**: Database-backed activity tracking (future)
+- **Validation first**: cafe init ensures operational state
 
-## What Works ✅
+### Technical Foundation
+- **WTE pipeline**: Proven event-driven architecture
+- **Property system**: Source/role/name pane identification
+- **Script library**: Robust bash scripts for all operations
+- **MCP servers**: Both stdio and HTTP implementations working
 
-### Core Functionality
-- **MCP Log Watching**: Direct file watching with readline
-- **File Operation Detection**: Parses Claude Desktop file operations
-- **Emacs Integration**: Auto-opens files/directories using property-based pane discovery
-- **Pipeline Composition**: Clean functional data flow with `pipe()`
-- **Property-Based Routing**: Uses @source and @role for intelligent pane selection
+## Implementation Priorities 🚀
 
-### MCP Tools (Enhanced with Properties)
-- `assign_pane_properties` - Set name, source, and/or role on a pane
-- `list_panes_by_properties` - Filter panes by any property combination
-- `find_pane_by_source_and_role` - Direct lookup with exact match
-- `setEditorDestination` - Route output to specific tmux panes
-- `create_tmex_layout` - Create complex tmux layouts
-- `toggle_auto_open` - Control automatic file opening
-- `get_active_context` - Retrieve recent activity
-- All routing and layout management tools
+### Phase 1: cafe CLI Foundation (IMMEDIATE FOCUS)
+- [ ] Main cafe entry script with subcommand routing
+- [ ] cafe init - Validate server running, check dependencies, return errors
+- [ ] cafe deploy - Simple 2-pane layout (70% emacs, 30% system events)
+- [ ] Direct script invocation pattern
+- [ ] Basic error handling and user feedback
 
-### Technical Achievements
-- 10x code reduction while maintaining all features
-- Eliminated complex service architecture
-- Direct, understandable code flow
-- Easy to extend and modify
+### Phase 2: Core Features (NEXT)
+- [ ] System events database with reactive display
+- [ ] cafe events - SQLite system event viewer
+- [ ] Layout presets (minimal, full)
+- [ ] Integration with existing WTE pipeline
+### Phase 3: Claude Code Integration
+- [ ] SDK subprocess management
+- [ ] Multi-session coordination
+- [ ] Activity aggregation across sessions
+- [ ] Token usage tracking
 
-## Current Capabilities
+## Key Insights from Research
 
-### File Operations
-- Detects when Claude reads/writes files
-- Automatically opens them in Emacs
-- Routes to user-specified tmux panes
-- Maintains activity context
+### Claude Code SDK
+- Official SDK released May 2025
+- Enables programmatic session control
+- TypeScript and Python support
+- Direct API connection without middleware
 
-### Architecture Benefits
-- Add new watchers for different data sources
-- Create transforms for any data shape
-- Build executors for any action
-- Compose pipelines trivially
+### Session Management Tools
+- **claude-squad**: Tmux-based multi-session manager
+- **CCmanager**: TUI without tmux dependency
+- Both use human-friendly naming over session IDs
+- We'll integrate best patterns into cafe
 
-## What's Next 🚀
+### Performance Targets
+- **cafe init**: < 1 second to working IDE
+- **Direct scripts**: ~10ms execution time
+- **Database queries**: < 50ms for recent system events
+- **Session creation**: < 500ms with tracking
 
-### Immediate Priorities
-1. **Claude Desktop Visibility**
-   - Show AI actions in real-time
-   - Create activity dashboards
-   - Build visual feedback systems
+## Architecture Evolution
+1. **V1**: Complex services (deprecated)
+2. **V2**: Clean WTE pattern (foundation)
+3. **V3**: Claude Code IDE (building now)
 
-2. **Claude Code Integration**
-   - Direct tool execution
-   - Code-specific transforms
-   - Enhanced file operations
+## What Makes This Different
 
-3. **Pipeline Enhancements**
-   - Conditional routing
-   - Multi-stage transforms
-   - Parallel execution
+### From Other Tools
+- **Deeply tmux-native**: Not abstracting, enhancing
+- **CLI-first**: Simple commands, powerful results
+- **Database-backed**: Rich history and queries
+- **Session-oriented**: Built for multi-Claude workflows
 
-### Feature Possibilities
-With the clean WTE architecture, we can now easily add:
-- Git operation monitoring
-- Terminal command tracking
-- Browser action visibility
-- Custom notification systems
-- Any transform/execute combination
+### From Previous Versions
+- **Focused purpose**: AI pair programming, not general orchestration
+- **Direct execution**: No middleware overhead
+- **Human-centric**: Friendly names, not technical IDs
+- **Reactive displays**: Live updates, not just text pushing
+## Next Session Goals
+1. Create cli/cafe main entry script
+2. Implement cafe init with 30/70/30 layout
+3. Build system events database schema and viewer
+4. Create session tracking structure
+5. Test direct script invocation pattern
 
-## Development Status
-
-### Completed Milestones
-- [x] V2 architecture design
-- [x] WTE pattern implementation
-- [x] Core pipeline working
-- [x] V1 feature parity
-- [x] 10x code reduction
-- [x] Merge to main
-- [x] Issue #11 closed
-- [x] Issue #16 property-based consolidation
-
-### Ready to Build
-- [ ] Claude Desktop visibility features
-- [ ] Claude Code tool integration
-- [ ] Advanced routing options
-- [ ] Activity analytics
-- [ ] Custom pipelines
-
-## Known Limitations
-- No persistence (routing resets on restart)
-- Basic error handling
-- Limited test coverage
-- Single pipeline model (intentionally simple)
-
-## Technical Foundation
-The v2 implementation provides:
-- Clear extension points
-- Minimal dependencies
-- Direct debugging paths
-- Simple mental model
+## Known Limitations (Acceptable)
+- No cross-machine session sync (local-first)
+- Requires tmux (by design)
+- Bash/SQLite only (simplicity over features)
+- No GUI (terminal-native)
 
 ## Summary
-V2 redesign complete. The system now does exactly what it needs to with minimal complexity. Ready to rapidly build new features on this solid foundation.
-## Recent Achievement: Tool Deprecation (2025-05-31)
+Cafedelic is transforming from AI transparency framework to integrated Claude Code IDE. The technical foundation is proven (WTE pattern), the property system enables flexible pane management, and the CLI-first approach will make complex workflows simple. 
 
-Successfully deprecated and removed `assign_name_to_pane` tool in favor of the more powerful `assign_pane_properties` tool. This simplifies the API while providing enhanced multi-dimensional pane management capabilities.
+The shift to direct script execution and database-backed displays represents a commitment to performance and user experience over architectural purity. By studying tools like claude-squad and CCmanager, we're building on proven patterns while maintaining our tmux-native philosophy.
 
-**Changes Made**:
-- Removed deprecated tool from both MCP servers (stdio and HTTP)
-- Updated comprehensive documentation with migration guide
-- Cleaned up tool definitions and handlers
-- Added deprecation notes to .clauderules
-
-**Benefits Achieved**:
-- Cleaner API with single pane assignment method
-- Enhanced property system supports source/role combinations
-- Better multi-assistant workflow support
-- Future-proof extensible property model
-
+Ready to build the future of AI pair programming.

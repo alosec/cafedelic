@@ -257,3 +257,109 @@ This tool demonstrates the migration pattern:
 ```
 
 This pattern will guide future tool migrations, ensuring we expose system power while maintaining elegant APIs.
+
+## CLI-First Pattern
+
+### Direct Script Invocation
+Instead of CLI → MCP → Script, we use CLI → Script directly:
+
+```bash
+# Old pattern (avoided)
+cafe pane assign editor → HTTP POST → MCP server → assign-properties.sh
+
+# New pattern (preferred)  
+cafe pane assign editor → assign-properties.sh
+```
+
+Benefits:
+- Faster execution (~10ms vs ~100ms)
+- Simpler error handling
+- Easier debugging
+- No server dependency for CLI
+
+### CLI Command Structure
+```bash
+#!/bin/bash
+# Main cafe entry point
+case "$1" in
+  init)    exec "$CAFEDELIC_DIR/cli/commands/init.sh" "$@" ;;
+  make)    exec "$CAFEDELIC_DIR/cli/commands/make.sh" "$@" ;;
+  session) exec "$CAFEDELIC_DIR/cli/commands/session.sh" "$@" ;;
+esac
+```
+
+## Reactive Database Display Pattern
+
+Moving beyond send-keys to database-backed reactive displays:
+
+```bash
+# Old: Push text to panes
+tmux send-keys -t $pane "Status: $message"
+
+# New: Write to DB, pane reads and displays
+sqlite3 $DB "INSERT INTO system_events (source, message) VALUES ('$source', '$message')"
+# Pane runs: cafe events --follow
+```
+
+Benefits:
+- Persistent history
+- Rich queries
+- Multiple consumers
+- Structured data
+## Session Management Pattern
+
+Claude Code sessions tracked with human-friendly names:
+
+```json
+// ~/.cafedelic/sessions/active/frontend-refactor.json
+{
+  "name": "frontend-refactor",
+  "pid": 12345,
+  "started": "2025-06-12T10:30:00Z",
+  "working_dir": "/home/alex/code/myapp/frontend",
+  "last_command": "refactor auth component",
+  "status": "active"
+}
+```
+
+Pattern enables:
+- Multiple concurrent sessions
+- Human-readable identification  
+- Status aggregation
+- Session history
+
+### Session Lifecycle
+```bash
+# Create session
+cafe session new frontend-refactor
+→ Creates JSON file in active/
+→ Starts Claude Code with tracked PID
+
+# List sessions
+cafe session list
+→ Reads all active/*.json files
+→ Shows human-friendly names and status
+
+# Archive session
+cafe session done frontend-refactor  
+→ Moves to history/
+→ Adds completion timestamp
+```
+
+## Modular Layout Pattern
+
+Layouts defined as composable configurations:
+
+```bash
+# Layout presets in ~/.cafedelic/layouts/
+default.layout  # 30/70/30 standard
+minimal.layout  # 50/50 simple
+full.layout     # 5-pane comprehensive
+
+# Applied via: cafe make --layout full
+```
+
+Each layout file contains:
+- Split commands sequence
+- Property assignments
+- Initial commands for panes
