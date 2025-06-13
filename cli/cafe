@@ -1,0 +1,45 @@
+#!/bin/bash
+# Cafedelic CLI - Main entry point
+# Routes subcommands to individual scripts
+
+set -euo pipefail
+
+# Determine cafedelic directory (resolve symlinks)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+CAFEDELIC_DIR="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+export CAFEDELIC_DIR
+
+case "${1:-}" in
+    init)
+        exec "$CAFEDELIC_DIR/cli/commands/init.sh" "${@:2}"
+        ;;
+    deploy)
+        exec "$CAFEDELIC_DIR/cli/commands/deploy.sh" "${@:2}"
+        ;;
+    --help|-h|"")
+        cat << 'EOF'
+Cafedelic CLI - Claude Code powered tmux IDE
+
+Usage: cafe <command> [options]
+
+Commands:
+  init     Validate server and dependencies
+  deploy   Create 2-pane IDE layout (70% emacs, 30% system events)
+
+Options:
+  --help   Show this help message
+
+Examples:
+  cafe init          # Check system readiness
+  cafe deploy        # Create IDE layout in current tmux session
+  cafe deploy --new  # Create new tmux session with IDE layout
+
+EOF
+        exit 0
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'cafe --help' for usage information"
+        exit 1
+        ;;
+esac

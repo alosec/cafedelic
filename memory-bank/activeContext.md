@@ -110,12 +110,19 @@ pipe(
 3. Multi-session status dashboard
 4. Activity aggregation across sessions
 
-## Next Session Tasks (IMMEDIATE PRIORITIES)
-1. Create cli/cafe main entry script with init/deploy commands
-2. Implement cafe init for server validation and dependency checking
-3. Implement cafe deploy for 2-pane layout (70% emacs, 30% system events)
-4. Test direct script invocation pattern
-5. Validate emacs integration and system events display
+## Next Session Tasks (PHASE 1 COMPLETE ✅)
+1. ✅ Create cli/cafe main entry script with init/deploy commands
+2. ✅ Implement cafe init for server validation and dependency checking
+3. ✅ Implement cafe deploy for 2-pane layout (70% emacs, 30% system events)
+4. ✅ Test direct script invocation pattern
+5. ✅ Validate emacs integration and system events display
+
+## Next Priorities (PHASE 2)
+1. Build system events database schema and reactive viewer
+2. Integrate WTE pipeline with system events display
+3. Add cafe events command with --follow mode
+4. Enhance cafe deploy with layout options
+5. Add session tracking preparation for Claude Code integration
 
 ## Key Technical Decisions Summary
 - **CLI over MCP**: Direct user interface via cafe commands
