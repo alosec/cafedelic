@@ -1,52 +1,35 @@
 #!/usr/bin/env python3
 """
-Cafedelic Textual UI - Hello World
-A basic Textual TUI app demonstrating the foundation for cafedelic's intelligence platform UI.
+Cafedelic Task Delegation Platform
+Textual TUI for async Claude Code orchestration and session management.
 """
 
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Static
-from textual.containers import Vertical
+from textual.widgets import Header, Footer
+
+from cafe_ui.screens.main_dashboard import MainDashboard
 
 
 class CafedelicApp(App):
-    """A simple Textual app showcasing the cafedelic intelligence platform."""
+    """Cafedelic Task Delegation Platform - Main Application"""
     
-    CSS = """
-    #content {
-        background: $surface;
-        border: thick $background 80%;
-        padding: 1;
-        margin: 1;
-    }
-    
-    Static {
-        text-align: center;
-        margin: 1;
-    }
-    """
+    TITLE = "Cafedelic Task Delegation Platform"
+    SUB_TITLE = "Async Claude Code Orchestration"
     
     BINDINGS = [
-        ("d", "toggle_dark", "Toggle dark mode"),
-        ("q", "quit", "Quit")
+        ("ctrl+c", "quit", "Quit"),
+        ("ctrl+q", "quit", "Quit"),
     ]
-
+    
+    def on_mount(self) -> None:
+        """Handle app startup"""
+        self.push_screen(MainDashboard())
+    
     def compose(self) -> ComposeResult:
-        """Create child widgets for the app."""
+        """This will not be called since we push a screen immediately"""
+        # This method is required but won't be used since we push MainDashboard immediately
         yield Header()
-        with Vertical(id="content"):
-            yield Static("🚀 Cafedelic Intelligence Platform", classes="title")
-            yield Static("Hello, Textual World!", classes="greeting") 
-            yield Static("Intelligence layer for AI-assisted development", classes="subtitle")
-            yield Static("")
-            yield Static("Press 'd' to toggle dark mode, 'q' to quit", classes="instructions")
         yield Footer()
-
-    def action_toggle_dark(self) -> None:
-        """Toggle between light and dark themes."""
-        self.theme = (
-            "textual-dark" if self.theme == "textual-light" else "textual-light"
-        )
 
 
 if __name__ == "__main__":

@@ -1,2 +1,4 @@
 textual>=0.80.0
 requests>=2.32.0
+aiofiles>=24.1.0
+aiosqlite>=0.20.0
