@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { FileAction } from '../transforms/types.js';
+import { paneEmacsManager } from '../services/pane-emacs-manager.service.js';
 
 const execAsync = promisify(exec);
 
@@ -59,6 +60,16 @@ export async function openInEmacs(
   }
   
   console.log(`[EXECUTE] ${action.type} ${action.path} -> ${paneId} (role=${role}, source=${source})${options.readOnly ? ' [read-only]' : ''}`);
+  
+  // Ensure emacs server is running for this pane
+  try {
+    console.log(`[EMACS] Ensuring server is running for pane ${paneId}`);
+    await paneEmacsManager.getOrCreateServer(paneId);
+    console.log(`[EMACS] Server ready for pane ${paneId}`);
+  } catch (error) {
+    console.error(`[EMACS] Failed to start server for pane ${paneId}:`, error);
+    throw error;
+  }
   
   const scriptBase = join(SCRIPTS_DIR, 'emacs/pane-server');
   
