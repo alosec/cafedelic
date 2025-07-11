@@ -4,15 +4,15 @@
 Cafedelic - Intelligence Layer for Claude Code Project Management
 
 ## Vision
-Provide an intelligence platform that enhances Claude Code workflows through comprehensive project and session management. Cafedelic acts as a "glass box mission control" that makes AI development work visible, manageable, and orchestratable across multiple projects and Claude Code instances.
+Provide an asynchronous task delegation platform that transforms Claude Code from isolated conversations into an orchestrated workflow engine. Cafedelic enables rapid task assignment, intelligent session coordination, and automated handoffs between AI instances through natural language interfaces and contextual session discovery.
 
 ## Core Problem
-AI-assisted development creates new challenges that traditional tools don't address:
-1. **Session Invisibility**: Multiple Claude Code instances operate as isolated black boxes
-2. **Project Context Loss**: AI work happens without project-level coordination
-3. **Activity Fragmentation**: No unified view of what AI is doing across sessions
-4. **Manual Orchestration**: Constant switching between projects and AI conversations
-5. **Intelligence Isolation**: Each Claude session exists independently without shared context
+AI-assisted development creates new workflow challenges that traditional tools don't address:
+1. **Task Assignment Friction**: No quick way to delegate tasks to appropriate Claude Code sessions
+2. **Context Discovery Challenge**: Can't find relevant previous conversations for similar tasks
+3. **Manual Workflow Management**: Constantly switching between planning, analysis, and implementation modes
+4. **Session Coordination Overhead**: No async task delegation or automated handoffs between sessions
+5. **Command Workflow Isolation**: Project-specific slash commands in ~/.claude/commands not integrated with delegation
 
 ## Solution Architecture
 A three-layer intelligence platform:

@@ -43,7 +43,7 @@ interface DisplayAdapter {
 ```
 cafedelic/
 ├── src/
-│   ├── mcp-server/                    # Primary interface
+│   ├── mcp-server/                    # Primary interface (NEXT PHASE)
 │   │   ├── server.ts                  # MCP server implementation
 │   │   ├── tools/                     # Individual MCP tools
 │   │   │   ├── project-tools.ts       # Project management
@@ -53,22 +53,30 @@ cafedelic/
 │   │       ├── schema.sql             # Database schema
 │   │       ├── migrations/            # Schema migrations
 │   │       └── queries.ts             # Common queries
-│   ├── intelligence/                  # AI analysis engine
+│   ├── intelligence/                  # AI analysis engine (PLANNED)
 │   │   ├── context-analyzer.ts        # claude -p integration
 │   │   ├── pattern-detector.ts        # Cross-session analysis
 │   │   ├── session-health.ts          # Health monitoring
 │   │   └── insight-generator.ts       # Automatic insights
-│   ├── claude-code/                   # Claude Code integration
+│   ├── claude-code/                   # Claude Code integration (PLANNED)
 │   │   ├── session-manager.ts         # Process lifecycle
 │   │   ├── activity-monitor.ts        # Log watching
 │   │   └── log-parser.ts              # Activity extraction
 │   └── ui/                            # User interface layer
 │       ├── textual/                   # Python TUI implementation (WORKING)
-│       │   ├── hello_world.py         # Main Textual application with cafe branding
+│       │   ├── hello_world.py         # Complete delegation platform main app
 │       │   ├── run.py                 # Entry point script
 │       │   ├── cafe_ui/
+│       │   │   ├── components/        # Working UI components
+│       │   │   │   ├── quick_chat.py  # Task delegation widget
+│       │   │   │   ├── session_tabs.py # Session management with task states
+│       │   │   │   └── task_feed.py   # Real-time delegation status
+│       │   │   ├── screens/
+│       │   │   │   └── main_dashboard.py # Complete integrated interface
+│       │   │   ├── data/
+│       │   │   │   └── mock_data.py   # Sample data for demonstration
 │       │   │   └── adapter.py         # MCP server interface skeleton
-│       │   ├── requirements.txt       # Python dependencies (textual, requests)
+│       │   ├── requirements.txt       # Python dependencies (textual, aiofiles, aiosqlite)
 │       │   ├── README.md              # Setup instructions
 │       │   └── venv/                  # Virtual environment (auto-created)
 │       ├── terminal-adapter.ts        # Tmux integration (legacy)
