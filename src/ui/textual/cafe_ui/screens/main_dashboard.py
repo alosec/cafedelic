@@ -11,9 +11,9 @@ from textual.screen import Screen
 from textual.message import Message
 
 from ..components.quick_chat import QuickChatWidget
-from ..components.session_tabs import SessionTabsWidget  
-from ..components.task_feed import TaskFeedWidget
-from ..data.mock_data import get_sessions, get_active_sessions
+from ..widgets.project_tree import ProjectTree
+from ..widgets.main_view_frame import MainViewFrame
+from ..data.mock_data import get_sessions, get_active_sessions, get_projects
 
 
 class MainDashboard(Screen):
@@ -52,13 +52,14 @@ class MainDashboard(Screen):
     }
     
     MainDashboard .left-panel {
-        width: 1fr;
-        min-width: 60;
+        width: 30%;
+        min-width: 40;
+        max-width: 50%;
     }
     
-    MainDashboard .right-panel {
-        width: 25;
-        min-width: 25;
+    MainDashboard .main-view {
+        width: 70%;
+        min-width: 50%;
     }
     
     MainDashboard .stats-bar {
@@ -88,13 +89,13 @@ class MainDashboard(Screen):
             
             # Main content area
             with Horizontal(classes="content-container"):
-                # Left panel: Session tabs
+                # Left panel: Project tree (30%)
                 with Vertical(classes="left-panel"):
-                    yield SessionTabsWidget()
+                    yield ProjectTree()
                 
-                # Right panel: Task feed
-                with Vertical(classes="right-panel"):
-                    yield TaskFeedWidget()
+                # Main view frame (70%)
+                with Vertical(classes="main-view"):
+                    yield MainViewFrame()
         
         yield Footer()
     
@@ -109,26 +110,49 @@ class MainDashboard(Screen):
         # 1. Create task in database
         # 2. Send command to Claude Code session via --resume
         # 3. Update UI to show delegation status
-        # 4. Refresh task feed
+        # 4. Show session in main view frame
         
         self.notify(f"✅ Task delegated to {message.session_id}: {message.task}")
         
-        # Refresh task feed
-        task_feed = self.query_one(TaskFeedWidget)
-        task_feed._refresh_feed()
-    
-    def on_session_tabs_widget_command_sent(self, message: SessionTabsWidget.CommandSent) -> None:
-        """Handle command sent to session"""
-        # In real implementation, this would:
-        # 1. Execute: claude --resume {session_id} "{command}"
-        # 2. Track command execution in database
-        # 3. Update session status
-        # 4. Show progress in UI
-        
-        self.notify(f"📤 Sent {message.command} to session {message.session_id}")
+        # Open session in main view frame
+        main_view = self.query_one(MainViewFrame)
+        main_view.show_session_view(message.session_id)
         
         # Update stats
         self._update_stats()
+    
+    def on_project_tree_project_selected(self, message: ProjectTree.ProjectSelected) -> None:
+        """Handle project selection from tree"""
+        self.notify(f"📁 Opening project: {message.project_name}")
+        
+        # Show project in main view frame
+        main_view = self.query_one(MainViewFrame)
+        main_view.show_project_view(message.project_name)
+    
+    def on_project_tree_session_selected(self, message: ProjectTree.SessionSelected) -> None:
+        """Handle session selection from tree"""
+        self.notify(f"🎯 Opening session: {message.session_id}")
+        
+        # Show session in main view frame
+        main_view = self.query_one(MainViewFrame)
+        main_view.show_session_view(message.session_id)
+    
+    def on_project_tree_chat_requested(self, message: ProjectTree.ChatRequested) -> None:
+        """Handle chat request from tree"""
+        # For now, just show notification - chat integration deferred
+        self.notify(f"💬 Chat requested for session {message.session_id} - Coming soon!")
+    
+    def on_main_view_frame_view_changed(self, message: MainViewFrame.ViewChanged) -> None:
+        """Handle view changes in main frame"""
+        view_type = message.view_type
+        context = message.context
+        
+        if view_type == "session":
+            self.sub_title = f"Session: {context[:8]}"
+        elif view_type == "project":
+            self.sub_title = f"Project: {context}"
+        else:
+            self.sub_title = f"{len(get_active_sessions())} active sessions"
     
     def action_toggle_dark(self) -> None:
         """Toggle between light and dark themes"""
@@ -140,9 +164,9 @@ class MainDashboard(Screen):
         """Refresh all data"""
         self.notify("🔄 Refreshing data...")
         
-        # Refresh task feed
-        task_feed = self.query_one(TaskFeedWidget)
-        task_feed._refresh_feed()
+        # Refresh project tree
+        project_tree = self.query_one(ProjectTree)
+        project_tree.refresh_tree()
         
         # Update stats
         self._update_stats()
