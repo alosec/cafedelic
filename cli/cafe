@@ -16,6 +16,9 @@ case "${1:-}" in
     deploy)
         exec "$CAFEDELIC_DIR/cli/commands/deploy.sh" "${@:2}"
         ;;
+    open)
+        exec "$CAFEDELIC_DIR/cli/commands/open.sh" "${@:2}"
+        ;;
     --help|-h|"")
         cat << 'EOF'
 Cafedelic CLI - Claude Code powered tmux IDE
@@ -25,6 +28,7 @@ Usage: cafe <command> [options]
 Commands:
   init     Validate server and dependencies
   deploy   Create 2-pane IDE layout (70% emacs, 30% system events)
+  open     Launch UI interfaces (textual)
 
 Options:
   --help   Show this help message
@@ -33,6 +37,7 @@ Examples:
   cafe init          # Check system readiness
   cafe deploy        # Create IDE layout in current tmux session
   cafe deploy --new  # Create new tmux session with IDE layout
+  cafe open textual  # Launch Textual intelligence platform UI
 
 EOF
         exit 0

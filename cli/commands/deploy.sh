@@ -44,18 +44,17 @@ deploy_layout() {
     # Bottom pane (1) - System events
     assign_pane_properties "$session" "$window" "1" "system-events" "system" "monitor"
     
-    # Start emacs in top pane
-    log "Starting Emacs in editor pane..."
-    tmux send-keys -t "$session:$window.0" "emacs" Enter
+    # Emacs will be started automatically by property-based pane management
+    log "Editor pane configured for Claude Desktop integration"
     
-    # Start system events viewer in bottom pane
-    log "Starting system events viewer..."
-    tmux send-keys -t "$session:$window.1" "echo 'System Events Monitor - Ready'" Enter
-    tmux send-keys -t "$session:$window.1" "echo 'Waiting for activity...'" Enter
+    # Start real-time system events monitoring
+    log "Starting Claude Desktop log watcher..."
+    local cafedelic_dir="/home/alex/code/cafedelic"
+    tmux send-keys -t "$session:$window.1" "cd $cafedelic_dir && npm run build && node scripts/watch-claude-desktop.js" Enter
     
     success "2-pane IDE layout deployed successfully!"
-    success "Top pane: Emacs editor (70%)"
-    success "Bottom pane: System events (30%)"
+    success "Top pane: Emacs editor (70%) - Ready for Claude Desktop integration"
+    success "Bottom pane: Real-time system events monitoring (30%)"
     
     return 0
 }
