@@ -1,63 +1,75 @@
 # Cafedelic Project Brief
 
 ## Project Name
-Cafedelic - Claude Code Powered Tmux IDE
+Cafedelic - Intelligence Layer for Claude Code Project Management
 
 ## Vision
-Create a tmux-based AI pair programming IDE that seamlessly integrates Claude Code sessions with developer workflows, providing intuitive CLI tools, intelligent layout management, and reactive status displays for managing multiple AI-assisted development tasks.
+Provide an intelligence platform that enhances Claude Code workflows through comprehensive project and session management. Cafedelic acts as a "glass box mission control" that makes AI development work visible, manageable, and orchestratable across multiple projects and Claude Code instances.
 
 ## Core Problem
-Developers using Claude Code need:
-1. **Session Management**: Track multiple Claude Code instances with human names
-2. **Integrated Workspace**: File tree, editor, and messages in optimal layout
-3. **Simple Commands**: CLI tools that make complex setups one command away
-4. **Activity Awareness**: See what Claude is doing across all sessions
-5. **Seamless Integration**: Direct tmux integration without external dependencies
+AI-assisted development creates new challenges that traditional tools don't address:
+1. **Session Invisibility**: Multiple Claude Code instances operate as isolated black boxes
+2. **Project Context Loss**: AI work happens without project-level coordination
+3. **Activity Fragmentation**: No unified view of what AI is doing across sessions
+4. **Manual Orchestration**: Constant switching between projects and AI conversations
+5. **Intelligence Isolation**: Each Claude session exists independently without shared context
 
-## Solution
-A tmux-native IDE framework that:
-1. **Validates** system readiness with 'cafe init' - ensures server running
-2. **Deploys** simple layouts (70% editor, 30% system events) with 'cafe deploy'
-3. **Integrates** deeply with tmux using property-based pane management
-4. **Provides** direct bash script execution (no middleware overhead)
-5. **Expands** to full session management and activity tracking (future phases)
+## Solution Architecture
+A three-layer intelligence platform:
 
-## Success Metrics (Phase 1)
-- 'cafe init' validates system in under 1 second with clear error reporting
-- 'cafe deploy' creates working 2-pane layout in under 3 seconds
-- Emacs integration works seamlessly as Claude Desktop's editor
-- System events display provides activity visibility
-- Zero configuration required for basic workflow
+### 1. **MCP Toolset** (API Layer)
+Natural language interface for managing projects and sessions:
+- `create_project(name, repo_path, description)` 
+- `create_session(project_id, branch, worktree, assistant_type)`
+- `read_session_context(session_id, include_summary)`
+- `update_project_status(project_id, status)`
 
-## Scope
-### In Scope
-- cafe CLI tool suite with subcommands
-- Claude Code session lifecycle management
-- SQLite-backed messages database
-- Reactive pane displays (not just send-keys)
-- Direct script invocation architecture
-- Modular layout system with sensible defaults
-- Integration with Claude Code SDK
-- MCP tools for programmatic access
-- Shell script integration patterns
+### 2. **SQLite Intelligence Database** (Core Layer)  
+Comprehensive data model for AI development workflows:
+- **Projects**: Git repositories, worktrees, branch management
+- **Sessions**: Claude Code instances with metadata and context
+- **Activities**: File operations, conversations, task progression
+- **Context**: Dynamic summaries via `claude -p` processing
 
-### Out of Scope (Current Phase)
-- Multi-agent orchestration beyond Claude Code
-- Docker container deployment
-- Complex ML-based pattern analysis
-- Cross-machine session sync
-- GUI interfaces
+### 3. **Display Adapters** (View Layer)
+Flexible frontend integrations:
+- Terminal displays (tmux, terminal multiplexers)
+- Editor extensions (VS Code, Emacs integration)  
+- Web dashboards (future expansion)
+- CLI interfaces (`cafe` command suite)
 
-## Technical Constraints
-- Bash-first CLI implementation
-- Direct script execution (no middleware)
-- SQLite for local persistence
-- Tmux as display layer
-- Node.js for WTE pipeline
-- Shell scripts for core operations
+## Success Metrics
+- **Claude Code Enhancement**: Seamless integration that adds intelligence without disrupting existing workflows
+- **Session Coordination**: Multiple Claude Code instances managed through single orchestrator interface
+- **Context Preservation**: AI conversations maintain project context across sessions and time
+- **Real-time Intelligence**: `claude -p` summaries provide actionable insights about current AI activities
+- **Database-Driven Insights**: Rich querying capabilities for project history and session analytics
 
-## Timeline
-- Phase 1: MCP log watch & translate ✅ (completed)
-- Phase 2: Output routing system ✅ (completed)
-- Phase 3: Claude Code IDE & cafe CLI (current focus)
-- Phase 4: Advanced session intelligence (future)
+## Scope Definition
+
+### Core Focus: Claude Code Intelligence
+- **Project Management**: Database-driven project organization with Git integration
+- **Session Orchestration**: Claude Code instance lifecycle and coordination
+- **Context Intelligence**: Real-time AI activity analysis and summarization
+- **MCP API**: Natural language interface for all operations
+- **Display Flexibility**: Adapter pattern for multiple frontend options
+
+### Explicit Non-Goals
+- **Editor Replacement**: Cafedelic enhances, doesn't replace existing editors
+- **Terminal Management**: Users manage their own tmux/terminal setup
+- **Code Generation**: AI assistants handle coding, cafedelic handles coordination
+- **Multi-Assistant Support**: Phase 1 focuses exclusively on Claude Code
+
+## Technical Foundation
+- **Database-First**: SQLite as single source of truth for all intelligence
+- **MCP-Native**: All operations exposed through conversational interface
+- **Assistant-Agnostic Design**: Architecture supports future expansion beyond Claude Code
+- **Plugin Architecture**: Display adapters separate intelligence from presentation
+- **Event-Driven**: Proven WTE pipeline for real-time activity monitoring
+
+## Development Philosophy
+- **Intelligence over Interface**: Focus on making AI work visible and manageable
+- **Enhancement over Replacement**: Integrate with existing tools rather than replacing them
+- **Database over Files**: Structured data enables rich analysis and coordination
+- **Conversation over Commands**: Natural language MCP interface for all operations
+- **Value-First**: Every feature must provide clear value for Claude Code workflows

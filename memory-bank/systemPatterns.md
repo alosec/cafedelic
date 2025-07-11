@@ -1,365 +1,384 @@
 # System Patterns
 
-## Core Architecture: Watch-Transform-Execute (WTE)
+## Core Architecture: Intelligence-First Design
 
-The entire cafedelic system is built on a simple, powerful pattern that composes three phases:
+Cafedelic is built on a three-layer intelligence platform that prioritizes data modeling and natural language interaction over traditional terminal manipulation.
+
+```
+┌─────────────────────────────────────┐
+│           MCP Toolset               │ ← Natural language interface
+│    (Conversational API Layer)      │
+├─────────────────────────────────────┤
+│        SQLite Database              │ ← Single source of truth
+│      (Intelligence Core)            │
+├─────────────────────────────────────┤
+│       Display Adapters              │ ← Flexible presentation
+│    (Terminal, VS Code, Web)        │
+└─────────────────────────────────────┘
+```
+
+## The Database-First Pattern
+
+### Single Source of Truth
+All intelligence flows through SQLite rather than files or memory:
+
+```sql
+-- Core entities
+CREATE TABLE projects (id, name, repo_path, description, status, created_at);
+CREATE TABLE sessions (id, project_id, name, assistant_type, branch, status);
+CREATE TABLE activities (id, session_id, type, content, timestamp, files_affected);
+CREATE TABLE context (id, session_id, open_files, current_task, summary);
+```
+
+### Intelligence Through Relationships
+```sql
+-- Cross-session insights
+SELECT p.name as project, COUNT(s.id) as active_sessions
+FROM projects p
+JOIN sessions s ON p.id = s.project_id
+WHERE s.status = 'active'
+GROUP BY p.id;
+
+-- Activity patterns
+SELECT session_name, COUNT(*) as file_operations
+FROM activities a
+JOIN sessions s ON a.session_id = s.id
+WHERE a.type = 'file_read' AND a.timestamp > datetime('now', '-1 hour')
+GROUP BY s.id;
+```
+
+## MCP-Native Interface Pattern
+
+### Conversational Operations
+All functionality exposed through natural language MCP tools:
 
 ```typescript
-interface WTE<W, T, E> {
-  watch: () => AsyncIterator<W>      // Observe data sources
-  transform: (data: W) => T | null   // Shape data for action
-  execute: (action: T) => Promise<void> // Perform side effects
+// Project management
+interface ProjectTools {
+  create_project(name: string, repo_path: string, description?: string)
+  read_project_status(project_id: string)
+  update_project_metadata(project_id: string, updates: ProjectUpdate)
+  list_active_projects()
+  archive_project(project_id: string)
+}
+
+// Session orchestration  
+interface SessionTools {
+  create_session(project_id: string, options: SessionOptions)
+  read_session_context(session_id: string, include_summary?: boolean)
+  update_session_status(session_id: string, status: SessionStatus)
+  list_project_sessions(project_id: string)
+  terminate_session(session_id: string)
+}
+
+// Context intelligence
+interface ContextTools {
+  analyze_current_activity(session_id: string)
+  generate_task_summary(session_id: string) // Uses claude -p
+  track_file_access(session_id: string, file_path: string)
+  update_session_context(session_id: string, context: ContextUpdate)
 }
 ```
 
-## Implementation Pattern
+### Tool Safety Pattern
+All MCP tools follow CRUD principles with built-in safety:
 
-### The Pipe Utility
 ```typescript
-// Functional composition for async iterators
-export async function pipe<T, U>(
-  source: AsyncIterator<T>,
-  transform: (value: T) => U | null,
-  execute: (value: U) => Promise<void>
-): Promise<void> {
-  for await (const value of source) {
-    const transformed = transform(value);
-    if (transformed !== null) {
-      await execute(transformed);
-    }
+// Safe creation - validates before inserting
+async function create_project(name: string, repo_path: string) {
+  // Validate git repository exists
+  if (!fs.existsSync(path.join(repo_path, '.git'))) {
+    throw new Error('Not a git repository');
   }
-}
-```
-
-### Real Example
-```typescript
-// Entire file-to-emacs pipeline
-pipe(
-  mcpLogWatcher('/home/alex/.config/Claude/logs/mcp-*.log'),
-  fileOperationTransform,
-  emacsExecutor('/path/to/open-file.sh')
-);
-```
-
-## Design Principles
-
-### 1. Direct Implementation
-- No abstractions unless they simplify
-- Code reads like what it does
-- Functions over classes
-
-### 2. Functional Composition
-- Small, focused functions
-- Compose behavior through piping
-- Transform data, don't mutate state
-
-### 3. Shell Script Integration
-- Proven scripts do the real work
-- TypeScript orchestrates and composes
-- Clear boundary between coordination and execution
-
-## Component Patterns
-
-### Watchers
-```typescript
-// Watchers yield data from sources
-async function* mcpLogWatcher(pattern: string) {
-  const files = await glob(pattern);
-  const latest = files[files.length - 1];
   
-  const rl = readline.createInterface({
-    input: fs.createReadStream(latest),
-    crlfDelay: Infinity
-  });
+  // Check for existing project
+  const existing = await db.get('SELECT id FROM projects WHERE repo_path = ?', repo_path);
+  if (existing) {
+    throw new Error('Project already exists');
+  }
   
-  for await (const line of rl) {
-    yield line;
-  }
+  // Safe insertion
+  const result = await db.run(
+    'INSERT INTO projects (name, repo_path, status, created_at) VALUES (?, ?, ?, ?)',
+    [name, repo_path, 'active', new Date().toISOString()]
+  );
+  
+  return { project_id: result.lastID, name, repo_path };
 }
-```
 
-### Transforms
-```typescript
-// Transforms shape data or return null to skip
-function fileOperationTransform(line: string): FileOp | null {
-  try {
-    const entry = JSON.parse(line);
-    if (entry.method === 'read_file') {
-      return {
-        type: 'file',
-        path: entry.params.path
-      };
-    }
-    return null;
-  } catch {
-    return null;
+// Safe reading - always returns valid data structure
+async function read_project_status(project_id: string) {
+  const project = await db.get('SELECT * FROM projects WHERE id = ?', project_id);
+  if (!project) {
+    return { error: 'Project not found', project_id };
   }
-}
-```
-
-### Executors
-```typescript
-// Executors perform side effects
-function emacsExecutor(scriptPath: string) {
-  return async (op: FileOp) => {
-    await execAsync(`${scriptPath} "${op.path}"`);
+  
+  const sessions = await db.all('SELECT * FROM sessions WHERE project_id = ?', project_id);
+  const recent_activity = await db.all(
+    'SELECT COUNT(*) as count FROM activities WHERE session_id IN (SELECT id FROM sessions WHERE project_id = ?) AND timestamp > datetime("now", "-1 hour")',
+    project_id
+  );
+  
+  return {
+    project,
+    active_sessions: sessions.filter(s => s.status === 'active').length,
+    total_sessions: sessions.length,
+    recent_activity: recent_activity[0].count
   };
 }
 ```
 
-## Extension Patterns
+## Display Adapter Pattern
 
-### Adding Features
-1. **New Data Source**: Create a watcher
-2. **New Data Shape**: Create a transform
-3. **New Side Effect**: Create an executor
-4. **Combine**: Use `pipe()`
+### Plugin Architecture
+Display adapters connect the intelligence database to various frontends:
 
-### Example: Git Monitoring
 ```typescript
-// Watch git operations
-async function* gitLogWatcher() { ... }
-
-// Transform to git events
-function gitTransform(line: string): GitOp | null { ... }
-
-// Execute notifications
-function notifyExecutor(op: GitOp) { ... }
-
-// Compose the pipeline
-pipe(gitLogWatcher(), gitTransform, notifyExecutor);
-```
-
-## Anti-Patterns (What We Avoided)
-
-### ❌ Service Classes
-```typescript
-// Don't do this
-class FileWatcherService extends EventEmitter {
-  constructor(private config: Config) {}
-  start() { ... }
-  stop() { ... }
+interface DisplayAdapter {
+  name: string;
+  supports: string[]; // ['terminal', 'gui', 'web']
+  initialize(database: Database): Promise<void>;
+  displayProjectStatus(project_id: string): Promise<void>;
+  showSessionList(project_id?: string): Promise<void>;
+  updateActivityFeed(activities: Activity[]): Promise<void>;
 }
-```
 
-### ❌ Complex Event Systems
-```typescript
-// Don't do this
-eventBus.on('file:changed', (e) => {
-  eventBus.emit('transform:needed', e);
-});
-```
-
-### ❌ Generic Abstractions
-```typescript
-// Don't do this
-interface Pipeline<T extends Watchable, U extends Transformable> {
-  // ... complex type gymnastics
-}
-```
-
-## Current Implementation Stats
-- **Total Lines**: ~150
-- **Core Pattern**: 15 lines (pipe function)
-- **Main Pipeline**: ~50 lines
-- **Supporting Code**: ~85 lines
-
-## Why This Works
-
-1. **Clarity**: Each piece does one thing
-2. **Testability**: Pure functions, clear boundaries  
-3. **Extensibility**: Add stages without touching existing code
-4. **Debuggability**: Linear flow, obvious data path
-5. **Maintainability**: Less code = less bugs
-
-## Future Patterns
-
-### Conditional Execution
-```typescript
-pipe(
-  watcher,
-  transform,
-  conditionalExecutor(predicate, executorA, executorB)
-);
-```
-
-### Parallel Pipelines
-```typescript
-multipipe([
-  [watcherA, transformA, executorA],
-  [watcherB, transformB, executorB]
-]);
-```
-
-### Pipeline Composition
-```typescript
-const filePipeline = createPipeline(fileWatcher, fileTransform);
-const gitPipeline = createPipeline(gitWatcher, gitTransform);
-mergePipelines(filePipeline, gitPipeline, commonExecutor);
-```
-
-The WTE pattern provides infinite flexibility through simple composition.
-
-## Tool Migration Pattern
-
-### From Name-Based to Property-Based
-The system has migrated from simple name-based tool identification to a richer property-based system:
-
-```bash
-# Old approach (deprecated)
-read_pane_by_name "editor" 100
-
-# New approach
-capture_pane_with_properties \
-  --source "claude-desktop" \
-  --role "editor" \
-  --last 100 \
-  --grep "error" \
-  --grep-context 2
-```
-
-### Migration Principles
-1. **Preserve Functionality**: New tools must support all old capabilities
-2. **Add Power**: Expose underlying system features (tmux capture-pane options)
-3. **Property-Aware**: Use multi-dimensional property system for pane discovery
-4. **Graceful Fallback**: Handle missing panes elegantly
-
-### Example: capture_pane_with_properties
-This tool demonstrates the migration pattern:
-- Replaces simple `read_pane_by_name` 
-- Adds full tmux capture-pane power (ranges, grep, formatting)
-- Uses property-based pane discovery
-- Maintains backward compatibility via name parameter
-
-```javascript
-// Rich parameter set exposing tmux capabilities
-{
-  // Property filters
-  source?: 'user' | 'claude-desktop' | 'claude-code' | 'system',
-  role?: 'editor' | 'terminal' | 'logs' | 'tests' | 'debug' | 'monitor',
-  name?: string,
+// Terminal adapter for tmux integration
+class TerminalAdapter implements DisplayAdapter {
+  name = 'terminal';
+  supports = ['tmux', 'terminal-multiplexer'];
   
-  // Capture options
-  start?: number | '-',
-  end?: number | '-', 
-  last?: number,
+  async displayProjectStatus(project_id: string) {
+    const status = await this.database.getProjectStatus(project_id);
+    const pane = await findPaneByRole('status');
+    await sendToPane(pane, this.formatProjectStatus(status));
+  }
+}
+
+// VS Code extension adapter
+class VSCodeAdapter implements DisplayAdapter {
+  name = 'vscode';
+  supports = ['gui', 'editor-integration'];
   
-  // Output formatting
-  join_lines?: boolean,
-  escape_sequences?: boolean,
-  preserve_trailing?: boolean,
-  
-  // Search capabilities
-  grep?: string,
-  grep_context?: number,
-  invert_match?: boolean
+  async showSessionList(project_id?: string) {
+    const sessions = await this.database.getProjectSessions(project_id);
+    vscode.window.showQuickPick(
+      sessions.map(s => ({ label: s.name, session_id: s.id }))
+    );
+  }
 }
 ```
 
-This pattern will guide future tool migrations, ensuring we expose system power while maintaining elegant APIs.
+### Adapter Registration
+```typescript
+// Adapters register with the core system
+const adapterRegistry = new Map<string, DisplayAdapter>();
 
-## CLI-First Pattern
+function registerAdapter(adapter: DisplayAdapter) {
+  adapterRegistry.set(adapter.name, adapter);
+  adapter.initialize(cafedelicDatabase);
+}
 
-### Direct Script Invocation
-Instead of CLI → MCP → Script, we use CLI → Script directly:
-
-```bash
-# Old pattern (avoided)
-cafe pane assign editor → HTTP POST → MCP server → assign-properties.sh
-
-# New pattern (preferred)  
-cafe pane assign editor → assign-properties.sh
+// User can choose active adapters
+const activeAdapters = ['terminal', 'vscode']; // From config
 ```
 
-Benefits:
-- Faster execution (~10ms vs ~100ms)
-- Simpler error handling
-- Easier debugging
-- No server dependency for CLI
+## Intelligence Pipeline Pattern
 
-### CLI Command Structure
-```bash
-#!/bin/bash
-# Main cafe entry point
-case "$1" in
-  init)    exec "$CAFEDELIC_DIR/cli/commands/init.sh" "$@" ;;
-  make)    exec "$CAFEDELIC_DIR/cli/commands/make.sh" "$@" ;;
-  session) exec "$CAFEDELIC_DIR/cli/commands/session.sh" "$@" ;;
-esac
-```
+### Real-Time Context Analysis
+The system maintains dynamic understanding of AI work through continuous analysis:
 
-## Reactive Database Display Pattern
-
-Moving beyond send-keys to database-backed reactive displays:
-
-```bash
-# Old: Push text to panes
-tmux send-keys -t $pane "Status: $message"
-
-# New: Write to DB, pane reads and displays
-sqlite3 $DB "INSERT INTO system_events (source, message) VALUES ('$source', '$message')"
-# Pane runs: cafe events --follow
-```
-
-Benefits:
-- Persistent history
-- Rich queries
-- Multiple consumers
-- Structured data
-## Session Management Pattern
-
-Claude Code sessions tracked with human-friendly names:
-
-```json
-// ~/.cafedelic/sessions/active/frontend-refactor.json
-{
-  "name": "frontend-refactor",
-  "pid": 12345,
-  "started": "2025-06-12T10:30:00Z",
-  "working_dir": "/home/alex/code/myapp/frontend",
-  "last_command": "refactor auth component",
-  "status": "active"
+```typescript
+// Context processor pipeline
+async function processSessionActivity(session_id: string) {
+  // 1. Gather raw activity data
+  const activities = await getRecentActivities(session_id, '15 minutes');
+  const openFiles = await getSessionOpenFiles(session_id);
+  const chatHistory = await getRecentChatMessages(session_id);
+  
+  // 2. Generate intelligent summary via claude -p
+  const contextPrompt = `
+    Analyze this Claude Code session activity:
+    
+    Recent file operations: ${JSON.stringify(activities)}
+    Currently open files: ${JSON.stringify(openFiles)}
+    Recent chat: ${chatHistory}
+    
+    Provide a concise summary of:
+    1. What Claude is currently working on
+    2. The main task or problem being addressed
+    3. Current progress/status
+    4. Any apparent blockers or issues
+  `;
+  
+  const summary = await callClaudeP(contextPrompt);
+  
+  // 3. Update database with intelligence
+  await updateSessionContext(session_id, {
+    current_task: summary.task,
+    progress_status: summary.progress,
+    open_files: openFiles,
+    last_analysis: new Date().toISOString()
+  });
+  
+  // 4. Trigger display updates
+  await notifyDisplayAdapters('session_context_updated', {
+    session_id,
+    summary: summary.task
+  });
 }
 ```
 
-Pattern enables:
-- Multiple concurrent sessions
-- Human-readable identification  
-- Status aggregation
-- Session history
-
-### Session Lifecycle
-```bash
-# Create session
-cafe session new frontend-refactor
-→ Creates JSON file in active/
-→ Starts Claude Code with tracked PID
-
-# List sessions
-cafe session list
-→ Reads all active/*.json files
-→ Shows human-friendly names and status
-
-# Archive session
-cafe session done frontend-refactor  
-→ Moves to history/
-→ Adds completion timestamp
+### Cross-Session Intelligence
+```typescript
+// Analyze patterns across multiple sessions
+async function analyzeProjectIntelligence(project_id: string) {
+  const sessions = await getActiveSessions(project_id);
+  
+  const insights = [];
+  
+  // Look for related work across sessions
+  for (const sessionA of sessions) {
+    for (const sessionB of sessions) {
+      if (sessionA.id !== sessionB.id) {
+        const filesA = await getSessionFiles(sessionA.id);
+        const filesB = await getSessionFiles(sessionB.id);
+        const overlap = findFileOverlap(filesA, filesB);
+        
+        if (overlap.length > 0) {
+          insights.push({
+            type: 'related_sessions',
+            sessions: [sessionA.name, sessionB.name],
+            shared_files: overlap,
+            recommendation: 'Consider coordinating these sessions - they\'re working on related files'
+          });
+        }
+      }
+    }
+  }
+  
+  return insights;
+}
 ```
 
-## Modular Layout Pattern
+## Event-Driven Updates Pattern
 
-Layouts defined as composable configurations:
+### Database Triggers
+Use SQLite triggers for automatic intelligence updates:
 
-```bash
-# Layout presets in ~/.cafedelic/layouts/
-default.layout  # 30/70/30 standard
-minimal.layout  # 50/50 simple
-full.layout     # 5-pane comprehensive
+```sql
+-- Auto-update project activity timestamp
+CREATE TRIGGER update_project_activity 
+AFTER INSERT ON activities
+BEGIN
+  UPDATE projects 
+  SET last_activity = datetime('now')
+  WHERE id = (
+    SELECT project_id FROM sessions 
+    WHERE id = NEW.session_id
+  );
+END;
 
-# Applied via: cafe make --layout full
+-- Auto-archive idle sessions
+CREATE TRIGGER archive_idle_sessions
+AFTER UPDATE ON sessions
+WHEN NEW.last_activity < datetime('now', '-24 hours')
+BEGIN
+  UPDATE sessions
+  SET status = 'idle'
+  WHERE id = NEW.id AND status = 'active';
+END;
 ```
 
-Each layout file contains:
-- Split commands sequence
-- Property assignments
-- Initial commands for panes
+### Reactive Display Updates
+```typescript
+// Database change listener
+async function watchDatabaseChanges() {
+  // SQLite change notifications (via polling or triggers)
+  setInterval(async () => {
+    const changes = await getRecentChanges();
+    
+    for (const change of changes) {
+      // Notify all active display adapters
+      for (const adapter of activeAdapters) {
+        await adapter.handleDatabaseChange(change);
+      }
+    }
+  }, 1000); // 1 second polling
+}
+```
+
+## Claude Code Integration Pattern
+
+### Session Lifecycle Management
+```typescript
+interface ClaudeCodeSession {
+  id: string;
+  name: string;
+  project_id: string;
+  process_id: number;
+  working_directory: string;
+  branch: string;
+  worktree?: string;
+  yolo_mode: boolean;
+  status: 'starting' | 'active' | 'idle' | 'error' | 'terminated';
+  created_at: string;
+  last_activity: string;
+}
+
+async function createClaudeCodeSession(options: SessionOptions) {
+  // 1. Validate project exists
+  const project = await getProject(options.project_id);
+  if (!project) throw new Error('Project not found');
+  
+  // 2. Setup working directory (worktree if specified)
+  const workingDir = await setupWorkingDirectory(project, options);
+  
+  // 3. Launch Claude Code process
+  const process = await launchClaudeCode({
+    directory: workingDir,
+    yolo: options.yolo_mode || false,
+    session_name: options.name
+  });
+  
+  // 4. Register in database
+  const session = await db.run(
+    'INSERT INTO sessions (name, project_id, process_id, working_directory, branch, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [options.name, options.project_id, process.pid, workingDir, options.branch, 'starting', new Date().toISOString()]
+  );
+  
+  // 5. Setup activity monitoring
+  await setupSessionMonitoring(session.lastID, process.pid);
+  
+  return { session_id: session.lastID, process_id: process.pid };
+}
+```
+
+### Activity Monitoring
+```typescript
+// Monitor Claude Code logs for this session
+async function setupSessionMonitoring(session_id: string, process_id: number) {
+  // Watch MCP logs for this Claude Code instance
+  const logWatcher = createLogWatcher(process_id);
+  
+  for await (const logEntry of logWatcher) {
+    // Parse activity from logs
+    const activity = parseClaudeCodeActivity(logEntry);
+    
+    if (activity) {
+      // Store in database
+      await db.run(
+        'INSERT INTO activities (session_id, type, content, timestamp, files_affected) VALUES (?, ?, ?, ?, ?)',
+        [session_id, activity.type, activity.content, activity.timestamp, JSON.stringify(activity.files)]
+      );
+      
+      // Update session context if it's a significant activity
+      if (activity.type === 'file_read' || activity.type === 'file_write') {
+        await updateSessionContext(session_id, activity);
+      }
+    }
+  }
+}
+```
+
+This intelligence-first architecture ensures that all AI development work becomes visible, manageable, and coordinatable through a single, powerful database-driven system.

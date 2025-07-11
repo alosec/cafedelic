@@ -1,275 +1,321 @@
 # Technical Context
 
-## Technology Stack
+## Technology Stack (Intelligence-First Architecture)
 
-### Core Runtime
-- **Node.js**: v20+ (async iterators, ES modules)
-- **TypeScript**: Minimal typing, focus on inference
-- **Shell Scripts**: Proven Emacs integration scripts
+### Core Database Layer
+- **SQLite3**: Single source of truth for all intelligence data
+- **Node.js**: v20+ for MCP server and intelligence processing
+- **TypeScript**: Strict typing for database operations and MCP tools
+- **No external dependencies**: Built on platform standard libraries
 
-### Dependencies (Minimal)
-- `glob`: File pattern matching
-- `readline`: Built-in Node.js module for log tailing
-- No complex frameworks or libraries
+### MCP Server Architecture
+```typescript
+// Core MCP server providing conversational interface
+interface CafedelicMCPServer {
+  // Project management tools
+  create_project, read_project_status, update_project_metadata, 
+  list_active_projects, archive_project,
+  
+  // Session orchestration tools  
+  create_session, read_session_context, update_session_status,
+  list_project_sessions, terminate_session,
+  
+  // Intelligence analysis tools
+  analyze_current_activity, generate_task_summary, track_file_access,
+  identify_coordination_opportunities, preserve_session_context
+}
+```
 
-## Project Structure (V2)
+### Display Adapter Plugin System
+```typescript
+interface DisplayAdapter {
+  name: string;
+  supports: string[]; // ['terminal', 'vscode', 'web']
+  initialize(database: Database): Promise<void>;
+  displayProjectStatus(project_id: string): Promise<void>;
+  showSessionList(project_id?: string): Promise<void>;
+  updateActivityFeed(activities: Activity[]): Promise<void>;
+}
+```
+
+## Project Structure (V3 Intelligence Layer)
 
 ```
 cafedelic/
-├── index.ts           # Entry point (~150 lines total)
-├── core/              # WTE pattern implementation
-│   ├── wte.ts        # Core types and interfaces
-│   ├── compose.ts    # Pipe utility function
-│   └── runner.ts     # Pipeline execution
-├── watchers/          # Data source observers
-│   └── mcp-log.ts    # MCP log file watcher
-├── transforms/        # Data transformation functions
-│   └── file-operations.ts  # Extract file ops from logs
-├── executors/         # Side effect performers
-│   └── emacs.ts      # Execute emacs commands
-├── pipelines/         # Pre-composed pipelines
-│   └── file-to-emacs.ts   # Main pipeline
-└── scripts/           # Shell scripts (unchanged from v1)
-    └── emacs/        # All emacs integration scripts
+├── src/
+│   ├── mcp-server/                    # Primary interface
+│   │   ├── server.ts                  # MCP server implementation
+│   │   ├── tools/                     # Individual MCP tools
+│   │   │   ├── project-tools.ts       # Project management
+│   │   │   ├── session-tools.ts       # Session orchestration  
+│   │   │   └── intelligence-tools.ts  # Analysis & insights
+│   │   └── database/                  # Database layer
+│   │       ├── schema.sql             # Database schema
+│   │       ├── migrations/            # Schema migrations
+│   │       └── queries.ts             # Common queries
+│   ├── intelligence/                  # AI analysis engine
+│   │   ├── context-analyzer.ts        # claude -p integration
+│   │   ├── pattern-detector.ts        # Cross-session analysis
+│   │   ├── session-health.ts          # Health monitoring
+│   │   └── insight-generator.ts       # Automatic insights
+│   ├── claude-code/                   # Claude Code integration
+│   │   ├── session-manager.ts         # Process lifecycle
+│   │   ├── activity-monitor.ts        # Log watching
+│   │   └── log-parser.ts              # Activity extraction
+│   └── ui/                            # User interface layer
+│       ├── textual/                   # Python TUI implementation
+│       │   ├── hello_world.py         # Main Textual application
+│       │   ├── run.py                 # Entry point script
+│       │   ├── cafe_ui/
+│       │   │   └── adapter.py         # MCP server interface
+│       │   ├── requirements.txt       # Python dependencies
+│       │   └── README.md              # Setup instructions
+│       ├── terminal-adapter.ts        # Tmux integration (legacy)
+│       ├── vscode-adapter.ts          # VS Code extension
+│       └── cli-adapter.ts             # Command line interface
+├── database/
+│   ├── cafedelic.db                   # SQLite database
+│   └── migrations/                    # Schema versions
+├── scripts/                           # Legacy bash scripts (V2)
+│   ├── emacs/                         # Emacs integration
+│   └── pane-management/               # Tmux operations
+└── config/
+    ├── default.json                   # Default configuration
+    └── adapters/                      # Adapter configurations
 ```
 
 ## Architecture Decisions
 
-### Why WTE Pattern
-- **Simplicity**: Three-phase model covers all needs
-- **Composability**: Functions compose naturally
-- **Testability**: Each phase is independently testable
-- **Flexibility**: Easy to add new sources/transforms/actions
+### Database-First Design
+**Rationale**: SQLite as single source of truth enables rich analysis and coordination
+- All project/session/activity data flows through database
+- Complex queries for pattern recognition and insights
+- Atomic operations with transaction support
+- No in-memory state - database is the state
 
-### Why Functional
-- **No State**: Pipelines are stateless flows
-- **No Classes**: Functions are sufficient
-- **No Events**: Direct data flow instead
-- **No Abstractions**: Code does what it says
+### MCP-Native Interface
+**Rationale**: Natural language conversation is the primary interface
+- All operations accessible through conversational tools
+- Rich context in every response for intelligent analysis
+- Error handling that explains problems in human terms
+- Designed for orchestrator Claude instance interaction
 
-### Shell Script Integration
-All complex Emacs operations remain in battle-tested shell scripts:
-- `open-claude-file.sh` - Opens files in Emacs
-- `open-dired.sh` - Opens directories
-- `pane-server/` - Pane-specific Emacs servers
-- Plus 10+ other integration scripts
+### Plugin Architecture for Display
+**Rationale**: Separate intelligence layer from presentation concerns
+- Users can choose terminal, VS Code, web, or custom displays
+- Intelligence layer remains agnostic to presentation
+- Easy to add new display options without touching core logic
+- Clean separation enables independent development
 
-## Build & Run
+### Assistant-Agnostic Design
+**Rationale**: Support future expansion beyond Claude Code
+- Database schema includes `assistant_type` field
+- Activity parsing abstracted from specific log formats
+- Session management supports different process types
+- Foundation for Cline, Cursor, future AI assistants
 
-### Development
-```bash
-# Install minimal dependencies
-npm install
+## Core Technical Components
 
-# Run in development
-npm run dev
-
-# Build for production
-npm run build
+### Intelligence Processing Pipeline
+```typescript
+// Real-time intelligence generation
+async function processSessionActivity(session_id: string) {
+  // 1. Ingest raw activity from Claude Code logs
+  const rawActivity = await parseClaudeCodeLogs(session_id);
+  
+  // 2. Store structured activity in database
+  await storeActivity(session_id, rawActivity);
+  
+  // 3. Generate intelligence via claude -p analysis
+  const intelligence = await analyzeSessionContext(session_id);
+  
+  // 4. Update session context with insights
+  await updateSessionContext(session_id, intelligence);
+  
+  // 5. Trigger display adapter updates
+  await notifyDisplayAdapters('session_updated', { session_id });
+}
 ```
 
-### Production
-```bash
-# Start the server
-npm start
-```
+### Claude Code Integration
+```typescript
+// Session lifecycle management
+interface ClaudeCodeIntegration {
+  createSession(options: SessionOptions): Promise<SessionInfo>;
+  monitorSession(session_id: string): AsyncIterator<Activity>;
+  terminateSession(session_id: string): Promise<void>;
+  getSessionHealth(session_id: string): Promise<HealthMetrics>;
+}
 
-## File Monitoring
-
-### MCP Logs Location
-```
-/home/alex/.config/Claude/logs/mcp-*.log
-```
-
-### Log Format
-```json
-{
-  "method": "read_file",
-  "params": {
-    "path": "/absolute/path/to/file"
+// Activity monitoring from logs
+async function* monitorClaudeCodeActivity(session_id: string) {
+  const logPath = getClaudeCodeLogPath(session_id);
+  const logWatcher = createLogWatcher(logPath);
+  
+  for await (const logEntry of logWatcher) {
+    const activity = parseLogEntry(logEntry);
+    if (activity) {
+      yield activity;
+    }
   }
 }
 ```
 
-## Integration Points
-
-### Tmux Integration
-- Routes output to specific panes
-- Supports any session/window/pane combination
-- Configured via MCP tools
-
-### Emacs Integration
-- Daemon mode or pane-specific servers
-- Auto-opens files on AI access
-- Maintains separate frames per pane
-
-## Configuration
-
-### Environment Variables
-```bash
-# Optional - defaults work fine
-CAFEDELIC_LOG_PATH="/custom/path/to/logs"
-CAFEDELIC_SCRIPTS_PATH="/custom/path/to/scripts"
+### Cross-Session Intelligence
+```typescript
+// Pattern recognition across sessions
+async function analyzeProjectPatterns(project_id: string) {
+  const sessions = await getActiveSessions(project_id);
+  const activities = await getRecentActivities(project_id, '24 hours');
+  
+  return {
+    file_overlaps: findFileOverlaps(sessions),
+    concept_clusters: extractConceptClusters(activities),
+    coordination_opportunities: identifyCoordination(sessions),
+    potential_conflicts: detectConflicts(sessions),
+    knowledge_gaps: findKnowledgeGaps(activities)
+  };
+}
 ```
 
-### MCP Tools Configuration
-Tools from v1 still work for configuration:
-- `setEditorDestination("0:0.1")` - Set output pane
-- `toggle_auto_open(true)` - Enable auto-opening
-- `set_emacs_mode("pane-server")` - Configure Emacs
+## Configuration & Deployment
+
+### Database Configuration
+```typescript
+// Database initialization
+interface DatabaseConfig {
+  path: string;                    // Default: ~/.cafedelic/intelligence.db
+  backup_interval: string;         // Default: "1 hour"
+  retention_days: number;          // Default: 90
+  auto_vacuum: boolean;            // Default: true
+}
+```
+
+### MCP Server Configuration
+```json
+{
+  "mcp_server": {
+    "host": "localhost",
+    "port": 3000,
+    "max_connections": 10,
+    "request_timeout": 30000
+  },
+  "intelligence": {
+    "claude_p_enabled": true,
+    "analysis_interval": "5 minutes",
+    "insight_generation": true,
+    "cross_session_analysis": true
+  },
+  "display_adapters": {
+    "enabled": ["terminal", "cli"],
+    "terminal": {
+      "tmux_integration": true,
+      "default_session": "main"
+    }
+  }
+}
+```
+
+### Claude Code Integration Setup
+```bash
+# Environment setup for Claude Code monitoring
+export CLAUDE_CODE_LOG_PATH="~/.claude/logs"
+export CAFEDELIC_DB_PATH="~/.cafedelic/intelligence.db"
+export CAFEDELIC_MCP_PORT="3000"
+
+# Start cafedelic MCP server
+npm run start:mcp-server
+
+# In separate terminal, test MCP connection
+npx @anthropic-ai/mcp-client connect http://localhost:3000
+```
 
 ## Performance Characteristics
 
-### Resource Usage
-- **Memory**: ~50MB (Node.js baseline)
-- **CPU**: Near zero (event-driven)
-- **Startup**: <1 second
-- **Latency**: <100ms file open response
+### Database Performance
+- **Query Response**: <50ms for typical project/session queries
+- **Activity Ingestion**: 1000+ activities/second
+- **Intelligence Generation**: 2-5 seconds for claude -p analysis
+- **Cross-Session Analysis**: <10 seconds for projects with <100 sessions
 
-### Scalability
-- Handles thousands of events/second
-- No memory leaks (stateless design)
-- Linear performance with pipeline count
+### MCP Server Performance
+- **Tool Execution**: <100ms for simple CRUD operations
+- **Complex Analysis**: 2-10 seconds for intelligence tools
+- **Concurrent Sessions**: Supports 10+ simultaneous MCP connections
+- **Memory Usage**: ~100MB baseline + ~10MB per active project
 
-## Error Handling
+### Intelligence Processing
+- **Real-time Analysis**: <1 second activity processing latency
+- **Context Updates**: Updated within 5 seconds of activity
+- **Pattern Recognition**: Runs every 5 minutes for active projects
+- **Insight Generation**: Triggered by significant activity patterns
 
-### Current Approach
-- Errors logged to console
-- Pipelines continue on non-fatal errors
-- Failed transforms return null (skip)
-- Failed executions logged but don't stop pipeline
+## Security & Data Handling
 
-### Future Considerations
-- Add error recovery strategies
-- Implement retry logic for executions
-- Add metrics/monitoring hooks
-
-## Testing Strategy
-
-### Unit Tests
-- Test transforms with known inputs
-- Test executors with mocked shell commands
-- Test watchers with synthetic events
-
-### Integration Tests
-- Test full pipelines with real files
-- Verify Emacs integration works
-- Test MCP tool compatibility
-
-## Security Considerations
-
-### File Access
-- Only reads log files from Claude config
-- Executes pre-defined shell scripts
-- No arbitrary command execution
+### Data Privacy
+- All data stored locally in SQLite database
+- No external API calls except for claude -p analysis
+- Claude -p receives only structured activity data, not raw code
+- User controls all data retention and deletion
 
 ### Process Isolation
-- Runs as user process
+- MCP server runs as user process
+- Claude Code sessions sandboxed to project directories
 - No elevated privileges required
-- Sandboxed to specific directories
+- File system access limited to project paths and logs
+
+### Database Security
+- SQLite database secured with file system permissions
+- No network database access
+- Automatic backups to prevent data loss
+- Schema migrations handle version upgrades safely
+
+## Integration Points
+
+### With Existing V2 Foundation
+- Retains proven WTE pipeline for activity monitoring
+- Bash scripts remain available for direct operations
+- Property-based pane management system unchanged
+- Existing tmux integration scripts still functional
+
+### With Claude Code Ecosystem
+- Integrates with Claude Code's native project system
+- Respects Claude Code's session and workspace management
+- Enhances rather than replaces Claude Code functionality
+- Compatible with Claude Code SDK and CLI
+
+### With User Development Environment
+- Works with any terminal multiplexer (tmux, screen, etc.)
+- Supports any editor through display adapters
+- Integrates with existing git workflows
+- No changes required to development processes
 
 ## Future Technical Directions
 
-### Potential Enhancements
-1. **Multi-Pipeline Support**: Run multiple pipelines concurrently
-2. **Plugin System**: Dynamic pipeline loading
-3. **WebSocket Support**: Real-time browser updates
-4. **Metrics Collection**: Performance monitoring
+### Phase 1: Core Intelligence (Current Focus)
+- SQLite database with comprehensive schema
+- MCP toolset for project/session management
+- Basic claude -p integration for context analysis
+- Terminal display adapter
 
-### Maintaining Simplicity
-Any additions must:
-- Follow WTE pattern
-- Remain functional
-- Avoid state management
-- Keep code readable
+### Phase 2: Advanced Intelligence
+- Real-time cross-session coordination
+- Predictive session health monitoring
+- Advanced pattern recognition and insights
+- Multi-project intelligence analysis
 
-The technical foundation is intentionally minimal to maximize maintainability and extensibility.
+### Phase 3: Multi-Assistant Platform
+- Support for Cline, Cursor, other AI assistants
+- Universal intelligence layer across tools
+- Advanced workflow automation
+- Enterprise features and scaling
 
-## New Technical Components
+### Maintaining Technical Simplicity
+All enhancements must:
+- Use SQLite as single source of truth
+- Maintain MCP-first interface design
+- Follow display adapter separation pattern
+- Keep core intelligence processing performant
+- Preserve local-first, privacy-focused approach
 
-### cafe CLI Suite
-```
-cafedelic/
-├── cli/
-│   ├── cafe              # Main entry point (bash)
-│   └── commands/         # Subcommand implementations
-│       ├── init.sh       # Layout initialization
-│       ├── make.sh       # Custom layout creation
-│       ├── session.sh    # Claude Code management
-│       ├── status.sh     # Activity dashboard
-│       ├── events.sh     # Database viewer
-│       └── pane.sh       # Direct script wrapper
-```
-
-### System Events Database
-- **Location**: `~/.cafedelic/system_events.db`
-- **Engine**: SQLite3 (no external dependencies)
-- **Schema**: Optimized for one-liner system event tracking
-```sql
-CREATE TABLE system_events (
-    id INTEGER PRIMARY KEY,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    source TEXT NOT NULL,
-    level TEXT DEFAULT 'info',
-    message TEXT NOT NULL,
-    session_name TEXT
-);
-```
-- **Indexes**: timestamp DESC, source for fast queries
-- **Viewer**: Reactive display via `cafe events --follow`
-
-### Session Management
-- **Location**: `~/.cafedelic/sessions/`
-- **Format**: JSON files for active sessions
-- **Structure**:
-```
-sessions/
-├── active/          # Currently running sessions
-│   ├── frontend-refactor.json
-│   └── api-tests.json
-└── history/         # Archived sessions
-    └── completed.jsonl
-```
-- **Naming**: Human-friendly names map to Claude Code PIDs
-### Claude Code Integration
-
-#### SDK Usage
-- Run Claude Code as subprocess via SDK
-- Available for TypeScript and Python
-- Direct API integration without intermediate servers
-- Example usage:
-```typescript
-import { ClaudeCode } from '@anthropic/claude-code-sdk';
-const session = await ClaudeCode.start({
-  name: 'frontend-refactor',
-  workingDir: process.cwd()
-});
-```
-
-#### Direct Script Architecture
-```
-CLI Command → Bash Script → Tmux/File Operation
-     ↓              ↓
-No MCP Server   Direct Execution
-```
-
-Benefits:
-- ~10ms script execution vs ~100ms via MCP
-- Simple error propagation
-- Easy to debug with bash -x
-- No server process management
-
-### Updated Performance Characteristics
-
-#### cafe CLI Performance
-- **cafe init**: < 1 second to full IDE layout
-- **cafe session new**: < 500ms to start tracked session
-- **Script calls**: ~10ms overhead (direct execution)
-- **Messages DB**: Handles 1000s system events/minute
-- **Status refresh**: 1-2 second update cycle
-
-#### Resource Usage
-- **Bash scripts**: Negligible memory
-- **SQLite DB**: Grows ~1MB per 10k system events
-- **Session tracking**: ~1KB per session file
-- **Overall overhead**: < 10MB for typical usage
+The technical foundation prioritizes intelligence generation and natural language interaction while maintaining the proven simplicity and reliability of the V2 architecture.

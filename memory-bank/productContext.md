@@ -1,124 +1,95 @@
 # Product Context
 
-## Why Cafedelic Exists
+## Why Cafedelic Exists (V3 Vision)
 
-AI development tools operate as black boxes. When Claude Desktop works on your code, you see results but not the journey. Cafedelic makes the invisible visible while providing control over how and where insights appear.
+We're in a transitional moment where AI models are strong enough to do 100% of code editing. The human role is shifting from typing to **navigation, observation, orchestration, and guidance**. Cafedelic builds "glass box mission control" for AI-assisted development - making AI work visible and manageable across projects.
 
-## The Evolution
+## The Core Problem
 
-Cafedelic started as a transparency framework but evolved into something more powerful: an integrated AI pair programming environment. We kept the transparency features but added active workspace management, transforming from passive observer to active IDE.
+**Traditional Development Tools**: Built for humans typing code
+**AI-Native Development**: Humans need to navigate, observe, and orchestrate AI work
+
+### The Paradigm Shift
+- **Editing interface becomes irrelevant** - AI does the typing
+- **Mission control becomes critical** - Humans need to see and guide
+- **Project context matters most** - Managing multiple AI sessions across codebases
+- **Observability is the new editing** - Understanding what AI is doing and why
 
 ### Problems We Solve
 
-1. **Session Chaos**: Multiple Claude Code instances without organization
-2. **Context Switching**: Constant jumping between terminal, editor, logs
-3. **Lost Activity**: No unified view of what AI and developers are doing
-4. **Complex Setup**: Too many commands to create productive workspace
-5. **Static Interfaces**: Can't see live updates across tools
+1. **AI Work Invisibility**: Can't see what Claude is thinking or planning
+2. **Session Chaos**: Multiple Claude Code instances without project context
+3. **Context Fragmentation**: AI loses track across files and conversations  
+4. **Manual Orchestration**: Constantly managing AI sessions and project switching
+5. **Intelligence Isolation**: Each AI conversation exists in a silo
 
-## The Integration Gap
+## The Intelligence Gap
 
-Current tools provide either:
-- **Too Fragmented**: Separate terminals for each Claude Code session
-- **Too Manual**: Constant tmux commands and pane management
-- **Too Opaque**: No visibility into AI activity across sessions
+Current Claude Code usage patterns create systematic blind spots:
+- **Session Isolation**: Each Claude conversation operates independently
+- **Context Loss**: Project knowledge doesn't persist across sessions
+- **Activity Invisibility**: Can't see what Claude is thinking or planning across instances
+- **Manual Coordination**: Humans must manually manage session switching and context
 
-Cafedelic provides seamless integration - one command to productive IDE.
+Cafedelic bridges these gaps through comprehensive session intelligence and orchestration.
 
-## How It Works
+## How It Works (Intelligence-First Architecture)
 
-### One Command IDE
-```bash
-cafe init  # Instant 30/70/30 layout with file tree, editor, and messages
+### MCP Conversational Interface
+```
+Human: "What are my active projects?"
+Orchestrator Claude: "You have 3 projects: auth-refactor (2 sessions), ui-components (1 session), db-migration (paused). Marcel is stuck on OAuth middleware - want me to open that session?"
+
+### SQLite Intelligence Database
+```sql
+-- Projects table tracks git repositories and worktrees
+SELECT name, active_sessions FROM projects WHERE status = 'active';
+
+-- Sessions table links Claude Code instances to projects  
+SELECT session_name, project_name, last_activity FROM sessions 
+JOIN projects ON sessions.project_id = projects.id;
+
+-- Activities table captures all AI operations
+SELECT COUNT(*) as claude_actions FROM activities 
+WHERE type = 'file_read' AND created_at > datetime('now', '-1 hour');
 ```
 
-### Session Management  
-```bash
-cafe session new frontend-refactor  # Start Claude Code with friendly name
-cafe session list                   # See all active sessions
-cafe status                        # Live dashboard of AI activity
-```
+### Display Adapter Flexibility
+```javascript
+// Terminal adapter (tmux integration)
+const terminalAdapter = new TerminalAdapter(cafedelicDatabase);
+terminalAdapter.displayProjectStatus('auth-refactor');
 
-### Direct Integration
-- No MCP server overhead for CLI commands
-- Bash scripts called directly for speed
-- SQLite system events database for rich querying
-- Reactive displays that update automatically
+// VS Code extension adapter  
+const vscodeAdapter = new VSCodeAdapter(cafedelicDatabase);
+vscodeAdapter.showSessionSidebar();
 
-## The 30/70/30 Philosophy
-
-Our default layout emerged from real usage patterns:
-```
-┌─────────────┬─────────────────────┐
-│  Directory  │       Editor        │
-│    Tree     │      (Emacs)        │
-│    (30%)    │       (70%)         │
-├─────────────┴─────────────────────┤
-│         System Events              │
-│     (Terminal, Logs, Activity)     │
-│             (30%)                  │
-└────────────────────────────────────┘
-```
-- **30% File Tree**: Always see project structure
-- **70% Editor**: Maximum space for code work  
-- **30% System Events**: Unified activity stream from all sources
-
-## User Experience
-
-### For Developers
-Simple commands, powerful results:
-```
-[Starting work]
-$ cafe init
-→ Full IDE layout in 1 second
-
-$ cafe session new auth-refactor
-→ Claude Code starts with friendly name
-
-[During work]
-System Events panel shows:
-10:32:15 [claude-code] Started auth-refactor session
-10:32:18 [activity] Claude reading src/auth/login.js
-10:32:20 [terminal] Running: npm test auth
-10:32:25 [logs] All auth tests passing
-
-[Managing sessions]
-$ cafe status
-→ See all Claude Code sessions and activity
-```
-
-### Flexible Configuration
-```bash
-# Use different layouts
-cafe make --layout minimal    # Just editor and terminal
-cafe make --layout full      # 5-pane comprehensive
-
-# Direct pane management via CLI
-cafe pane assign editor --source claude-code
-cafe pane send events "Starting new feature"
+// CLI adapter
+const cliAdapter = new CLIAdapter(cafedelicDatabase);
+cliAdapter.executeCommand('cafe status');
 ```
 
 ## Design Principles
 
-1. **CLI First**: Everything starts with simple cafe commands
-2. **Direct Execution**: Skip middleware, call scripts directly
-3. **Session Oriented**: Human names for Claude Code instances
-4. **Database Backed**: Rich querying and history, not just text
-5. **Tmux Native**: Deep integration, not abstraction
+1. **Database-First**: SQLite as single source of truth for all intelligence
+2. **Conversation-Native**: MCP interface enables natural language interaction
+3. **Enhancement over Replacement**: Integrates with existing tools, doesn't replace them
+4. **Intelligence over Interface**: Focus on making AI work visible and manageable
+5. **Assistant-Agnostic**: Architecture supports future expansion beyond Claude Code
 
 ## Evolution Path
 
-### Today: Claude Code IDE
-- Multiple Claude Code sessions with names
-- Unified activity tracking
-- One-command workspace setup
+### Phase 1: Claude Code Intelligence Foundation
+- SQLite database schema for projects, sessions, activities
+- MCP toolset for natural language project management
+- Basic session tracking and context preservation
 
-### Tomorrow: Intelligent Orchestration
-- AI agents that coordinate
-- Pattern learning from sessions
-- Suggested next actions
+### Phase 2: Advanced Intelligence Features  
+- `claude -p` integration for real-time AI activity summarization
+- Cross-session context sharing and coordination
+- Pattern recognition in AI development workflows
 
-### Future: Adaptive Platform
-- Learns your development patterns
-- Optimizes layouts for tasks
-- Predictive session management
+### Phase 3: Multi-Assistant Platform
+- Support for additional AI assistants (Cline, future tools)
+- Universal intelligence layer across different development environments
+- Advanced orchestration and workflow automation

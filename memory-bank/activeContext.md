@@ -1,11 +1,48 @@
 # Active Context
 
-## Current State
-- **Date**: June 12, 2025
-- **Focus**: Building cafe CLI tool suite for Claude Code IDE
-- **Status**: Architecture defined, implementation starting
+## Current State  
+- **Date**: July 11, 2025
+- **Focus**: V3 Architectural Exploration - Glass Box Mission Control
+- **Status**: Contemplative inquiry on fundamental UI paradigm and separation of concerns
 
-## Recent Architectural Decisions
+## V3 Paradigm Shift: Glass Box Mission Control
+
+### The Fundamental Reframe (July 11, 2025)
+**From**: "Tmux IDE with AI Features"  
+**To**: "Glass Box Mission Control for AI-Assisted Development"
+
+### Core Realization
+AI models are now strong enough to do 100% of editing work. The human interface should focus on:
+- **Navigation**: Moving through projects and contexts
+- **Observation**: Watching AI work in real-time  
+- **Orchestration**: Managing Claude Code sessions across projects
+- **Guidance**: High-level direction, not low-level typing
+
+### The Tmux Reality Check
+Attempting to build modern interactive UI with tmux is fundamentally mismatched:
+- tmux = "rebar and duct tape" 
+- Modern UI needs = "React/HTML/CSS level sophistication"
+- Result: Fighting the wrong battle
+
+### Architectural Separation Strategy
+**Intelligence Layer** (Cafedelic's core value):
+- Observability pipeline (WTE pattern)
+- claude -p context reasoning and task summarization
+- Session management via SQLite
+- Project/worktree orchestration
+
+**Display Layer** (User's responsibility):
+- Their own tmux configuration
+- Terminal multiplexer preferences  
+- Editor choice and setup
+
+### The Glass Box Vision
+```
+(Dynamic file tree) | "Claude is now..." (claude -p summary) | Session: marcel (tracked in SQLite)
+```
+Focus on making AI work visible and comprehensible rather than replacing terminal UI.
+
+## Previous Architectural Decisions (V2 Foundation)
 
 ### Keeping All MCP Tools
 Decision: Maintain all 8 existing MCP tools rather than deprecating
@@ -89,40 +126,50 @@ pipe(
 6. `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
 7. `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
 8. `get_details_for_pane_by_name` - Get pane information
-## Implementation Priorities
+## Current Implementation Focus (Post-Exploration)
 
-### Phase 1: cafe CLI Foundation (IMMEDIATE SCOPE)
-1. Main cafe entry script with subcommand routing
-2. `cafe init` - Ensure server running, check dependencies, return errors
-3. `cafe deploy` - Simple 2-pane layout (70% emacs, 30% system events)
-4. Direct bash script invocation pattern
-5. Basic error handling and validation
+### Resolved Architecture: MCP Intelligence Platform
+**Decision**: Cafedelic is an MCP server providing intelligence layer for Claude Code project/session management
+- **Core**: SQLite database as single source of truth
+- **Interface**: Natural language MCP tools for conversational management
+- **Display**: Plugin adapter system supporting terminal, VS Code, web interfaces
+- **Scope**: Intelligence and coordination, not terminal UI replacement
 
-### Phase 2: System Events Database (NEXT)
-1. SQLite schema for one-liner system event tracking
-2. cafe events command with --follow mode
-3. Integration points for various sources
-4. Reactive display updates
+### Phase 1 Implementation Priorities (UPDATED - Textual Integration)
+1. **Database Schema Implementation**: SQLite tables for projects, sessions, activities, context
+2. **Core MCP Tools**: project_tools.ts, session_tools.ts, intelligence_tools.ts  
+3. **Claude Code Integration**: Process monitoring, log parsing, activity extraction
+4. **Textual UI Platform**: Rich terminal/web UI for project management (BREAKTHROUGH)
+5. **Intelligence Pipeline**: claude -p integration for context analysis
 
-### Phase 3: Claude Code Integration (FUTURE)
-1. Session management with human names
-2. SDK subprocess integration
-3. Multi-session status dashboard
-4. Activity aggregation across sessions
+### Textual Integration Discovery (July 11, 2025)
+**Platform**: https://github.com/Textualize/textual - Python TUI framework
+**Capabilities**: Rich terminal UIs that can serve to web, reactive/dynamic, professional-grade
+**Perfect Fit**: Ideal platform for cafedelic's intelligence layer visualization
+**Integration**: Textual as primary display adapter, reads from SQLite intelligence database
 
-## Next Session Tasks (PHASE 1 COMPLETE ✅)
-1. ✅ Create cli/cafe main entry script with init/deploy commands
-2. ✅ Implement cafe init for server validation and dependency checking
-3. ✅ Implement cafe deploy for 2-pane layout (70% emacs, 30% system events)
-4. ✅ Test direct script invocation pattern
-5. ✅ Validate emacs integration and system events display
+### Technical Architecture Decisions (Finalized)
+1. **Database-First**: All state lives in SQLite, no in-memory persistence
+2. **MCP-Native**: Primary interface through conversational tools, not CLI
+3. **Plugin Display**: Separate intelligence from presentation via adapter pattern
+4. **Assistant-Agnostic**: Database schema supports future expansion beyond Claude Code
+5. **Enhancement Philosophy**: Integrate with existing tools, don't replace them
 
-## Next Priorities (PHASE 2)
-1. Build system events database schema and reactive viewer
-2. Integrate WTE pipeline with system events display
-3. Add cafe events command with --follow mode
-4. Enhance cafe deploy with layout options
-5. Add session tracking preparation for Claude Code integration
+## V2 Foundation (Proven & Retained)
+### Phase 1: cafe CLI Foundation (COMPLETED ✅)
+- [x] Main cafe entry script with subcommand routing
+- [x] cafe init - Validate server running, check dependencies
+- [x] cafe deploy - Simple 2-pane layout (70% emacs, 30% system events)  
+- [x] Direct script invocation pattern
+- [x] Basic error handling and user feedback
+- [x] PATH installation system
+
+### Technical Assets Available
+- **WTE Pipeline**: Proven event-driven architecture (~150 lines)
+- **Property System**: Multi-dimensional pane management (source/role/name)
+- **MCP Tools**: 8 working tools for programmatic pane access
+- **Script Library**: Robust bash scripts for tmux operations
+- **SQLite Foundation**: Basic database patterns established
 
 ## Key Technical Decisions Summary
 - **CLI over MCP**: Direct user interface via cafe commands
