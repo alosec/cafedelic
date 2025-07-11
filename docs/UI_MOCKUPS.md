@@ -9,14 +9,17 @@ This document provides detailed UI mockups and layout specifications for the Caf
 ### Full Application Layout
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ ♦ Cafedelic Intelligence Platform                    [17:42] │ ● 2 sessions  │ Header
+│ ♦ Cafedelic Task Delegation Platform             [17:42] │ ● 2 active tasks │ Header
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ [Projects] [auth-refactor ● ] [ui-components ○ ] [database-opt ⚠ ] [+ New] │ Tab Bar
+│ Quick Delegate: [Type task here...] → [Session ▼] [Find Similar] [Send]    │ Quick Chat
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Projects] [auth: Planning ● ] [ui: Analyzing ○ ] [db: Stuck ⚠ ] [+ New]   │ Tab Bar
 ├──────────────┬──────────────────────────────────────────────────────────────┤
 │              │ ┌──────────────────────────────────────────────────────────┐ │
-│  Projects    │ │ Session: auth-refactor                           ● Active │ │
+│  Projects    │ │ Session: auth-refactor                    ● Planning Phase │ │
 │              │ │ Project: /home/alex/projects/webapp              14:23:15 │ │
-│ ┌─ webapp    │ │ Task: Implementing OAuth2 authentication flows            │ │
+│ ┌─ webapp    │ │ Delegated Task: Implement OAuth2 authentication flows    │ │
+│              │ │ Status: Planning... security architecture patterns       │ │
 │ ├─ api-srv   │ │                                                           │ │
 │ ├─ frontend  │ │ Files in Context:                                        │ │
 │ └─ mobile    │ │ ├── 📄 src/auth/oauth.js        ●●○ [Modified Today]    │ │
@@ -34,11 +37,12 @@ This document provides detailed UI mockups and layout specifications for the Caf
 │ ○ 1 Idle     │ │ Duration: 3h 42m               Files: 15    Commits: 7  │ │
 │ ⚠ 1 Issues   │ └──────────────────────────────────────────────────────────┘ │
 ├──────────────┴──────────────────────────────────────────────────────────────┤
-│ Intelligence Feed:                                    [Filter: All] [Search] │
-│ [17:42] ♦ auth-refactor: Coordination opportunity with ui-components session │
-│ [17:41] ● auth-refactor: Completed OAuth token validation implementation      │
-│ [17:40] ○ ui-components: Modified shared authentication components            │
-│ [17:39] ⚠ database-opt: Session appears stuck on database query optimization │
+│ Task Delegation Feed:                                [Filter: All] [Search] │
+│ [17:42] 🔄 auth-refactor: Ready for /act command - plan complete          │
+│ [17:41] ✓ ui-components: Task completed - authentication UI ready          │
+│ [17:40] 📝 database-opt: Analyzing... query optimization strategies        │
+│ [17:39] ⚠ database-opt: Stuck - requires coordination with auth session   │
+│ [17:38] 🎯 Task suggested: Handoff auth tokens → database-opt session     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Status: 3 projects │ 4 sessions │ 2 active │ Health: ● Good │ [Q]uit [?]Help │ Footer
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -46,26 +50,27 @@ This document provides detailed UI mockups and layout specifications for the Caf
 
 ### Widget Mapping
 - **Header**: Custom header with title, clock, and session count
-- **Tab Bar**: `TabbedContent` with custom tab styling and session indicators
+- **Quick Chat**: Text input with session selector and find_relevant_chats() integration
+- **Tab Bar**: `TabbedContent` with task-state indicators and delegation controls
 - **Left Sidebar**: `Vertical` container with multiple sections
 - **Main Content**: Tab-specific content area with session details
-- **Intelligence Feed**: `ScrollView` with filterable activity items
+- **Task Delegation Feed**: `ScrollView` with task status updates and coordination alerts
 - **Footer**: Status bar with quick stats and keyboard shortcuts
 
 ## Tab Content Layouts
 
-### Session Detail Tab
+### Task Delegation Session Tab
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ Session: auth-refactor                                         ● Active   │
-│ Project: /home/alex/projects/webapp                           Duration: 3h │
+│ Session: auth-refactor [abc123]                      ● Planning Phase   │
+│ Delegated Task: Implement OAuth2 authentication flows      Duration: 3h │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ ┌─ Current Task ─────────────────┐ ┌─ Session Health ─────────────────────┐ │
-│ │ Implementing OAuth2 flows      │ │ Status: ● Active     CPU: ██░░░ 40% │ │
-│ │                                │ │ Memory: ███░░ 60%    Response: 120ms│ │
-│ │ Progress: ████████░░ 80%      │ │ Errors: 0           Activities: 247  │ │
-│ │ Last Activity: 2 minutes ago   │ │ Health Score: 94/100  Trend: ↗     │ │
-│ └────────────────────────────────┘ └──────────────────────────────────────┘ │
+│ ┌─ Task Status ───────────────────┐ ┌─ Delegation Controls ─────────────────┐ │
+│ │ Status: Planning...            │ │ [/plan] [/analyze] [/act]      │ │
+│ │ Current: Security patterns     │ │ [Send Message] [Handoff]       │ │
+│ │ Progress: ████░░░░░░ 40%        │ │ [Find Similar] [Duplicate]     │ │
+│ │ Ready for: /act command        │ │ Priority: High ▲              │ │
+│ └────────────────────────────────┘ └────────────────────────────────┘ │
 │                                                                              │
 │ ┌─ Files in Context ─────────────────────────────────────────────────────┐ │
 │ │ 📁 src/auth/                                                           │ │
@@ -89,7 +94,7 @@ This document provides detailed UI mockups and layout specifications for the Caf
 │ │ [16:58] ● Created src/auth/tokens.js - Token management utilities     │ │
 │ └────────────────────────────────────────────────────────────────────────┘ │
 │                                                                              │
-│ [Actions: [Resume] [Pause] [Restart] [Duplicate] [Export Context]]         │
+│ [Delegation: [Send /act] [Handoff Task] [Find Context] [Monitor Progress]] │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -188,9 +193,72 @@ Legend:
 ●●● = Created/Modified/Read recently
 ```
 
-## Intelligence Feed Component
+## Quick-Chat Delegation Widget
 
-### Activity Feed with Filtering
+### Primary Delegation Interface
+```
+┌─ Quick Delegate ─────────────────────────────────────────────────────────┐
+│ Task: [Implement user authentication with JWT tokens              ]     │
+│ Target: [Find Session ▼] [auth-refactor] [ui-components] [+ New]        │
+│ Context: [☑] Include current files  [☑] Include git history             │
+│ Priority: [● High ○ Medium ○ Low]   Deadline: [Today 6PM]              │
+│                                                                          │
+│ Similar Conversations Found:                            [Find All Chats] │
+│ • auth-refactor [abc123] - "OAuth implementation" (85% match)           │
+│ • security-audit [def456] - "JWT token security" (72% match)            │
+│ • user-mgmt [ghi789] - "Authentication flow" (68% match)               │
+│                                                                          │
+│ [Use Existing: abc123] [Create New Session] [Delegate to Queue]         │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### find_relevant_chats() Function Integration
+```typescript
+// Core function for context discovery
+interface ChatMatch {
+  session_id: string;
+  title: string;
+  similarity_score: number;
+  context_summary: string;
+  last_activity: Date;
+  status: 'active' | 'idle' | 'completed';
+}
+
+function find_relevant_chats(query: string): Promise<ChatMatch[]> {
+  // 1. Semantic search against session context and task descriptions
+  // 2. Analyze task patterns and technical requirements
+  // 3. Score sessions based on context similarity and recency
+  // 4. Return ranked list of potential session matches
+}
+
+// Usage in UI:
+// - Auto-complete suggestions as user types task
+// - "Find Similar" button for explicit context discovery
+// - Background matching for proactive session recommendations
+```
+
+### Workflow Command Interface
+```
+┌─ Task Control Panel ────────────────────────────────────────────────────┐
+│ Session: auth-refactor [abc123]                    Status: Planning... │
+│ Current Task: Implement OAuth2 authentication flows                    │
+│                                                                         │
+│ Workflow Commands:                                                      │
+│ [/plan] [/keep-planning] [/analyze] [/keep-analyzing] [/act] [/review]  │
+│                                                                         │
+│ Quick Actions:                                                          │
+│ [Send "/act"] [Send "/keep-planning"] [Custom Command: ____________]    │
+│                                                                         │
+│ Auto-Suggestions:                                                       │
+│ • "/act" - Planning phase appears complete, ready for implementation    │
+│ • "/coordinate" - Database session needs auth token integration         │
+│ • "/handoff" - UI session ready for authentication component work      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Task Delegation Feed Component
+
+### Task Status and Coordination Feed
 ```
 ┌─ Intelligence Feed ────────────────────────────────────────────────┐
 │ [Filter: All ▼] [Sessions: All ▼] [🔍 Search...]  [⚙️] [📊] [📋] │

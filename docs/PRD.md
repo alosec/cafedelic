@@ -11,49 +11,83 @@
 ## Product Vision
 
 ### Mission Statement
-Transform AI-assisted development from a black box into a transparent, manageable, and coordinatable experience through an intelligent terminal user interface that makes Claude Code sessions visible, trackable, and optimizable.
+Transform AI-assisted development into an asynchronous task delegation platform that enables developers to orchestrate, coordinate, and manage Claude Code conversations through intelligent session management, quick-chat interfaces, and automated task handoffs.
 
 ### Vision Statement
-Create the definitive "glass box mission control" for AI development - a rich terminal application that serves as the intelligence layer between developers and their AI assistants, providing real-time visibility into AI work, cross-session coordination, and project-level intelligence insights.
+Create the definitive task delegation platform for AI development - a rich terminal application that transforms Claude Code from isolated conversations into an orchestrated workflow engine, enabling asynchronous task management, intelligent session coordination, and automated handoffs between AI instances.
 
 ### Product Goals
-1. **Visibility**: Make AI development work transparent and comprehensible
-2. **Coordination**: Enable management of multiple Claude Code sessions across projects
-3. **Intelligence**: Provide actionable insights from AI session data and patterns
-4. **Integration**: Seamlessly integrate with existing development workflows
-5. **Scalability**: Support individual developers through enterprise team coordination
+1. **Delegation**: Enable quick task assignment to Claude Code sessions via natural language
+2. **Orchestration**: Coordinate multiple AI conversations with task-state management
+3. **Automation**: Intelligent handoffs and context preservation between sessions
+4. **Intelligence**: Proactive suggestions for task routing and session optimization
+5. **Integration**: Seamless `claude --resume` integration for async communication
 
 ## User Personas
 
-### Primary Persona: Technical Lead (Alex)
-- **Background**: Senior developer managing multiple AI-assisted projects
+### Primary Persona: Delegation Manager (Alex)
+- **Background**: Technical lead orchestrating AI-assisted development across multiple projects
 - **Pain Points**: 
-  - Can't see what Claude Code is doing across different sessions
-  - Loses context when switching between projects
-  - No visibility into AI session health or productivity patterns
+  - Can't delegate tasks to Claude Code sessions asynchronously
+  - No way to monitor task progress across multiple AI conversations
+  - Manual context switching between sessions breaks workflow
 - **Goals**: 
-  - Monitor AI work across multiple concurrent sessions
-  - Quickly switch context between projects
-  - Identify coordination opportunities between sessions
-- **Use Cases**: Project management, session orchestration, team coordination
+  - Quick-delegate tasks to appropriate Claude Code sessions
+  - Monitor task states and completion status in real-time
+  - Automate handoffs between sessions for complex workflows
+- **Use Cases**: Task delegation, workflow orchestration, async AI coordination
 
 ### Secondary Persona: Solo Developer (Sam)
-- **Background**: Individual contributor using Claude Code for focused development
+- **Background**: Individual contributor using AI delegation for complex feature development
 - **Pain Points**:
-  - Forgets which sessions are working on what
-  - Difficulty tracking progress across complex features
-  - No way to preserve or share session context
+  - Switching between planning, analysis, and implementation modes manually
+  - Can't find relevant previous conversations for similar tasks
+  - No way to queue multiple tasks for sequential AI processing
 - **Goals**:
-  - Track personal development sessions
-  - Maintain context across work sessions
-  - Monitor progress and identify blockers
-- **Use Cases**: Personal productivity, session management, progress tracking
+  - Use quick-chat interface for rapid task assignment
+  - Leverage find_relevant_chats() to resume context-rich sessions
+  - Manage task states with /plan, /analyze workflow commands
+- **Use Cases**: Task queuing, context discovery, workflow automation
 
 ## Core Features
 
-### 1. Project Management Dashboard
+### 1. Quick-Chat Delegation Widget
 
-**Overview**: Central hub displaying all active projects with real-time status
+**Overview**: Primary interface for rapid task assignment to Claude Code sessions via natural language
+
+**User Stories**:
+- As a delegation manager, I want to type a task and assign it to a specific session instantly
+- As a developer, I want to see task status updates in real-time without switching contexts
+- As a user, I want find_relevant_chats(query) to suggest existing sessions with relevant context
+- As a developer, I want to use /plan, /analyze workflow commands for task state management
+
+**Acceptance Criteria**:
+- Prominent quick-chat input field always accessible in main interface
+- Session selection dropdown with status indicators and task descriptions
+- Auto-completion for task types and session targeting
+- Real-time task progress updates and completion notifications
+- Integration with `claude --resume {session_id}` for async communication
+- find_relevant_chats() function returns contextually similar conversations
+
+**Technical Requirements**:
+- Natural language processing for task categorization
+- MCP tool integration for session orchestration
+- Database tracking of task assignments and completions
+- WebSocket communication for real-time updates
+
+**Workflow Commands**:
+- `/plan` - Initiate planning phase for task
+- `/keep-planning` - Continue planning without execution
+- `/analyze` - Begin analysis of requirements or codebase
+- `/keep-analyzing` - Extend analysis phase
+- `/act` - Execute planned tasks
+- `/review` - Review completed work
+- `/coordinate` - Identify cross-session dependencies
+- `/handoff` - Transfer task to different session with context
+
+### 2. Project Management Dashboard
+
+**Overview**: Central hub displaying all active projects with task delegation status
 
 **User Stories**:
 - As a developer, I want to see all my projects in a grid view so I can quickly assess current status
@@ -73,22 +107,23 @@ Create the definitive "glass box mission control" for AI development - a rich te
 - Support both grid and list view modes
 - Include search and filtering capabilities
 
-### 2. Tabbed Session Management
+### 3. Task-State Session Management
 
-**Overview**: Multi-tab interface for managing Claude Code sessions within projects
+**Overview**: Multi-tab interface for managing Claude Code sessions with task-state awareness
 
 **User Stories**:
-- As a developer, I want to click on a Claude Code session to open it in a new tab
-- As a technical lead, I want to see session status (active, idle, stuck) at a glance
-- As a developer, I want to close, restart, or duplicate sessions from the tab interface
-- As a developer, I want to rearrange tabs to organize my workflow
+- As a developer, I want to see session task states: "Planning... feature xyz" or "Analyzing... feature abc"
+- As a delegation manager, I want to see which sessions are available for new task assignment
+- As a developer, I want to monitor task progress without interrupting AI workflows
+- As a user, I want to resume relevant sessions based on task similarity
 
 **Acceptance Criteria**:
-- Use Textual's `TabbedContent` widget for session tabs
-- Display session status with color-coded indicators (green=active, yellow=idle, red=stuck)
-- Support tab reordering, closing, and context menu actions
-- Show session metadata: project, duration, current task, file context
-- Persist tab order and state in database
+- Use Textual's `TabbedContent` widget with task-state indicators
+- Display session status: Planning, Analyzing, Implementing, Reviewing, Stuck, Available
+- Show current task description and progress indicators
+- Support task handoffs between sessions with context preservation
+- Integrate find_relevant_chats() for session discovery and resumption
+- Quick-delegate tasks directly from tab interface
 
 **Technical Requirements**:
 - Integrate with Claude Code process management
@@ -96,7 +131,7 @@ Create the definitive "glass box mission control" for AI development - a rich te
 - Database persistence of tab state and ordering
 - Keyboard shortcuts for tab navigation (Ctrl+T, Ctrl+W, Ctrl+Tab)
 
-### 3. File Tree Integration
+### 4. File Tree Integration
 
 **Overview**: Context-aware file browser showing session-relevant files
 
@@ -119,20 +154,43 @@ Create the definitive "glass box mission control" for AI development - a rich te
 - Database tracking of file access patterns
 - Efficient tree rendering for large codebases
 
-### 4. Intelligence Feed
+### 5. Task Delegation Queue
 
-**Overview**: Real-time activity stream with AI-generated insights
+**Overview**: Visual queue management for pending, active, and completed task delegations
 
 **User Stories**:
-- As a developer, I want to see what Claude Code is currently doing across all sessions
-- As a technical lead, I want AI-generated summaries of session progress and blockers
-- As a developer, I want to receive notifications when coordination opportunities arise
-- As a developer, I want to see historical activity patterns and trends
+- As a delegation manager, I want to see all pending tasks waiting for session assignment
+- As a developer, I want to track task completion status across multiple sessions
+- As a user, I want to reorder task priorities and reassign to different sessions
+- As a developer, I want automated task routing based on session expertise and availability
 
 **Acceptance Criteria**:
-- Display real-time activity stream with timestamps and session context
-- Generate AI summaries using claude -p integration for session analysis
-- Highlight coordination opportunities between sessions
+- Display task queue with priority indicators and estimated completion times
+- Support drag-and-drop task reordering and session reassignment
+- Show task dependencies and coordination requirements
+- Automated suggestions for optimal task-to-session matching
+- Integration with find_relevant_chats() for context-aware assignment
+
+**Technical Requirements**:
+- Database persistence of task queue state and priorities
+- Real-time updates via WebSocket for collaborative workflows
+- Machine learning for session expertise modeling
+- Integration with Claude Code session health monitoring
+
+### 6. Intelligence Feed with Delegation Insights
+
+**Overview**: Real-time activity stream focused on task delegation and coordination opportunities
+
+**User Stories**:
+- As a developer, I want to see which sessions are actively working on delegated tasks
+- As a delegation manager, I want AI-generated suggestions for task handoffs
+- As a developer, I want notifications when sessions complete delegated work
+- As a user, I want to see coordination opportunities between related tasks
+
+**Acceptance Criteria**:
+- Display real-time task delegation status with session assignments
+- Generate AI suggestions for optimal task routing and coordination
+- Highlight task delegation opportunities and session coordination needs
 - Support activity filtering by session, project, file, or activity type
 - Provide activity search and historical browsing
 
