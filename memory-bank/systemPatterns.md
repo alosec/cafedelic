@@ -1,19 +1,19 @@
 # System Patterns
 
-## Core Architecture: Intelligence-First Design
+## Core Architecture: Task Delegation Platform
 
-Cafedelic is built on a three-layer intelligence platform that prioritizes data modeling and natural language interaction over traditional terminal manipulation.
+Cafedelic is built on a three-layer task delegation platform that prioritizes async Claude Code orchestration and contextual session management over traditional terminal manipulation.
 
 ```
 ┌─────────────────────────────────────┐
-│           MCP Toolset               │ ← Natural language interface
-│    (Conversational API Layer)      │
+│     Quick-Chat Delegation           │ ← Task assignment interface
+│   + find_relevant_chats()           │
 ├─────────────────────────────────────┤
 │        SQLite Database              │ ← Single source of truth
-│      (Intelligence Core)            │
+│   (Task State Management)           │
 ├─────────────────────────────────────┤
-│       Display Adapters              │ ← Flexible presentation
-│    (Terminal, VS Code, Web)        │
+│    Claude Code Session Pool         │ ← claude --resume integration
+│   + ~/.claude/commands/             │
 └─────────────────────────────────────┘
 ```
 

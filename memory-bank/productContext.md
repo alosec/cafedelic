@@ -2,26 +2,26 @@
 
 ## Why Cafedelic Exists (V3 Vision)
 
-We're in a transitional moment where AI models are strong enough to do 100% of code editing. The human role is shifting from typing to **navigation, observation, orchestration, and guidance**. Cafedelic builds "glass box mission control" for AI-assisted development - making AI work visible and manageable across projects.
+We're in a transformational moment where AI models can handle complex development tasks independently. The human role is shifting from typing to **task delegation, workflow orchestration, and async coordination**. Cafedelic builds the definitive task delegation platform for AI-assisted development - enabling rapid task assignment and intelligent session management.
 
 ## The Core Problem
 
 **Traditional Development Tools**: Built for humans typing code
-**AI-Native Development**: Humans need to navigate, observe, and orchestrate AI work
+**AI-Native Development**: Humans need to delegate tasks, coordinate workflows, and manage async AI conversations
 
 ### The Paradigm Shift
-- **Editing interface becomes irrelevant** - AI does the typing
-- **Mission control becomes critical** - Humans need to see and guide
-- **Project context matters most** - Managing multiple AI sessions across codebases
-- **Observability is the new editing** - Understanding what AI is doing and why
+- **Quick-chat delegation** - Natural language task assignment to Claude Code sessions
+- **Task state orchestration** - Managing Planning/Analyzing/Implementing phases across sessions
+- **Async coordination** - Background task processing with `claude --resume {session_id}`
+- **Contextual session discovery** - find_relevant_chats() for intelligent session resumption
 
 ### Problems We Solve
 
-1. **AI Work Invisibility**: Can't see what Claude is thinking or planning
-2. **Session Chaos**: Multiple Claude Code instances without project context
-3. **Context Fragmentation**: AI loses track across files and conversations  
-4. **Manual Orchestration**: Constantly managing AI sessions and project switching
-5. **Intelligence Isolation**: Each AI conversation exists in a silo
+1. **Task Assignment Friction**: No quick way to delegate tasks to appropriate Claude Code sessions
+2. **Context Discovery Challenge**: Can't find relevant previous conversations for similar tasks
+3. **Manual Workflow Management**: Constantly switching between planning, analysis, and implementation modes
+4. **Session Coordination Overhead**: No async task delegation or automated handoffs between sessions
+5. **Command Workflow Isolation**: Project-specific slash commands in ~/.claude/commands not integrated with delegation
 
 ## The Intelligence Gap
 
@@ -31,14 +31,22 @@ Current Claude Code usage patterns create systematic blind spots:
 - **Activity Invisibility**: Can't see what Claude is thinking or planning across instances
 - **Manual Coordination**: Humans must manually manage session switching and context
 
-Cafedelic bridges these gaps through comprehensive session intelligence and orchestration.
+Cafedelic bridges these gaps through async task delegation, contextual session discovery, and integration with project-specific commands in ~/.claude/commands/.
 
 ## How It Works (Intelligence-First Architecture)
 
-### MCP Conversational Interface
+### Quick-Chat Delegation Interface
 ```
-Human: "What are my active projects?"
-Orchestrator Claude: "You have 3 projects: auth-refactor (2 sessions), ui-components (1 session), db-migration (paused). Marcel is stuck on OAuth middleware - want me to open that session?"
+Human: [Types in widget] "Implement user authentication"
+Cafedelic: "Found similar context in auth-refactor [abc123]. Use existing session or create new?"
+Human: [Clicks] "Use existing"
+Cafedelic: "Task delegated to auth-refactor. Status: Planning... security patterns. Use /act when ready."
+
+### Project Command Integration
+```
+Human: [Quick delegate] "Run my auth-tests command"
+Cafedelic: "Found /auth-tests in ~/.claude/commands/. Delegating to test-session [def456]."
+Claude (test-session): [Executes custom auth-tests workflow]
 
 ### SQLite Intelligence Database
 ```sql

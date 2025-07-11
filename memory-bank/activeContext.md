@@ -2,21 +2,21 @@
 
 ## Current State  
 - **Date**: July 11, 2025
-- **Focus**: V3 Implementation Ready - PRD-Driven Development
-- **Status**: Documentation complete, Phase 1 implementation begins
+- **Focus**: V3 Task Delegation Platform - Async Claude Code Orchestration
+- **Status**: Documentation updated for delegation-centric vision, Phase 1 ready
 
-## V3 Paradigm Shift: Glass Box Mission Control
+## V3 Paradigm Shift: Asynchronous Task Delegation Platform
 
 ### The Fundamental Reframe (July 11, 2025)
-**From**: "Tmux IDE with AI Features"  
-**To**: "Glass Box Mission Control for AI-Assisted Development"
+**From**: "Glass Box Mission Control for Observation"  
+**To**: "Asynchronous Task Delegation Platform for AI Orchestration"
 
 ### Core Realization
-AI models are now strong enough to do 100% of editing work. The human interface should focus on:
-- **Navigation**: Moving through projects and contexts
-- **Observation**: Watching AI work in real-time  
-- **Orchestration**: Managing Claude Code sessions across projects
-- **Guidance**: High-level direction, not low-level typing
+AI models are now strong enough to handle complex tasks independently. The human interface should focus on:
+- **Delegation**: Quick task assignment via natural language to appropriate Claude Code sessions
+- **Orchestration**: Managing multiple AI conversations with task-state awareness  
+- **Coordination**: Automated handoffs and context preservation between sessions
+- **Monitoring**: Real-time task progress tracking and completion notifications
 
 ### The Tmux Reality Check
 Attempting to build modern interactive UI with tmux is fundamentally mismatched:
@@ -36,11 +36,11 @@ Attempting to build modern interactive UI with tmux is fundamentally mismatched:
 - Terminal multiplexer preferences  
 - Editor choice and setup
 
-### The Glass Box Vision
+### The Delegation Platform Vision
 ```
-(Dynamic file tree) | "Claude is now..." (claude -p summary) | Session: marcel (tracked in SQLite)
+Quick-Chat: [Implement auth] → [auth-session] | Status: Planning... | Progress: [████░░░░] 40%
 ```
-Focus on making AI work visible and comprehensible rather than replacing terminal UI.
+Focus on async task orchestration with `claude --resume {session_id}` integration for background AI coordination.
 
 ## Previous Architectural Decisions (V2 Foundation)
 
@@ -135,19 +135,21 @@ pipe(
 - **Display**: Plugin adapter system supporting terminal, VS Code, web interfaces
 - **Scope**: Intelligence and coordination, not terminal UI replacement
 
-### Comprehensive Documentation Complete (July 11, 2025)
-✅ **PRD.md**: Complete product requirements with user personas, tabbed UI specs, success metrics  
+### Delegation-Centric Documentation Complete (July 11, 2025)
+✅ **PRD.md**: Updated for task delegation platform with quick-chat interface and workflow commands  
+✅ **UI_MOCKUPS.md**: Enhanced with delegation widgets, find_relevant_chats(), and task orchestration  
 ✅ **IMPLEMENTATION_ROADMAP.md**: 16-week phased approach with specific deliverables and timelines  
-✅ **UI_MOCKUPS.md**: Detailed ASCII mockups with Textual widget specifications  
 ✅ **schema_v3.sql**: Enhanced database schema with 12 tables, views, triggers, and FTS search  
 ✅ **Working Textual UI**: `cafe open textual` functional with virtual environment management
+✅ **find_relevant_chats()**: Function specification for contextual session discovery and resumption
 
-### Phase 1 Implementation Priorities (READY TO BEGIN)
+### Phase 1 Delegation Platform Priorities (READY TO BEGIN)
 1. **Database Migration System**: V2→V3 schema upgrade preserving existing 2778 activities
-2. **Enhanced MCP Server**: Core intelligence tools (project_tools, session_tools, claude_code_tools)
-3. **Basic TUI Enhancement**: Transform hello_world.py into project browser with session listing
-4. **Database Integration**: Connect Textual UI to V3 schema with real project/session data
-5. **Tabbed Interface Foundation**: Implement TabbedContent widget for session management
+2. **Quick-Chat Delegation Widget**: Primary interface for rapid task assignment via natural language
+3. **find_relevant_chats() Implementation**: Semantic search for contextual session discovery
+4. **Task-State Session Management**: Enhanced session tracking with Planning/Analyzing/Implementing states
+5. **Workflow Command Integration**: /plan, /analyze, /act command routing to appropriate sessions
+6. **Claude Code --resume Integration**: Async communication layer for background task delegation
 
 ### Textual Integration Discovery (July 11, 2025)
 **Platform**: https://github.com/Textualize/textual - Python TUI framework
