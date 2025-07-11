@@ -38,6 +38,24 @@ class MockCommand:
     description: str
     category: str  # 'workflow', 'test', 'deploy', 'analyze'
 
+@dataclass
+class MockProject:
+    """Mock project data"""
+    name: str
+    path: str
+    status: str  # 'active', 'idle', 'issues'
+    sessions: List[str]  # session IDs
+    activity_level: int  # 0-3 (●●●)
+    
+@dataclass
+class MockFile:
+    """Mock file data"""
+    name: str
+    path: str
+    status: str  # 'modified', 'created', 'read', 'referenced'
+    in_context: bool
+    activity_level: int  # 0-3 (●●●)
+
 # Sample session data
 MOCK_SESSIONS = [
     MockSession(
@@ -178,3 +196,93 @@ def get_task_status_emoji(status: str) -> str:
         'failed': '❌'
     }
     return task_emojis.get(status, '❓')
+
+# Sample project data
+MOCK_PROJECTS = [
+    MockProject(
+        name="webapp",
+        path="/home/alex/projects/webapp",
+        status="active", 
+        sessions=["abc123", "def456", "ghi789"],
+        activity_level=3
+    ),
+    MockProject(
+        name="api-server",
+        path="/home/alex/projects/api-server",
+        status="issues",
+        sessions=["xyz999"],
+        activity_level=1
+    ),
+    MockProject(
+        name="mobile",
+        path="/home/alex/projects/mobile",
+        status="idle",
+        sessions=["jkl012"],
+        activity_level=0
+    )
+]
+
+# Sample file data
+MOCK_FILES = [
+    # webapp files
+    MockFile("oauth.js", "src/auth/oauth.js", "modified", True, 3),
+    MockFile("middleware.js", "src/auth/middleware.js", "read", True, 2),
+    MockFile("tokens.js", "src/auth/tokens.js", "created", False, 1),
+    MockFile("auth.test.js", "tests/auth.test.js", "created", True, 3),
+    MockFile("ThemeToggle.jsx", "src/components/ThemeToggle.jsx", "modified", True, 2),
+    MockFile("themes.css", "src/styles/themes.css", "modified", True, 1),
+    MockFile("queries.sql", "src/db/queries.sql", "referenced", True, 1),
+    MockFile("User.js", "src/models/User.js", "read", True, 1),
+    MockFile("package.json", "package.json", "read", False, 0),
+    
+    # api-server files  
+    MockFile("auth.js", "src/routes/auth.js", "modified", True, 1),
+    MockFile("middleware.js", "src/middleware/auth.js", "read", False, 0),
+    
+    # mobile files (minimal)
+    MockFile("App.js", "src/App.js", "read", False, 0),
+    MockFile("package.json", "package.json", "read", False, 0)
+]
+
+def get_projects() -> List[MockProject]:
+    """Get all mock projects"""
+    return MOCK_PROJECTS
+
+def get_project_by_name(name: str) -> MockProject | None:
+    """Get project by name"""
+    return next((p for p in MOCK_PROJECTS if p.name == name), None)
+
+def get_files() -> List[MockFile]:
+    """Get all mock files"""
+    return MOCK_FILES
+
+def get_files_by_project(project_name: str) -> List[MockFile]:
+    """Get files for a specific project"""
+    # Simple filtering based on common patterns
+    if project_name == "webapp":
+        return [f for f in MOCK_FILES if not f.path.startswith("src/routes/") and f.name != "App.js"]
+    elif project_name == "api-server":
+        return [f for f in MOCK_FILES if f.path.startswith("src/routes/") or f.path.startswith("src/middleware/")]
+    elif project_name == "mobile":
+        return [f for f in MOCK_FILES if f.name == "App.js" or (f.name == "package.json" and project_name == "mobile")]
+    return []
+
+def get_context_files_by_session(session_id: str) -> List[MockFile]:
+    """Get files currently in context for a session"""
+    session = get_session_by_id(session_id)
+    if not session:
+        return []
+    
+    context_paths = session.files_context
+    return [f for f in MOCK_FILES if any(path in f.path for path in context_paths)]
+
+def get_activity_emoji(level: int) -> str:
+    """Get activity level emoji representation"""
+    if level == 3:
+        return "●●●"
+    elif level == 2:
+        return "●●○"
+    elif level == 1:
+        return "●○○"
+    else:
+        return "○○○"
