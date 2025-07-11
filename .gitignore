@@ -19,3 +19,6 @@ cafedelic.db
 
 # Chat logs
 desktop-full-chats/
+
+# Python virtual environments
+src/ui/textual/venv/
