@@ -2,64 +2,149 @@
 
 ## Overview
 
-This document provides detailed UI mockups and layout specifications for the Cafedelic Intelligence Platform TUI. All mockups use ASCII art to represent the terminal interface and specify exact Textual widget usage.
+This document provides detailed UI mockups and layout specifications for the Cafedelic Intelligence Platform TUI using a configurable panel system. All mockups use ASCII art to represent the terminal interface and specify exact Textual widget usage.
 
-## Main Dashboard Layout
+## Design Philosophy
 
-### Full Application Layout
+### VS Code-Inspired Configurable Panels
+The interface uses a flexible panel system that adapts to different developer workflows:
+- **LeftPanel**: ProjectTree + FileTree + SessionTree with configurable nesting
+- **MainViewFrame**: Central workspace with multiple view types
+- **RightPanel**: Intelligence feed and auxiliary content
+- **BottomPanel**: Terminal output and logs with overlay capability
+
+### Intelligence-First Architecture
+- **Reactive Components**: Database-driven UI with automatic updates
+- **Task Delegation**: Quick-chat interface for natural language task assignment
+- **Session Orchestration**: Multi-session coordination with status awareness
+- **Context Preservation**: Seamless handoffs between Claude Code sessions
+
+## Configurable Panel System Layout
+
+### Primary Layout: VS Code-Inspired Three-Panel System
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ ♦ Cafedelic Task Delegation Platform             [17:42] │ ● 2 active tasks │ Header
+│ ♦ Cafedelic Task Delegation Platform    [Ctrl+N] New [Ctrl+T] Task [17:42] │ Header
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Quick Delegate: [Type task here...] → [Session ▼] [Find Similar] [Send]    │ Quick Chat
-├─────────────────────────────────────────────────────────────────────────────┤
-│ [Projects] [auth: Planning ● ] [ui: Analyzing ○ ] [db: Stuck ⚠ ] [+ New]   │ Tab Bar
-├──────────────┬──────────────────────────────────────────────────────────────┤
-│              │ ┌──────────────────────────────────────────────────────────┐ │
-│  Projects    │ │ Session: auth-refactor                    ● Planning Phase │ │
-│              │ │ Project: /home/alex/projects/webapp              14:23:15 │ │
-│ ┌─ webapp    │ │ Delegated Task: Implement OAuth2 authentication flows    │ │
-│              │ │ Status: Planning... security architecture patterns       │ │
-│ ├─ api-srv   │ │                                                           │ │
-│ ├─ frontend  │ │ Files in Context:                                        │ │
-│ └─ mobile    │ │ ├── 📄 src/auth/oauth.js        ●●○ [Modified Today]    │ │
-│              │ │ ├── 📄 src/middleware/auth.js   ●○○ [Recently Read]     │ │
-│              │ │ ├── 📄 tests/auth.test.js       ○○● [Tests Created]     │ │
-│  Sessions    │ │ └── 📄 docs/oauth-spec.md       ○●○ [Referenced]        │ │
-│              │ │                                                           │ │
-│ ● webapp/1   │ │ Recent Activity:                                         │ │
-│ ○ webapp/2   │ │ [17:41] Reading OAuth2 specification documentation       │ │
-│ ⚠ api-srv/1  │ │ [17:39] Modified authentication middleware structure     │ │
-│              │ │ [17:37] Created comprehensive test suite for OAuth       │ │
-│  Health      │ │ [17:35] Analyzed security implications of token storage  │ │
-│              │ │                                                           │ │
-│ ● 2 Active   │ │ Session Health: ● Excellent    Progress: ████████░░ 80% │ │
-│ ○ 1 Idle     │ │ Duration: 3h 42m               Files: 15    Commits: 7  │ │
-│ ⚠ 1 Issues   │ └──────────────────────────────────────────────────────────┘ │
-├──────────────┴──────────────────────────────────────────────────────────────┤
-│ Task Delegation Feed:                                [Filter: All] [Search] │
-│ [17:42] 🔄 auth-refactor: Ready for /act command - plan complete          │
-│ [17:41] ✓ ui-components: Task completed - authentication UI ready          │
-│ [17:40] 📝 database-opt: Analyzing... query optimization strategies        │
-│ [17:39] ⚠ database-opt: Stuck - requires coordination with auth session   │
-│ [17:38] 🎯 Task suggested: Handoff auth tokens → database-opt session     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Status: 3 projects │ 4 sessions │ 2 active │ Health: ● Good │ [Q]uit [?]Help │ Footer
+│ Quick Delegate: [Type task here...] → [Session ▼] [Find Similar] [Send]    │ Quick Delegation
+├─────────────┬───────────────────────────────────────────┬─────────────────┤
+│ LeftPanel   │ MainViewFrame                             │ RightPanel      │
+│             │                                           │                 │
+│ ┌─Projects─┐│ ┌─── SessionViewPane: auth-refactor ────┐ │ ┌─Intelligence─┐ │
+│ │📁 webapp ││ │ Status: ● Planning Phase              │ │ │[17:42] 🔄    │ │
+│ │  ├─auth  ││ │ Task: Implement OAuth2 authentication │ │ │auth: Ready   │ │
+│ │  │ └─○○● ││ │                                       │ │ │for /act      │ │
+│ │  ├─ui    ││ │ Files in Context:                     │ │ │              │ │
+│ │  └─tests ││ │ ├─📄 src/auth/oauth.js      ●●○       │ │ │[17:41] ✓     │ │
+│ │           ││ │ ├─📄 src/middleware/auth.js ●○○       │ │ │ui: Task      │ │
+│ │📁 api-srv││ │ └─📄 tests/auth.test.js     ○○●       │ │ │completed     │ │
+│ │  └─stuck ││ │                                       │ │ │              │ │
+│ │           ││ │ Recent Activity:                      │ │ │[17:40] 📝    │ │
+│ └─Sessions─┘│ │ [17:41] Reading OAuth2 spec docs      │ │ │database:     │ │
+│ ● webapp/1  │ │ [17:39] Modified auth middleware       │ │ │Analyzing...  │ │
+│ ○ webapp/2  │ │ [17:37] Created test suite             │ │ │              │ │
+│ ⚠ api-srv/1 │ │                                       │ │ │🎯 Coordinate:│ │
+│             │ │ Health: ● Excellent  Progress: 80%    │ │ │auth → db    │ │
+│ [☑] FileTree│ │ Duration: 3h 42m     Files: 15       │ │ │handoff       │ │
+│ [Tab] Nav   │ └───────────────────────────────────────┘ │ └─────────────┘ │
+├─────────────┴───────────────────────────────────────────┴─────────────────┤
+│ Status: 3 projects │ 4 sessions │ 2 active │ Health: ● Good │ [?] Help     │ Footer
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Widget Mapping
-- **Header**: Custom header with title, clock, and session count
-- **Quick Chat**: Text input with session selector and find_relevant_chats() integration
-- **Tab Bar**: `TabbedContent` with task-state indicators and delegation controls
-- **Left Sidebar**: `Vertical` container with multiple sections
-- **Main Content**: Tab-specific content area with session details
-- **Task Delegation Feed**: `ScrollView` with task status updates and coordination alerts
-- **Footer**: Status bar with quick stats and keyboard shortcuts
+- **Header**: Custom header with keyboard shortcuts and real-time clock
+- **Quick Delegation**: `Input` widget with session targeting and find_relevant_chats() integration
+- **LeftPanel**: `Vertical` container with `DirectoryTree` for projects and sessions
+- **MainViewFrame**: `TabbedContent` with dynamic session tabs and view switching
+- **RightPanel**: `RichLog` for real-time intelligence feed and coordination alerts
+- **Footer**: Status bar with reactive project/session counts and health indicators
 
-## Tab Content Layouts
+## LeftPanel Configurations
 
-### Task Delegation Session Tab
+### Configuration 1: Nested Sessions in Projects (Default)
+```
+┌─ LeftPanel ──────────┐
+│ ┌─ ProjectTree ─────┐ │
+│ │ 📁 webapp         │ │
+│ │   ├─ 📁 auth ●●●  │ │ ← High activity folder
+│ │   │  ├─ oauth.js  │ │
+│ │   │  └─ tokens.js │ │
+│ │   ├─ 📁 ui ○●○    │ │
+│ │   └─ 📁 tests ○○● │ │
+│ │   ┌─ Sessions ───┐ │ │
+│ │   │ ● auth-1    │ │ │ ← Nested sessions
+│ │   │ ○ ui-comp   │ │ │
+│ │   └─────────────┘ │ │
+│ │                   │ │
+│ │ 📁 api-server     │ │
+│ │   ├─ 📁 routes    │ │
+│ │   └─ 📁 middleware│ │
+│ │   ┌─ Sessions ───┐ │ │
+│ │   │ ⚠ debug-1   │ │ │
+│ │   └─────────────┘ │ │
+│ └───────────────────┘ │
+│                       │
+│ [☑] Show FileTree     │ ← Configuration checkbox
+│ [○] Tab Navigation    │
+│ [○] Separate Trees    │
+└───────────────────────┘
+```
+
+### Configuration 2: Separate Trees with Tab Navigation
+```
+┌─ LeftPanel ──────────┐
+│ [Projects][Sessions] │ ← Tab bar navigation
+│ ┌─ ProjectTree ─────┐ │
+│ │ 📁 webapp    ●●●  │ │
+│ │ 📁 api-srv   ⚠○○  │ │
+│ │ 📁 frontend  ○●○  │ │
+│ │ 📁 mobile    ○○○  │ │
+│ └───────────────────┘ │
+│                       │
+│ Quick Actions:        │
+│ [+ New Project]       │
+│ [📊 Analytics]        │
+│ [⚙️ Settings]         │
+│                       │
+│ [☐] Show FileTree     │
+│ [●] Tab Navigation    │
+│ [○] Separate Trees    │
+└───────────────────────┘
+```
+
+### Configuration 3: File-Only Tree with Project Switching
+```
+┌─ LeftPanel ──────────┐
+│ Project: [webapp ▼]   │ ← Project selector
+│ ┌─ FileTree ────────┐ │
+│ │ 📁 src/           │ │
+│ │ ├─ 📁 auth/ ●●●   │ │
+│ │ │  ├─ oauth.js ●  │ │
+│ │ │  └─ tokens.js ○ │ │
+│ │ ├─ 📁 components/ │ │
+│ │ │  ├─ Auth.js ●   │ │
+│ │ │  └─ Login.js ○  │ │
+│ │ └─ 📁 utils/      │ │
+│ │    └─ helpers.js  │ │
+│ │ 📁 tests/         │ │
+│ │ ├─ auth.test.js ● │ │
+│ │ └─ ui.test.js ○   │ │
+│ └───────────────────┘ │
+│                       │
+│ Active Sessions:      │
+│ ● auth-refactor       │
+│ ○ ui-components       │
+│                       │
+│ [●] Show FileTree     │
+│ [○] Tab Navigation    │
+│ [●] Separate Trees    │
+└───────────────────────┘
+```
+
+## MainViewFrame Content Types
+
+### SessionViewPane: Individual Session Management
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ Session: auth-refactor [abc123]                      ● Planning Phase   │
