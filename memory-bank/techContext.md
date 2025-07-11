@@ -63,19 +63,25 @@ cafedelic/
 │   │   ├── activity-monitor.ts        # Log watching
 │   │   └── log-parser.ts              # Activity extraction
 │   └── ui/                            # User interface layer
-│       ├── textual/                   # Python TUI implementation
-│       │   ├── hello_world.py         # Main Textual application
+│       ├── textual/                   # Python TUI implementation (WORKING)
+│       │   ├── hello_world.py         # Main Textual application with cafe branding
 │       │   ├── run.py                 # Entry point script
 │       │   ├── cafe_ui/
-│       │   │   └── adapter.py         # MCP server interface
-│       │   ├── requirements.txt       # Python dependencies
-│       │   └── README.md              # Setup instructions
+│       │   │   └── adapter.py         # MCP server interface skeleton
+│       │   ├── requirements.txt       # Python dependencies (textual, requests)
+│       │   ├── README.md              # Setup instructions
+│       │   └── venv/                  # Virtual environment (auto-created)
 │       ├── terminal-adapter.ts        # Tmux integration (legacy)
 │       ├── vscode-adapter.ts          # VS Code extension
 │       └── cli-adapter.ts             # Command line interface
-├── database/
-│   ├── cafedelic.db                   # SQLite database
-│   └── migrations/                    # Schema versions
+├── database/                          # Intelligence database (NEW)
+│   ├── schema_v3.sql                  # Enhanced SQLite schema
+│   ├── migrations/                    # Database migration system
+│   └── cafedelic.db                   # Current V2 database (2778 activities, 30 sessions)
+├── docs/                              # Comprehensive documentation (NEW)
+│   ├── PRD.md                         # Product Requirements Document
+│   ├── IMPLEMENTATION_ROADMAP.md      # 16-week phased development plan
+│   └── UI_MOCKUPS.md                  # Detailed ASCII interface mockups
 ├── scripts/                           # Legacy bash scripts (V2)
 │   ├── emacs/                         # Emacs integration
 │   └── pane-management/               # Tmux operations
