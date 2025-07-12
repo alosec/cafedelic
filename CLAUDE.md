@@ -41,6 +41,76 @@ rm /tmp/gh-comment-body.md
 
 ---
 
+## Python Environment Setup
+
+### Textual UI Environment
+
+The Textual TUI components use a **dedicated Python virtual environment** located at:
+```
+src/ui/textual/venv/
+```
+
+**IMPORTANT**: Do NOT create additional virtual environments in the project root. The existing venv in `src/ui/textual/` is the correct location.
+
+### Setup Instructions
+
+To work with the Python TUI components:
+
+```bash
+# Navigate to textual UI directory
+cd src/ui/textual
+
+# Activate existing virtual environment
+source venv/bin/activate
+
+# Install/update dependencies
+pip install -r requirements.txt
+
+# Run the TUI
+python run.py
+```
+
+### Dependencies
+
+The TUI requires these packages (defined in `requirements.txt`):
+- `textual>=0.80.0` - Terminal UI framework
+- `requests>=2.32.0` - HTTP client for MCP integration  
+- `aiofiles>=24.1.0` - Async file I/O
+- `aiosqlite>=0.20.0` - Async SQLite operations
+- `libtmux>=0.30.0` - Tmux session management
+
+### Package Structure
+
+The project uses proper Python package structure with `__init__.py` files:
+```
+src/
+├── __init__.py
+├── database/
+│   ├── __init__.py
+│   └── session_db.py
+└── ui/
+    ├── __init__.py
+    └── textual/
+        ├── __init__.py
+        ├── venv/ (virtual environment)
+        ├── requirements.txt
+        └── *.py (TUI modules)
+```
+
+All imports use absolute imports from the `src` package (e.g., `from src.database.session_db import get_database`).
+
+### Launch Commands
+
+The TUI is launched via the main CLI:
+```bash
+# From project root
+cafe open textual
+```
+
+This activates the virtual environment and runs the chat interface with real database integration.
+
+---
+
 ## Project Context
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
