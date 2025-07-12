@@ -4,12 +4,12 @@ Cafedelic Textual UI Entry Point
 Launches the cafedelic intelligence platform TUI.
 """
 
-from hello_world import CafedelicApp
+from simple_chat import SimpleChatApp
 
 
 def main():
-    """Launch the cafedelic textual UI."""
-    app = CafedelicApp()
+    """Launch the cafedelic simple chat interface."""
+    app = SimpleChatApp()
     app.run()
 
 

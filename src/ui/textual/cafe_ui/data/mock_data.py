@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Mock data for Cafedelic delegation platform demo
-Provides sample sessions, tasks, and delegation states for UI development.
+Mock data for Cafedelic simple chat interface
+Provides sample chat messages for UI development.
 """
 
 from dataclasses import dataclass
@@ -276,13 +276,44 @@ def get_context_files_by_session(session_id: str) -> List[MockFile]:
     context_paths = session.files_context
     return [f for f in MOCK_FILES if any(path in f.path for path in context_paths)]
 
-def get_activity_emoji(level: int) -> str:
-    """Get activity level emoji representation"""
-    if level == 3:
-        return "●●●"
-    elif level == 2:
-        return "●●○"
-    elif level == 1:
-        return "●○○"
-    else:
-        return "○○○"
+# Simple chat messages for demo
+CHAT_MESSAGES = [
+    {
+        "type": "system",
+        "content": "Welcome to Cafedelic! Type 'help' for available commands.",
+        "timestamp": "10:30:15"
+    },
+    {
+        "type": "user", 
+        "content": "status",
+        "timestamp": "10:30:22"
+    },
+    {
+        "type": "system",
+        "content": "System Status:\n• Cafedelic Server: Running\n• Active Sessions: 3\n• Database: Connected",
+        "timestamp": "10:30:23"
+    },
+    {
+        "type": "user",
+        "content": "delegate implement user authentication",
+        "timestamp": "10:32:10"
+    },
+    {
+        "type": "system",
+        "content": "Delegating task: 'implement user authentication'\n→ Finding best session...\n→ Task assigned to 'auth-refactor' session\n✓ Delegation complete. Session status: Planning...",
+        "timestamp": "10:32:12"
+    }
+]
+
+def get_chat_messages() -> List[Dict[str, str]]:
+    """Get sample chat messages for demo"""
+    return CHAT_MESSAGES.copy()
+
+# Legacy functions kept for compatibility with existing components
+def get_sessions():
+    """Legacy function - returns empty list"""
+    return []
+
+def get_commands():
+    """Legacy function - returns empty list"""
+    return []
