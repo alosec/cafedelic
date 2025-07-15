@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current State  
-- **Date**: July 11, 2025
-- **Focus**: V3 Task Delegation Platform - Working TUI Implementation
-- **Status**: Functional delegation platform skeleton with QuickChat, SessionTabs, TaskFeed components
+- **Date**: July 12, 2025
+- **Focus**: Real Claude Code Discovery System - Working Implementation
+- **Status**: Functional project discovery with database persistence and chat interface
 
 ## V3 Paradigm Shift: Asynchronous Task Delegation Platform
 
@@ -126,35 +126,53 @@ pipe(
 6. `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
 7. `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
 8. `get_details_for_pane_by_name` - Get pane information
-## Current Implementation Focus (Post-Exploration)
+## Current Implementation Focus (Real Discovery Complete - July 12, 2025)
 
-### Resolved Architecture: MCP Intelligence Platform
-**Decision**: Cafedelic is an MCP server providing intelligence layer for Claude Code project/session management
-- **Core**: SQLite database as single source of truth
-- **Interface**: Natural language MCP tools for conversational management
-- **Display**: Plugin adapter system supporting terminal, VS Code, web interfaces
-- **Scope**: Intelligence and coordination, not terminal UI replacement
+### Resolved Architecture: Hybrid File-Database Intelligence Platform
+**Decision**: Files are source of truth for Claude sessions, database provides intelligence layer
+- **Sessions**: Claude Code JSONL files remain authoritative (~/.claude/projects/)
+- **Projects**: Database tracks user-curated project intelligence and metadata
+- **Operations**: Session management works directly with files and processes
+- **Intelligence**: Database caches analysis, patterns, cross-session insights
 
-### Task Delegation Platform Implementation Complete (July 11, 2025)
-✅ **PRD.md**: Updated for task delegation platform with quick-chat interface and workflow commands  
-✅ **UI_MOCKUPS.md**: Enhanced with delegation widgets, find_relevant_chats(), and task orchestration  
-✅ **Working Textual UI**: Full delegation platform skeleton with QuickChatWidget, SessionTabsWidget, TaskFeedWidget
-✅ **Mock Data System**: Complete sample sessions, tasks, and commands for demonstration
-✅ **MainDashboard**: Integrated TUI with stats bar, keyboard shortcuts, and real-time updates
-✅ **find_relevant_chats()**: Function specification implemented in component architecture
-✅ **Project Commands Integration**: ~/.claude/commands/ dropdown integration designed
+### Real Discovery System Implementation Complete (July 12, 2025)
+✅ **Claude Code Discovery**: Complete JSONL parser and session extraction
+- Decodes Claude's path encoding (-home-alex-code-foo → /home/alex/code/foo)
+- Extracts session metadata: UUIDs, conversation turns, costs, file operations
+- Process-based active session detection
+- Robust error handling for malformed JSONL entries
 
-### Phase 1 Delegation Platform Priorities (SKELETON COMPLETE)
-✅ **Quick-Chat Delegation Widget**: Primary interface for rapid task assignment via natural language
-✅ **Task-State Session Management**: Enhanced session tracking with Planning/Analyzing/Implementing states
-✅ **Workflow Command Integration**: /plan, /analyze, /act command routing to appropriate sessions
-✅ **TUI Component Architecture**: Complete working skeleton with mock data integration
+✅ **Project Discovery**: Filesystem scanning with Git intelligence
+- Scans directories for projects (Git repos, package.json, etc.)
+- Cross-references with Claude Code sessions
+- Extracts Git remote URLs and repository metadata
+- Suggests common project directories for scanning
 
-**Next Implementation Steps**:
-1. **Database Migration System**: V2→V3 schema upgrade preserving existing 2778 activities
-2. **Real Data Integration**: Connect TUI components to actual SQLite database
-3. **Claude Code --resume Integration**: Async communication layer for background task delegation
-4. **MCP Server Enhancement**: Add delegation tools to existing MCP infrastructure
+✅ **Database Integration**: Enhanced schema with real discovery support
+- Projects table with Git metadata and discovery source tracking
+- Session tracking with Claude UUIDs and JSONL file paths
+- Project scan paths for user-defined discovery locations
+- Proper indexes and constraints for performance
+
+✅ **Chat Interface**: Working discovery commands replacing mock data
+- scan ~/code - Discovers projects and adds to database
+- suggest - Recommends project paths based on Claude sessions
+- projects - Shows tracked projects from database
+- Real Git repository detection and database persistence
+
+### Architectural Paradigm Established
+**Files as Source of Truth**: Claude Code JSONL files for session data
+**Database as Intelligence**: Cafedelic tracks projects, metadata, analysis
+**Hybrid Operations**: 
+- Session operations (open, resume) → Direct file/process access
+- Project management → Database-driven with filesystem validation
+- Intelligence queries → Database with real-time file system reconciliation
+
+**Next Implementation Priorities**:
+1. **Session-Project Linking**: Connect discovered Claude sessions to tracked projects
+2. **Session Intelligence**: Cache session analysis in database for cross-session insights
+3. **Real Session Management**: tmux integration with actual Claude Code session resumption
+4. **Activity Monitoring**: Real-time session activity tracking and intelligence updates
 
 ### Textual Integration Discovery (July 11, 2025)
 **Platform**: https://github.com/Textualize/textual - Python TUI framework

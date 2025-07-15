@@ -36,6 +36,7 @@ class Session:
     task_description: str
     tmux_session_name: Optional[str]
     last_activity: str
+    claude_session_uuid: Optional[str] = None
     recent_activity_count: int = 0
 
 
@@ -170,6 +171,7 @@ class SessionDatabase:
                     s.task_description,
                     s.tmux_session_name,
                     s.last_activity,
+                    s.claude_session_uuid,
                     0 as recent_activity_count
                 FROM sessions s
                 JOIN projects p ON s.project_id = p.id
@@ -194,6 +196,7 @@ class SessionDatabase:
                 task_description=row['task_description'] or 'No task assigned',
                 tmux_session_name=row['tmux_session_name'],
                 last_activity=row['last_activity'],
+                claude_session_uuid=row['claude_session_uuid'] if 'claude_session_uuid' in row.keys() else None,
                 recent_activity_count=row['recent_activity_count'] if 'recent_activity_count' in row.keys() else 0
             ))
         
@@ -312,6 +315,62 @@ class SessionDatabase:
             INSERT INTO sessions (short_id, project_id, name, task_description)
             VALUES (?, ?, ?, ?)
         """, (short_id, project_row['id'], name, task_description))
+        conn.commit()
+        
+        return short_id
+    
+    def create_session_from_claude_data(self, claude_session, project_id: str) -> str:
+        """Create session from discovered Claude Code session data"""
+        conn = self.connect()
+        
+        # Check if session already exists by claude_session_uuid
+        cursor = conn.execute("SELECT short_id FROM sessions WHERE claude_session_uuid = ?", (claude_session.session_uuid,))
+        existing = cursor.fetchone()
+        if existing:
+            return existing['short_id']  # Already exists, return existing short_id
+        
+        # Find next available short_id
+        cursor = conn.execute("SELECT short_id FROM sessions WHERE short_id LIKE 's%' ORDER BY short_id DESC LIMIT 1")
+        last_id = cursor.fetchone()
+        if last_id:
+            next_num = int(last_id['short_id'][1:]) + 1
+        else:
+            next_num = 1
+        
+        short_id = f"s{next_num}"
+        
+        # Get project's actual ID
+        cursor = conn.execute("SELECT id FROM projects WHERE short_id = ?", (project_id,))
+        project_row = cursor.fetchone()
+        if not project_row:
+            raise ValueError(f"Project {project_id} not found")
+        
+        # Create session name from project and conversation count
+        session_name = f"{claude_session.project_name}-{claude_session.conversation_turns}turns"
+        
+        # Determine status based on activity
+        status = 'active' if claude_session.is_active else 'available'
+        
+        conn.execute("""
+            INSERT INTO sessions (
+                short_id, project_id, name, claude_session_uuid, 
+                conversation_turns, total_cost_usd, jsonl_file_path,
+                status, task_description, created_at, last_activity
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            short_id, 
+            project_row['id'], 
+            session_name,
+            claude_session.session_uuid,
+            claude_session.conversation_turns,
+            claude_session.total_cost_usd,
+            claude_session.jsonl_file_path,
+            status,
+            f"Discovered Claude session with {claude_session.conversation_turns} turns",
+            claude_session.created_at.isoformat(),
+            claude_session.last_activity.isoformat()
+        ))
         conn.commit()
         
         return short_id

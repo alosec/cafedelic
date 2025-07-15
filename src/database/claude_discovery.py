@@ -8,7 +8,7 @@ import os
 import json
 import uuid
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 
@@ -43,9 +43,28 @@ class ClaudeDiscovery:
     
     def __init__(self):
         self.claude_dir = Path.home() / '.claude' / 'projects'
+        self.path_mappings = self._load_path_mappings()
+    
+    def _load_path_mappings(self) -> Dict[str, str]:
+        """Load path mappings from JSON file"""
+        try:
+            mappings_file = Path(__file__).parent / 'path_mappings.json'
+            if mappings_file.exists():
+                with open(mappings_file, 'r') as f:
+                    data = json.loads(f.read())
+                    return data.get('mappings', {})
+            return {}
+        except Exception as e:
+            print(f"Warning: Could not load path mappings: {e}")
+            return {}
         
     def decode_project_path(self, encoded_name: str) -> str:
         """Decode Claude's directory encoding back to filesystem path"""
+        # First check if we have a manual mapping for this encoded name
+        if encoded_name in self.path_mappings:
+            return self.path_mappings[encoded_name]
+        
+        # Fallback to algorithmic decoding
         # Claude encodes paths like: /home/alex/code/cafedelic -> -home-alex-code-cafedelic
         if encoded_name.startswith('-'):
             # Remove leading dash and replace remaining dashes with slashes
@@ -83,7 +102,7 @@ class ClaudeDiscovery:
                     session_uuids.append(session_uuid)
                     
                     # Get file modification time for last activity
-                    file_mtime = datetime.fromtimestamp(session_file.stat().st_mtime)
+                    file_mtime = datetime.fromtimestamp(session_file.stat().st_mtime, tz=timezone.utc)
                     if last_activity is None or file_mtime > last_activity:
                         last_activity = file_mtime
                         
@@ -165,9 +184,9 @@ class ClaudeDiscovery:
             
             # Use file modification time if no timestamps in content
             if last_activity is None:
-                last_activity = datetime.fromtimestamp(session_file_path.stat().st_mtime)
+                last_activity = datetime.fromtimestamp(session_file_path.stat().st_mtime, tz=timezone.utc)
             if created_at is None:
-                created_at = datetime.fromtimestamp(session_file_path.stat().st_ctime)
+                created_at = datetime.fromtimestamp(session_file_path.stat().st_ctime, tz=timezone.utc)
             
             # Check if session is currently active (basic process check)
             is_active = self._is_session_active(session_uuid)

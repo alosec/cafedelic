@@ -8,18 +8,18 @@
 **Integration**: Emacs auto-opening works, now part of display adapters
 **Property System**: Multi-dimensional pane management integrated into terminal adapter
 
-### Current Focus: Working Delegation Platform Skeleton
-**Vision**: Asynchronous task delegation platform for Claude Code orchestration
-**Approach**: Textual TUI with quick-chat interface and task-state management
-**Status**: Functional UI skeleton complete, ready for database integration and Claude Code connectivity
+### Current Focus: Real Discovery System Complete
+**Vision**: Intelligence layer over Claude Code's native session storage
+**Approach**: Hybrid file-database architecture with real JSONL parsing
+**Status**: Working project discovery with database persistence and chat interface
 
 ## Completed Decisions ✅
 
 ### V3 Architectural Choices (FINALIZED)
-- **MCP Intelligence Platform**: Primary interface through conversational tools
-- **Database-First Design**: SQLite as single source of truth for all intelligence
-- **Display Adapter Pattern**: Separate intelligence from presentation layer
-- **Assistant-Agnostic Schema**: Support Claude Code now, others later
+- **Hybrid File-Database Platform**: Files are source of truth for sessions, database provides intelligence
+- **Real Discovery System**: Parse Claude Code's native JSONL storage for session data
+- **Database Intelligence Layer**: SQLite for project tracking, metadata, and cross-session analysis
+- **Chat Interface**: Terminal-based project discovery and session management
 - **Enhancement Philosophy**: Integrate with existing tools, don't replace them
 - **Local-First Approach**: All data stored locally, privacy-focused
 

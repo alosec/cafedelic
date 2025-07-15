@@ -18,6 +18,7 @@ import os
 from src.database.session_db import get_database
 from src.database.claude_discovery import get_claude_discovery
 from src.database.project_discovery import get_project_discovery
+from src.database.session_loader import get_session_loader
 
 
 class SimpleChatApp(App):
@@ -78,6 +79,7 @@ class SimpleChatApp(App):
         self.session_manager = get_session_manager()
         self.claude_discovery = get_claude_discovery()
         self.project_discovery = get_project_discovery()
+        self.session_loader = get_session_loader()
         
         # Load initial messages
         self.messages = get_chat_messages()
@@ -121,6 +123,8 @@ class SimpleChatApp(App):
             self._show_projects()
         elif message_lower == "sessions":
             self._show_sessions()
+        elif message_lower == "load sessions":
+            self._load_sessions()
         elif message_lower.startswith("open "):
             session_id = message[5:].strip()  # Remove "open " prefix
             self._open_session(session_id)
@@ -188,6 +192,7 @@ class SimpleChatApp(App):
 • scan <path> - Scan directory for projects and add to database
 • projects - List tracked projects from database
 • sessions - List Claude Code sessions
+• load sessions - Load discovered Claude Code sessions into database
 • open <id> - Open/resume session (e.g., 'open s1')
 • kill <id> - Terminate session (e.g., 'kill s1')
 • delegate <task> - Delegate task to AI
@@ -506,6 +511,45 @@ Run 'init' to set up database."""
             
         except Exception as e:
             self._add_system_message(f"Error delegating task: {e}")
+    
+    def _load_sessions(self) -> None:
+        """Load discovered Claude Code sessions into database"""
+        try:
+            if not self.db.is_initialized():
+                self._add_system_message("Database not initialized. Run 'init' first.")
+                return
+            
+            self._add_system_message("Discovering Claude Code sessions...")
+            
+            # Get summary of current state
+            summary = self.session_loader.get_session_loading_summary()
+            
+            self._add_system_message(f"Found {summary['claude_sessions_discovered']} Claude sessions")
+            self._add_system_message(f"Database has {summary['database_sessions_from_claude']} sessions from Claude")
+            
+            if summary['claude_sessions_not_in_db'] == 0:
+                self._add_system_message("✓ All Claude sessions are already loaded in database")
+                return
+            
+            self._add_system_message(f"Loading {summary['claude_sessions_not_in_db']} new sessions...")
+            
+            # Load the sessions
+            results = self.session_loader.load_discovered_sessions()
+            
+            # Report results
+            self._add_system_message(f"✓ Session loading complete:")
+            self._add_system_message(f"  • Discovered: {results['discovered']} sessions")
+            self._add_system_message(f"  • Loaded: {results['loaded']} new sessions")
+            self._add_system_message(f"  • Skipped: {results['skipped']} (already existed)")
+            
+            if results['errors'] > 0:
+                self._add_system_message(f"  • Errors: {results['errors']} sessions failed to load")
+            
+            if results['loaded'] > 0:
+                self._add_system_message("Use 'sessions' to see all loaded sessions")
+                
+        except Exception as e:
+            self._add_system_message(f"Error loading sessions: {e}")
     
     def _clear_chat(self) -> None:
         """Clear chat history"""

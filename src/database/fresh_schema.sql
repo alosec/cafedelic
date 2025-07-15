@@ -110,6 +110,7 @@ SELECT
     s.task_description,
     s.tmux_session_name,
     s.last_activity,
+    s.claude_session_uuid,
     (SELECT COUNT(*) FROM activities a WHERE a.session_id = s.id AND a.created_at > datetime('now', '-1 hour')) as recent_activity_count
 FROM sessions s
 JOIN projects p ON s.project_id = p.id
