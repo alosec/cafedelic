@@ -22,7 +22,13 @@ case "${1:-}" in
     load-sessions)
         exec "$CAFEDELIC_DIR/cli/commands/load-sessions.sh" "${@:2}"
         ;;
-    --help|-h|"")
+    sessions)
+        exec "$CAFEDELIC_DIR/cli/commands/sessions.sh" "${@:2}"
+        ;;
+    projects)
+        exec "$CAFEDELIC_DIR/cli/commands/projects.sh" "${@:2}"
+        ;;
+    --help|-h)
         cat << 'EOF'
 Cafedelic CLI - Claude Code powered tmux IDE
 
@@ -33,6 +39,8 @@ Commands:
   deploy         Create 2-pane IDE layout (70% emacs, 30% system events)
   open           Launch UI interfaces (textual)
   load-sessions  Load discovered Claude Code sessions into database
+  sessions       Session management (list from database, scan from Claude Code files)
+  projects       Project management (list from database, scan from filesystem)
 
 Options:
   --help   Show this help message
@@ -41,12 +49,19 @@ Examples:
   cafe init                    # Check system readiness
   cafe deploy                  # Create IDE layout in current tmux session
   cafe deploy --new            # Create new tmux session with IDE layout
+  cafe                         # Launch Textual intelligence platform UI (default)
   cafe open textual            # Launch Textual intelligence platform UI
   cafe load-sessions           # Load Claude Code sessions into database
-  cafe load-sessions --verbose # Load sessions with detailed output
+  cafe sessions list           # List sessions from database
+  cafe sessions scan           # Scan Claude Code files for sessions
+  cafe projects list           # List projects from database  
+  cafe projects scan ~/code    # Scan filesystem for projects
 
 EOF
         exit 0
+        ;;
+    "")
+        exec "$CAFEDELIC_DIR/cli/commands/open.sh" textual
         ;;
     *)
         echo "Unknown command: $1"
