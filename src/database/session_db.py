@@ -45,11 +45,9 @@ class SessionDatabase:
     
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Default to ~/.cafedelic/intelligence.db
-            home = Path.home()
-            cafedelic_dir = home / '.cafedelic'
-            cafedelic_dir.mkdir(exist_ok=True)
-            db_path = str(cafedelic_dir / 'intelligence.db')
+            # Default to project root cafedelic.db
+            project_root = Path(__file__).parent.parent.parent
+            db_path = str(project_root / 'cafedelic.db')
         
         self.db_path = db_path
         self.connection = None
@@ -73,7 +71,7 @@ class SessionDatabase:
         conn = self.connect()
         
         # Read and execute schema
-        schema_path = Path(__file__).parent / 'fresh_schema.sql'
+        schema_path = Path(__file__).parent / 'cafedelic.sql'
         with open(schema_path, 'r') as f:
             schema_sql = f.read()
         

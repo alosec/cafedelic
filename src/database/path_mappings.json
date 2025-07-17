@@ -1,0 +1,30 @@
+{
+  "_comment": "Maps Claude Code directory names to actual filesystem paths",
+  "_instructions": "Add mappings for Claude directories that don't decode correctly",
+  "mappings": {
+    "-home-alex-code-cafedelic": "/home/alex/code/cafedelic",
+    "-home-alex-code-biz-dashboard": "/home/alex/code/biz-dashboard",
+    "-home-alex-code-claude-code-sandbox": "/home/alex/code/claude-code-sandbox",
+    "-home-alex-code-claude-squad": "/home/alex/code/claude-squad",
+    "-home-alex-code-cline": "/home/alex/code/cline",
+    "-home-alex-code-deli": "/home/alex/code/deli",
+    "-home-alex-code-for-clients": "/home/alex/code/for-clients",
+    "-home-alex-code-github-mcp-server": "/home/alex/code/github-mcp-server",
+    "-home-alex-code-mcp": "/home/alex/code/mcp",
+    "-home-alex-code-repos": "/home/alex/code/repos",
+    "-home-alex-code-teemax": "/home/alex/code/teemax",
+    "-home-alex-code-repos-alexgarciablog": "/home/alex/code/repos/alexgarciablog",
+    "-home-alex-code-repos-austin-pedicab-rides-v4": "/home/alex/code/repos/austin_pedicab_rides_v4",
+    "-home-alex-code-repos-backup-pedicalendar": "/home/alex/code/repos/backup_pedicalendar",
+    "-home-alex-code-repos-debian-setup": "/home/alex/code/repos/debian_setup",
+    "-home-alex-code-repos-events-manager": "/home/alex/code/repos/events-manager",
+    "-home-alex-code-repos-exec-insight-chat": "/home/alex/code/repos/exec-insight-chat",
+    "-home-alex-code-repos-life-manager": "/home/alex/code/repos/life-manager",
+    "-home-alex-code-repos-mcp-server-cloudflare": "/home/alex/code/repos/mcp-server-cloudflare",
+    "-home-alex-code-repos-ondacode": "/home/alex/code/repos/ondacode",
+    "-home-alex-code-repos-one-poem-every-day": "/home/alex/code/repos/one-poem-every-day",
+    "-home-alex-code-repos-pedicab512": "/home/alex/code/repos/pedicab512",
+    "-home-alex-code-repos-pedicalendar-v2": "/home/alex/code/repos/pedicalendar_v2",
+    "-home-alex-code-repos-woodcraft": "/home/alex/code/repos/woodcraft"
+  }
+}
