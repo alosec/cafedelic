@@ -31,3 +31,4 @@ __pycache__/
 # Editor temp files
 #*
 .#*
+src/ui/textual/__pycache__/
