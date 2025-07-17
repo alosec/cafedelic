@@ -26,20 +26,32 @@ class CafedelicMCPAdapter:
         except Exception as e:
             return {"status": "error", "error": str(e)}
     
-    async def get_active_projects(self) -> Dict[str, Any]:
-        """Get list of active projects from the intelligence database."""
-        # TODO: Implement when MCP project tools are available
-        return {"projects": [], "status": "not_implemented"}
+    def get_projects(self) -> Dict[str, Any]:
+        """Get list of active projects from Claude Code filesystem."""
+        try:
+            response = self.session.get(f"{self.base_url}/api/projects", timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {"projects": [], "error": str(e)}
     
-    async def get_session_status(self, project_id: Optional[str] = None) -> Dict[str, Any]:
-        """Get current session status and activity."""
-        # TODO: Implement when MCP session tools are available
-        return {"sessions": [], "status": "not_implemented"}
+    def get_sessions(self) -> Dict[str, Any]:
+        """Get current sessions from Claude Code filesystem."""
+        try:
+            response = self.session.get(f"{self.base_url}/api/sessions", timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {"sessions": [], "error": str(e)}
     
-    async def get_intelligence_summary(self) -> Dict[str, Any]:
-        """Get current AI activity summary from claude -p analysis."""
-        # TODO: Implement when intelligence tools are available
-        return {"summary": "No active intelligence", "status": "not_implemented"}
+    def get_session_summary(self) -> Dict[str, Any]:
+        """Get session summary statistics."""
+        try:
+            response = self.session.get(f"{self.base_url}/api/sessions/summary", timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return {"totalSessions": 0, "activeSessions": 0, "totalProjects": 0, "totalCost": 0, "error": str(e)}
 
 
 # Singleton instance for the UI to use

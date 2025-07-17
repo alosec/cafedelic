@@ -12,9 +12,9 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from rich.text import Text
 
-from ..data.mock_data import (
-    get_project_by_name, get_sessions, get_files_by_project,
-    get_activity_emoji, MockProject
+from ..data.claude_code_data import (
+    get_sessions, get_files_by_project,
+    get_activity_emoji
 )
 
 

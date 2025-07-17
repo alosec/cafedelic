@@ -7,6 +7,7 @@ import express from 'express';
 import { mcpRouter } from './mcp-tools/mcp-server.js';
 import { getSessionService } from './services/session-service.js';
 import { getProjectService } from './services/project-service.js';
+import { getClaudeCodeService } from './services/claude-code-service.js';
 
 const app = express();
 const PORT = process.env.MCP_PORT || 3001;
@@ -20,6 +21,7 @@ app.use('/mcp', mcpRouter);
 // Session API endpoints
 const sessionService = getSessionService();
 const projectService = getProjectService();
+const claudeCodeService = getClaudeCodeService();
 
 // GET /mcp/sessions - List sessions from database
 app.get('/mcp/sessions', async (req, res) => {
@@ -112,6 +114,34 @@ app.get('/mcp/projects/scan', async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: `Failed to scan projects: ${error}` });
+  }
+});
+
+// API endpoints for TUI (bypassing database)
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projects = await claudeCodeService.getProjects();
+    res.json({ projects });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to get projects: ${error}` });
+  }
+});
+
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const sessions = await claudeCodeService.getSessions();
+    res.json({ sessions });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to get sessions: ${error}` });
+  }
+});
+
+app.get('/api/sessions/summary', async (req, res) => {
+  try {
+    const summary = await claudeCodeService.getSessionSummary();
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to get session summary: ${error}` });
   }
 });
 

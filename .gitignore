@@ -22,3 +22,12 @@ desktop-full-chats/
 
 # Python virtual environments
 src/ui/textual/venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Editor temp files
+#*
+.#*

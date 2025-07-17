@@ -15,10 +15,9 @@ from rich.text import Text
 from pathlib import Path
 from typing import Optional
 
-from ..data.mock_data import (
+from ..data.claude_code_data import (
     get_projects, get_sessions, get_files_by_project, 
-    get_context_files_by_session, get_activity_emoji,
-    MockProject, MockSession, MockFile
+    get_context_files_by_session, get_activity_emoji
 )
 
 

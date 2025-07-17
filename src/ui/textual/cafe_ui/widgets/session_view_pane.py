@@ -14,9 +14,9 @@ from textual.widget import Widget
 from rich.text import Text
 from datetime import datetime
 
-from ..data.mock_data import (
+from ..data.claude_code_data import (
     get_session_by_id, get_context_files_by_session, 
-    get_activity_emoji, MockSession
+    get_activity_emoji
 )
 
 

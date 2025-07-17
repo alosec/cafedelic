@@ -11,7 +11,7 @@ from textual.widget import Widget
 from textual.reactive import reactive
 from textual.message import Message
 
-from ..data.mock_data import get_sessions, get_commands, MockSession
+from ..data.claude_code_data import get_sessions
 
 
 class QuickChatWidget(Widget):
