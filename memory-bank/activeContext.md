@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current State  
-- **Date**: July 12, 2025
-- **Focus**: Real Claude Code Discovery System - Working Implementation
-- **Status**: Functional project discovery with database persistence and chat interface
+- **Date**: July 15, 2025
+- **Focus**: Claude Code Data Integration - Multiple Approaches to Database Population
+- **Status**: Discovery system built, database integration incomplete - need to populate database with real CC data
 
 ## V3 Paradigm Shift: Asynchronous Task Delegation Platform
 
@@ -126,53 +126,50 @@ pipe(
 6. `send_special_key_to_pane` - Send special keys (enter, ctrl-c, etc.)
 7. `send_ctrl_c_to_pane_by_name` - Send Ctrl-C with double-tap option
 8. `get_details_for_pane_by_name` - Get pane information
-## Current Implementation Focus (Real Discovery Complete - July 12, 2025)
+## Current Implementation Focus (Database Integration Challenge - July 15, 2025)
 
-### Resolved Architecture: Hybrid File-Database Intelligence Platform
-**Decision**: Files are source of truth for Claude sessions, database provides intelligence layer
-- **Sessions**: Claude Code JSONL files remain authoritative (~/.claude/projects/)
-- **Projects**: Database tracks user-curated project intelligence and metadata
-- **Operations**: Session management works directly with files and processes
-- **Intelligence**: Database caches analysis, patterns, cross-session insights
+### Core Challenge: Claude Code Data → Database Population
+**Problem**: Discovery system extracts CC data correctly, but database remains unpopulated
+**Impact**: TUI shows mock data instead of real projects/sessions
+**Urgency**: Must resolve to enable real task delegation platform
 
-### Real Discovery System Implementation Complete (July 12, 2025)
-✅ **Claude Code Discovery**: Complete JSONL parser and session extraction
-- Decodes Claude's path encoding (-home-alex-code-foo → /home/alex/code/foo)
-- Extracts session metadata: UUIDs, conversation turns, costs, file operations
-- Process-based active session detection
-- Robust error handling for malformed JSONL entries
+### Two Parallel Approaches to Explore
 
-✅ **Project Discovery**: Filesystem scanning with Git intelligence
-- Scans directories for projects (Git repos, package.json, etc.)
-- Cross-references with Claude Code sessions
-- Extracts Git remote URLs and repository metadata
-- Suggests common project directories for scanning
+#### Approach 1: Claude Code Hooks Integration
+**Mechanism**: Live integration with Claude Code's event system
+- **Claude Code Hooks**: When Claude sends/receives messages, trigger structured data logging
+- **Direct Database Insertion**: Real-time session activity stored directly in SQLite
+- **Event-Driven**: Reactive updates as Claude Code operates
+- **Advantage**: Live, real-time data capture with minimal latency
+- **Challenge**: Requires understanding Claude Code's hook system and event architecture
 
-✅ **Database Integration**: Enhanced schema with real discovery support
-- Projects table with Git metadata and discovery source tracking
-- Session tracking with Claude UUIDs and JSONL file paths
-- Project scan paths for user-defined discovery locations
-- Proper indexes and constraints for performance
+#### Approach 2: Enhanced WTE Pipeline
+**Mechanism**: Watch-Transform-Execute on Claude Code logs
+- **Watch**: Monitor Claude Code JSONL files for changes
+- **Transform**: Parse new entries into structured activity data
+- **Execute**: Insert/update database records from parsed activities
+- **Advantage**: Builds on proven WTE architecture pattern
+- **Challenge**: Requires robust log parsing and incremental processing
 
-✅ **Chat Interface**: Working discovery commands replacing mock data
-- scan ~/code - Discovers projects and adds to database
-- suggest - Recommends project paths based on Claude sessions
-- projects - Shows tracked projects from database
-- Real Git repository detection and database persistence
+### Current Database Integration Status
+❌ **Session-Project Linking**: Claude sessions not connected to tracked projects
+❌ **Real Data Population**: Database still uses mock data structures
+❌ **Activity Monitoring**: No real-time Claude Code activity ingestion
+❌ **Intelligence Generation**: No claude -p analysis of actual session data
 
-### Architectural Paradigm Established
-**Files as Source of Truth**: Claude Code JSONL files for session data
-**Database as Intelligence**: Cafedelic tracks projects, metadata, analysis
-**Hybrid Operations**: 
-- Session operations (open, resume) → Direct file/process access
-- Project management → Database-driven with filesystem validation
-- Intelligence queries → Database with real-time file system reconciliation
+### Immediate Research Priorities
+1. **Claude Code Hooks Investigation**: Understand event system and hook capabilities
+2. **WTE Log Processing**: Implement robust JSONL incremental parsing
+3. **Database Population Testing**: Get real CC data flowing into SQLite
+4. **TUI Integration**: Connect Textual interface to populated database
+5. **CLI Utility Commands**: Add debugging tools that Claude Code can use (cafe sessions load/list)
+6. **Activity Analysis**: Begin claude -p intelligence generation on real data
 
-**Next Implementation Priorities**:
-1. **Session-Project Linking**: Connect discovered Claude sessions to tracked projects
-2. **Session Intelligence**: Cache session analysis in database for cross-session insights
-3. **Real Session Management**: tmux integration with actual Claude Code session resumption
-4. **Activity Monitoring**: Real-time session activity tracking and intelligence updates
+### Technical Foundation Ready
+✅ **Discovery System**: Complete JSONL parser extracting session metadata
+✅ **Database Schema**: Enhanced V3 schema supports projects/sessions/activities
+✅ **TUI Framework**: Functional delegation platform with component architecture
+✅ **MCP Integration**: Server foundation for conversational interface
 
 ### Textual Integration Discovery (July 11, 2025)
 **Platform**: https://github.com/Textualize/textual - Python TUI framework

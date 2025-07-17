@@ -308,77 +308,136 @@ async function watchDatabaseChanges() {
 }
 ```
 
-## Claude Code Integration Pattern
+## Claude Code Integration Pattern (REDESIGN NEEDED)
 
-### Session Lifecycle Management
+### Current Challenge: Data Population Gap
+**Problem**: Discovery system extracts CC data but database remains unpopulated
+**Impact**: TUI shows mock data instead of real projects/sessions
+**Research Focus**: Two parallel approaches to explore
+
+### Approach 1: Claude Code Hooks Integration
 ```typescript
-interface ClaudeCodeSession {
-  id: string;
-  name: string;
-  project_id: string;
-  process_id: number;
-  working_directory: string;
-  branch: string;
-  worktree?: string;
-  yolo_mode: boolean;
-  status: 'starting' | 'active' | 'idle' | 'error' | 'terminated';
-  created_at: string;
-  last_activity: string;
+// Hook-based real-time data capture
+interface ClaudeCodeHook {
+  event: 'message_sent' | 'message_received' | 'file_operation' | 'session_start' | 'session_end';
+  trigger: (data: HookData) => Promise<void>;
 }
 
-async function createClaudeCodeSession(options: SessionOptions) {
-  // 1. Validate project exists
-  const project = await getProject(options.project_id);
-  if (!project) throw new Error('Project not found');
+// Example hook for message processing
+async function onClaudeMessage(hookData: MessageHookData) {
+  // Extract structured data from Claude Code message
+  const activity = parseMessageActivity(hookData);
   
-  // 2. Setup working directory (worktree if specified)
-  const workingDir = await setupWorkingDirectory(project, options);
-  
-  // 3. Launch Claude Code process
-  const process = await launchClaudeCode({
-    directory: workingDir,
-    yolo: options.yolo_mode || false,
-    session_name: options.name
-  });
-  
-  // 4. Register in database
-  const session = await db.run(
-    'INSERT INTO sessions (name, project_id, process_id, working_directory, branch, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [options.name, options.project_id, process.pid, workingDir, options.branch, 'starting', new Date().toISOString()]
+  // Direct database insertion
+  await db.run(
+    'INSERT INTO activities (session_id, type, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?)',
+    [activity.session_id, activity.type, activity.content, activity.timestamp, JSON.stringify(activity.metadata)]
   );
   
-  // 5. Setup activity monitoring
-  await setupSessionMonitoring(session.lastID, process.pid);
-  
-  return { session_id: session.lastID, process_id: process.pid };
+  // Update session context
+  await updateSessionContext(activity.session_id, activity);
 }
 ```
 
-### Activity Monitoring
+### Approach 2: Enhanced WTE Pipeline
 ```typescript
-// Monitor Claude Code logs for this session
-async function setupSessionMonitoring(session_id: string, process_id: number) {
-  // Watch MCP logs for this Claude Code instance
-  const logWatcher = createLogWatcher(process_id);
+// Watch-Transform-Execute on Claude Code logs
+async function* watchClaudeCodeLogs() {
+  const logWatcher = createJSONLWatcher('~/.claude/projects/*/conversations.jsonl');
   
   for await (const logEntry of logWatcher) {
-    // Parse activity from logs
-    const activity = parseClaudeCodeActivity(logEntry);
+    // Transform: Parse JSONL entry into structured activity
+    const activity = parseJSONLEntry(logEntry);
     
     if (activity) {
-      // Store in database
-      await db.run(
-        'INSERT INTO activities (session_id, type, content, timestamp, files_affected) VALUES (?, ?, ?, ?, ?)',
-        [session_id, activity.type, activity.content, activity.timestamp, JSON.stringify(activity.files)]
-      );
+      // Execute: Database operations
+      await storeActivity(activity);
+      await updateSessionContext(activity.session_id, activity);
       
-      // Update session context if it's a significant activity
-      if (activity.type === 'file_read' || activity.type === 'file_write') {
-        await updateSessionContext(session_id, activity);
+      // Trigger intelligence processing
+      await processSessionIntelligence(activity.session_id);
+    }
+  }
+}
+
+// Incremental JSONL processing
+async function processIncrementalJSONL(filePath: string, lastProcessedPosition: number) {
+  const stream = fs.createReadStream(filePath, { 
+    start: lastProcessedPosition,
+    encoding: 'utf8'
+  });
+  
+  let buffer = '';
+  for await (const chunk of stream) {
+    buffer += chunk;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || ''; // Keep incomplete line
+    
+    for (const line of lines) {
+      if (line.trim()) {
+        const activity = parseJSONLEntry(line);
+        if (activity) {
+          await storeActivity(activity);
+        }
       }
     }
   }
 }
 ```
 
-This intelligence-first architecture ensures that all AI development work becomes visible, manageable, and coordinatable through a single, powerful database-driven system.
+### Session Discovery vs Real-Time Integration
+```typescript
+// Current discovery approach (may need rethinking)
+interface DiscoveryResult {
+  sessions: ClaudeCodeSession[];
+  projects: ProjectMetadata[];
+  activities: ActivitySummary[];
+}
+
+// Alternative: Real-time integration approach
+interface RealTimeIntegration {
+  hooks: ClaudeCodeHook[];
+  watchers: LogWatcher[];
+  processors: ActivityProcessor[];
+}
+
+// Hybrid approach: Use both for different purposes
+async function initializeClaudeCodeIntegration() {
+  // 1. Discovery for historical data
+  const historical = await discoverExistingData();
+  await populateDatabase(historical);
+  
+  // 2. Real-time for ongoing activity
+  await setupRealTimeMonitoring();
+  
+  // 3. Periodic reconciliation
+  setInterval(async () => {
+    await reconcileDiscoveryWithRealTime();
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
+```
+
+### Intelligence Generation Pipeline
+```typescript
+// Process activity into intelligence
+async function processSessionIntelligence(session_id: string) {
+  // 1. Gather recent activity
+  const activities = await getRecentActivities(session_id, '15 minutes');
+  
+  // 2. Generate claude -p analysis
+  const analysis = await generateClaudeAnalysis(activities);
+  
+  // 3. Update session context
+  await updateSessionContext(session_id, {
+    current_task: analysis.task,
+    progress_status: analysis.progress,
+    intelligence_summary: analysis.summary,
+    last_analysis: new Date().toISOString()
+  });
+  
+  // 4. Trigger UI updates
+  await notifyDisplayAdapters('session_intelligence_updated', { session_id });
+}
+```
+
+This pattern recognizes that the current discovery-based approach may need supplementation with real-time data capture to achieve the intelligence platform vision.

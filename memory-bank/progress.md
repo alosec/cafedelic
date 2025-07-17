@@ -8,10 +8,10 @@
 **Integration**: Emacs auto-opening works, now part of display adapters
 **Property System**: Multi-dimensional pane management integrated into terminal adapter
 
-### Current Focus: Real Discovery System Complete
+### Current Focus: Claude Code Data Integration Challenge
 **Vision**: Intelligence layer over Claude Code's native session storage
-**Approach**: Hybrid file-database architecture with real JSONL parsing
-**Status**: Working project discovery with database persistence and chat interface
+**Approach**: Multiple pathways to populate database with real CC data (hooks vs WTE pipeline)
+**Status**: Discovery system built but database integration incomplete - need real data flow
 
 ## Completed Decisions ✅
 
@@ -78,10 +78,11 @@
 ✅ **Task State Management**: Sessions show Planning/Analyzing/Implementing/Stuck states
 ✅ **Component Architecture**: QuickChatWidget, SessionTabsWidget, TaskFeedWidget, MainDashboard
 
-**Remaining Phase 1 Work**:
-- [ ] **Database Migration System**: V2→V3 schema upgrade preserving existing 2778 activities and 30 sessions
-- [ ] **Enhanced MCP Server**: Core intelligence tools (project_tools, session_tools, claude_code_tools)
-- [ ] **Database Integration**: Connect Textual UI to V3 schema with real project/session data
+**Critical Phase 1 Blockers**:
+- [ ] **Claude Code Data Integration**: Two approaches to explore (hooks vs WTE pipeline)
+- [ ] **Database Population**: Get real CC session/project data flowing into SQLite
+- [ ] **TUI Real Data Connection**: Replace mock data with actual database queries
+- [ ] **Activity Monitoring**: Real-time Claude Code activity ingestion and processing
 
 ### Phase 2: Advanced Intelligence Features
 - [ ] **Cross-Session Analysis**: Pattern recognition and coordination opportunities

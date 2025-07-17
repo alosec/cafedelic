@@ -237,7 +237,18 @@ export CLAUDE_CODE_LOG_PATH="~/.claude/logs"
 export CAFEDELIC_DB_PATH="~/.cafedelic/intelligence.db"
 export CAFEDELIC_MCP_PORT="3000"
 
-# Start cafedelic MCP server
+# TUI-first approach (PRIMARY INTERFACE)
+cafe open textual               # Launch main TUI delegation platform
+
+# CLI for debugging/utility (Claude Code can use these for debugging)
+cafe sessions load              # Load sessions from Claude Code into database
+cafe sessions list              # List sessions with filtering options
+cafe sessions list --project myproject    # Filter by project
+cafe sessions list --since "2 days ago"   # Filter by date range
+cafe projects scan ~/code       # Scan directory for projects
+cafe projects list              # List tracked projects
+
+# MCP server (secondary)
 npm run start:mcp-server
 
 # In separate terminal, test MCP connection
