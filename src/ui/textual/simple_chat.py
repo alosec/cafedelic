@@ -10,7 +10,7 @@ from textual.widgets import Input, Static
 from textual.reactive import reactive
 from datetime import datetime
 
-from cafe_ui.data.mock_data import get_chat_messages
+# Removed mock chat messages - using real database integration
 from session_manager import get_session_manager
 import sys
 import os
@@ -82,7 +82,7 @@ class SimpleChatApp(App):
         self.session_loader = get_session_loader()
         
         # Load initial messages
-        self.messages = get_chat_messages()
+        self.messages = []  # Start with empty messages - real chat functionality to be implemented
         self._render_messages()
         
         # Focus the input
