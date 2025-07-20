@@ -13,6 +13,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from rich.text import Text
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 from ..data.claude_code_data import (
     get_session_by_id, get_context_files_by_session, 
@@ -90,7 +91,7 @@ class SessionViewPane(Widget):
             super().__init__()
 
     session_id: reactive[str] = reactive("")
-    session_data: reactive[MockSession | None] = reactive(None)
+    session_data: reactive[Optional[Dict[str, Any]]] = reactive(None)
 
     def __init__(self, session_id: str, **kwargs):
         super().__init__(**kwargs)

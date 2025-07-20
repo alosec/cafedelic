@@ -11,6 +11,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
 from rich.text import Text
+from typing import Optional, Dict, Any
 
 from ..data.claude_code_data import (
     get_sessions, get_files_by_project,
@@ -81,7 +82,7 @@ class ProjectViewPane(Widget):
             super().__init__()
 
     project_name: reactive[str] = reactive("")
-    project_data: reactive[MockProject | None] = reactive(None)
+    project_data: reactive[Optional[Dict[str, Any]]] = reactive(None)
 
     def __init__(self, project_name: str, **kwargs):
         super().__init__(**kwargs)

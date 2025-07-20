@@ -14,6 +14,27 @@ from textual.message import Message
 from ..data.claude_code_data import get_sessions
 
 
+def get_commands():
+    """Get available commands for task delegation
+    
+    TODO: Implement real command discovery from ~/.claude/commands/
+    For now, returns mock commands for UI functionality.
+    """
+    # Mock command objects with name attribute
+    class MockCommand:
+        def __init__(self, name: str):
+            self.name = name
+    
+    return [
+        MockCommand("Analyze Code"),
+        MockCommand("Run Tests"), 
+        MockCommand("Debug Session"),
+        MockCommand("Review Changes"),
+        MockCommand("Deploy Code"),
+        MockCommand("Update Dependencies")
+    ]
+
+
 class QuickChatWidget(Widget):
     """Widget for quick task delegation to Claude Code sessions"""
     

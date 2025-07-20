@@ -18,7 +18,7 @@ class CafedelicMCPAdapter:
         self.base_url = f"http://{mcp_host}:{mcp_port}"
         self.session = requests.Session()
     
-    async def get_health(self) -> Dict[str, Any]:
+    def get_health(self) -> Dict[str, Any]:
         """Check if the MCP server is running."""
         try:
             response = self.session.get(f"{self.base_url}/health", timeout=5)
