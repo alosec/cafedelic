@@ -8,10 +8,10 @@
 **Integration**: Emacs auto-opening works, now part of display adapters
 **Property System**: Multi-dimensional pane management integrated into terminal adapter
 
-### Current Focus: Claude Code Data Integration Challenge
+### Current Focus: Intelligence Layer Development
 **Vision**: Intelligence layer over Claude Code's native session storage
-**Approach**: Multiple pathways to populate database with real CC data (hooks vs WTE pipeline)
-**Status**: Discovery system built but database integration incomplete - need real data flow
+**Approach**: Direct HTTP API connection to Claude Code filesystem - database bypassed
+**Status**: TUI displays real Claude Code data - now building intelligence features
 
 ## Completed Decisions ✅
 
@@ -78,11 +78,17 @@
 ✅ **Task State Management**: Sessions show Planning/Analyzing/Implementing/Stuck states
 ✅ **Component Architecture**: QuickChatWidget, SessionTabsWidget, TaskFeedWidget, MainDashboard
 
-**Critical Phase 1 Blockers**:
-- [ ] **Claude Code Data Integration**: Two approaches to explore (hooks vs WTE pipeline)
-- [ ] **Database Population**: Get real CC session/project data flowing into SQLite
-- [ ] **TUI Real Data Connection**: Replace mock data with actual database queries
+**Critical Phase 1 Completions**:
+- [x] **Claude Code Data Integration**: HTTP API approach successful - filesystem access working
+- [x] **Real Data Connection**: TUI now displays real projects/sessions from Claude Code
+- [x] **Service Layer**: claude-code-service.ts provides formatted data for TUI consumption
+- [x] **HTTP API Endpoints**: `/api/projects`, `/api/sessions`, `/api/sessions/summary` functional
+
+**Current Phase 1 Priorities**:
 - [ ] **Activity Monitoring**: Real-time Claude Code activity ingestion and processing
+- [ ] **Intelligence Generation**: Begin claude -p analysis of actual session data
+- [ ] **Task State Management**: Real task delegation with status tracking
+- [ ] **Session Health Monitoring**: Detect stuck/struggling sessions
 
 ### Phase 2: Advanced Intelligence Features
 - [ ] **Cross-Session Analysis**: Pattern recognition and coordination opportunities

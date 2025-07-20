@@ -43,16 +43,16 @@ interface DisplayAdapter {
 ```
 cafedelic/
 ├── src/
-│   ├── mcp-server/                    # Primary interface (NEXT PHASE)
-│   │   ├── server.ts                  # MCP server implementation
-│   │   ├── tools/                     # Individual MCP tools
-│   │   │   ├── project-tools.ts       # Project management
-│   │   │   ├── session-tools.ts       # Session orchestration  
-│   │   │   └── intelligence-tools.ts  # Analysis & insights
-│   │   └── database/                  # Database layer
-│   │       ├── schema.sql             # Database schema
-│   │       ├── migrations/            # Schema migrations
-│   │       └── queries.ts             # Common queries
+│   ├── mcp-server.ts                  # Primary HTTP server with MCP tools
+│   ├── mcp-tools/                     # Individual MCP tools
+│   │   ├── project-tools.ts           # Project management
+│   │   ├── session-tools.ts           # Session orchestration  
+│   │   └── pane-tools.ts              # Tmux pane management
+│   ├── services/                      # Service layer
+│   │   ├── claude-code-service.ts     # HTTP API for TUI (IMPLEMENTED)
+│   │   ├── claude-discovery.ts        # Claude Code filesystem access
+│   │   ├── project-service.ts         # Project management
+│   │   └── session-service.ts         # Session management
 │   ├── intelligence/                  # AI analysis engine (PLANNED)
 │   │   ├── context-analyzer.ts        # claude -p integration
 │   │   ├── pattern-detector.ts        # Cross-session analysis
@@ -74,8 +74,8 @@ cafedelic/
 │       │   │   ├── screens/
 │       │   │   │   └── main_dashboard.py # Complete integrated interface
 │       │   │   ├── data/
-│       │   │   │   └── mock_data.py   # Sample data for demonstration
-│       │   │   └── adapter.py         # MCP server interface skeleton
+│       │   │   │   └── claude_code_data.py # Real Claude Code data access (IMPLEMENTED)
+│       │   │   └── adapter.py         # HTTP API interface (IMPLEMENTED)
 │       │   ├── requirements.txt       # Python dependencies (textual, aiofiles, aiosqlite)
 │       │   ├── README.md              # Setup instructions
 │       │   └── venv/                  # Virtual environment (auto-created)

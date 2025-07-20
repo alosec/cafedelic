@@ -308,35 +308,56 @@ async function watchDatabaseChanges() {
 }
 ```
 
-## Claude Code Integration Pattern (REDESIGN NEEDED)
+## Claude Code Integration Pattern (IMPLEMENTED)
 
-### Current Challenge: Data Population Gap
-**Problem**: Discovery system extracts CC data but database remains unpopulated
-**Impact**: TUI shows mock data instead of real projects/sessions
-**Research Focus**: Two parallel approaches to explore
+### HTTP API Integration Success
+**Solution**: Direct filesystem access through HTTP API endpoints
+**Impact**: TUI displays real projects/sessions from Claude Code storage
+**Status**: Functional integration bypassing database complexity
 
-### Approach 1: Claude Code Hooks Integration
+### HTTP API Integration Pattern (IMPLEMENTED)
 ```typescript
-// Hook-based real-time data capture
-interface ClaudeCodeHook {
-  event: 'message_sent' | 'message_received' | 'file_operation' | 'session_start' | 'session_end';
-  trigger: (data: HookData) => Promise<void>;
+// Direct filesystem access through HTTP API
+// src/services/claude-code-service.ts
+export class ClaudeCodeService {
+  private discovery = getClaudeDiscovery();
+
+  async getProjects(): Promise<any[]> {
+    const projects = await this.discovery.findAllProjects();
+    return projects.map(project => this.formatProjectForTUI(project));
+  }
+
+  async getSessions(): Promise<any[]> {
+    const sessions = await this.discovery.findAllSessions();
+    return sessions.map(session => this.formatSessionForTUI(session));
+  }
+
+  async getSessionSummary(): Promise<SessionSummary> {
+    return await this.discovery.getSessionSummary();
+  }
 }
 
-// Example hook for message processing
-async function onClaudeMessage(hookData: MessageHookData) {
-  // Extract structured data from Claude Code message
-  const activity = parseMessageActivity(hookData);
-  
-  // Direct database insertion
-  await db.run(
-    'INSERT INTO activities (session_id, type, content, timestamp, metadata) VALUES (?, ?, ?, ?, ?)',
-    [activity.session_id, activity.type, activity.content, activity.timestamp, JSON.stringify(activity.metadata)]
-  );
-  
-  // Update session context
-  await updateSessionContext(activity.session_id, activity);
-}
+// HTTP endpoints in mcp-server.ts
+app.get('/api/projects', async (req, res) => {
+  const projects = await claudeCodeService.getProjects();
+  res.json({ projects });
+});
+
+app.get('/api/sessions', async (req, res) => {
+  const sessions = await claudeCodeService.getSessions();
+  res.json({ sessions });
+});
+
+// TUI integration via HTTP requests
+// src/ui/textual/cafe_ui/adapter.py
+class CafedelicMCPAdapter:
+  def get_projects(self) -> Dict[str, Any]:
+    response = self.session.get(f"{self.base_url}/api/projects")
+    return response.json()
+
+  def get_sessions(self) -> Dict[str, Any]:
+    response = self.session.get(f"{self.base_url}/api/sessions")
+    return response.json()
 ```
 
 ### Approach 2: Enhanced WTE Pipeline
