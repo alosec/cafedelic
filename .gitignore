@@ -32,3 +32,4 @@ __pycache__/
 #*
 .#*
 src/ui/textual/__pycache__/
+cafe_open_failure_logs.txt
