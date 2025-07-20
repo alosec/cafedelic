@@ -28,6 +28,12 @@ case "${1:-}" in
     projects)
         exec "$CAFEDELIC_DIR/cli/commands/projects.sh" "${@:2}"
         ;;
+    validate)
+        exec "$CAFEDELIC_DIR/cli/commands/validate.sh" "${@:2}"
+        ;;
+    debug)
+        exec "$CAFEDELIC_DIR/cli/commands/debug.sh" "${@:2}"
+        ;;
     --help|-h)
         cat << 'EOF'
 Cafedelic CLI - Claude Code powered tmux IDE
@@ -41,6 +47,8 @@ Commands:
   load-sessions  Load discovered Claude Code sessions into database
   sessions       Session management (list from database, scan from Claude Code files)
   projects       Project management (list from database, scan from filesystem)
+  validate       Validate Textual TUI without launching GUI
+  debug          Debug components showing all errors without GUI
 
 Options:
   --help   Show this help message
@@ -56,6 +64,8 @@ Examples:
   cafe sessions scan           # Scan Claude Code files for sessions
   cafe projects list           # List projects from database  
   cafe projects scan ~/code    # Scan filesystem for projects
+  cafe validate textual        # Check TUI for errors without launching GUI
+  cafe debug textual           # Show all 7 TUI errors comprehensively
 
 EOF
         exit 0
